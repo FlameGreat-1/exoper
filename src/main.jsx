@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './styles/global.css'; // Updated CSS import path
 import App from './App.jsx';
-import Hero from './pages/landingPage/heroPage/hero.jsx'; // Changed extension for consistency
+import Hero from './pages/landingPage/heroPage/hero'; // Changed extension for consistency
 
 // Create router with routes
 const router = createBrowserRouter([
