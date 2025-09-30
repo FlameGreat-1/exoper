@@ -1,31 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { GridBackground } from "../../../components/ui/grid-dot-background";
+import { motion, AnimatePresence } from 'framer-motion';
 import ParticlesBackground from "../../../components/ui/particles-background";
 import TerminalCard from "../../../components/ui/terminal-card";
 import TechStacks from "../../../components/ui/stacks";
-import { motion, AnimatePresence } from 'framer-motion';
 
 const Hero = () => {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [glowingLineIndex, setGlowingLineIndex] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
   const heroRef = useRef(null);
 
   const rotatingTexts = ["Optimize Cost, Time & Ship Faster ?", "Build cutting-edge solutions ?", "Ship secure software ?"];
   
   const textColors = [
-    'text-primary dark:text-primary',
-    'text-white dark:text-white',
-    'text-purple-500 dark:text-purple-400'
+    'text-purple-400',
+    'text-white',
+    'text-blue-400'
   ];
   
   const glowingColors = [
-    'rgba(102, 126, 234, 0.8)',
-    'rgba(237, 100, 166, 0.8)',
-    'rgba(246, 173, 85, 0.8)',
-    'rgba(72, 187, 120, 0.8)',
-    'rgba(99, 179, 237, 0.8)'
+    'rgba(139, 92, 246, 0.8)',
+    'rgba(59, 130, 246, 0.8)',
+    'rgba(255, 215, 0, 0.8)',
+    'rgba(139, 92, 246, 0.8)',
+    'rgba(59, 130, 246, 0.8)'
   ];
 
   const terminalCommands = [
@@ -61,20 +60,12 @@ builds.createApp();`
   ];
 
   const mainText = "Let me help you in Transforming ideas into exceptional digital experiences with modern web technologies and creative design solutions.";
-  const words = mainText.split(' ');
-  const wordGroups = [];
-  
-  for (let i = 0; i < words.length; i += 3) {
-    wordGroups.push(words.slice(i, i + 3).join(' '));
-  }
-  
-  const underlineColors = [
-    '#646cff',
-    '#5d1eb2',
-    '#ff7300',
-    '#00c4cc',
-    '#ff223e',
-  ];
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -114,262 +105,310 @@ builds.createApp();`
   return (
     <section 
       ref={heroRef}
-      className="relative w-full min-h-screen overflow-hidden"
+      className="relative w-full min-h-screen overflow-hidden bg-black"
       aria-label="Hero section"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-950 to-black dark:from-black dark:to-gray-950 z-0" />
-    
-      <div className="absolute inset-0 bg-black/40 z-0" />
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-950 to-black"></div>
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 1px)`,
+            backgroundSize: '24px 24px',
+            backgroundPosition: `${scrollY * 0.1}px ${scrollY * 0.1}px`
+          }}
+        ></div>
+      </div>
 
-      <GridBackground 
-        className="w-full min-h-screen"
-        gridSize={20}
-        gridColor="rgba(228, 228, 231, 0.4)"
-        darkGridColor="rgba(38, 38, 38, 0.5)"
-        showFade={true}
-        fadeIntensity={30}
-      >
-        <div className="absolute inset-0 w-full h-full">
-          <ParticlesBackground 
-            colors={['var(--color-primary)', '#5d1eb2', '#ff7300']}
-            size={3}
-            countDesktop={60}
-            countTablet={50}
-            countMobile={40}
-            zIndex={10}
-            height="100%"
-            width="100%"
-          />
-        </div>
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+        <defs>
+          <linearGradient id="heroGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8">
+              <animate attributeName="stopOpacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
+            </stop>
+            <stop offset="50%" stopColor="#3B82F6" stopOpacity="1">
+              <animate attributeName="stopOpacity" values="1;0.8;1" dur="3s" repeatCount="indefinite" />
+            </stop>
+            <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.8">
+              <animate attributeName="stopOpacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
+            </stop>
+          </linearGradient>
+          
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
 
-        <div className="absolute top-1/4 -right-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-10" />
-        <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-purple-500/5 rounded-full blur-3xl -z-10" />
+          <filter id="pulseGlow">
+            <feGaussianBlur stdDeviation="2">
+              <animate attributeName="stdDeviation" values="2;4;2" dur="2s" repeatCount="indefinite" />
+            </feGaussianBlur>
+          </filter>
+        </defs>
+
+        <path
+          d="M 100 100 Q 200 150 300 100 T 500 100"
+          stroke="url(#heroGradient)"
+          strokeWidth="2"
+          fill="none"
+          filter="url(#glow)"
+          opacity="0.5"
+        >
+          <animate attributeName="stroke-dasharray" from="0 1000" to="1000 0" dur="4s" repeatCount="indefinite" />
+        </path>
+
+        <path
+          d="M 800 200 Q 900 250 1000 200 T 1200 200"
+          stroke="url(#heroGradient)"
+          strokeWidth="2"
+          fill="none"
+          filter="url(#glow)"
+          opacity="0.5"
+        />
+
+        <circle cx="200" cy="150" r="4" fill="#8B5CF6" filter="url(#pulseGlow)">
+          <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
+        </circle>
+        
+        <circle cx="900" cy="250" r="4" fill="#3B82F6" filter="url(#pulseGlow)">
+          <animate attributeName="r" values="4;6;4" dur="2.5s" repeatCount="indefinite" />
+        </circle>
+      </svg>
+
+      <div className="absolute top-1/4 -right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl"></div>
                 
-        <div className="relative z-20 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 flex flex-col items-center justify-center min-h-screen py-24">
-          <div className="max-w-6xl mx-auto text-center px-6">
-            <motion.h1 
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-            >
-              <span className="block text-foreground dark:text-white">Let's Create And Craft</span>
-              <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ART</span>
-            </motion.h1>
-            
-            <div className="h-12 sm:h-16 mb-8 overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={currentTextIndex}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                  className={`text-xl sm:text-2xl md:text-3xl font-semibold ${textColors[currentTextIndex]}`}
-                >
-                  {rotatingTexts[currentTextIndex]}
-                </motion.p>
-              </AnimatePresence>
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-col items-center justify-center min-h-screen py-16 sm:py-20 md:py-24">
+        <div className="w-full max-w-6xl mx-auto text-center">
+          <motion.h1 
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-4 sm:mb-6 px-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+          >
+            <span className="block text-white">Let's Create And Craft</span>
+            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">ART</span>
+          </motion.h1>
+          
+          <div className="h-auto min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] mb-6 sm:mb-8 overflow-hidden px-2">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={currentTextIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className={`text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium ${textColors[currentTextIndex]}`}
+              >
+                {rotatingTexts[currentTextIndex]}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+          
+          <motion.div 
+            className="mt-4 sm:mt-6 relative px-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isVisible ? 1 : 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+          >
+            <div className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+              {mainText}
             </div>
             
-            <motion.div 
-              className="mt-6 relative"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isVisible ? 1 : 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
-            >
-              <div className="text-lg sm:text-xl text-foreground/80 dark:text-gray-300 max-w-2xl mx-auto">
-                {wordGroups.map((group, index) => (
-                  <span key={index} className="relative inline">
-                    {group}{' '}
-                    <span 
-                      className="absolute bottom-0 left-0 w-full h-0.5"
-                      style={{ 
-                        backgroundColor: underlineColors[index % underlineColors.length],
-                        boxShadow: `0 0 4px ${underlineColors[index % underlineColors.length]}`
-                      }}
-                    ></span>
-                  </span>
-                ))}
-              </div>
-              
-              <div className="relative w-full h-1 mt-4 overflow-hidden">
-                {glowingColors.map((color, index) => (
-                  <motion.div
-                    key={index}
-                    className="absolute inset-0 flex items-center justify-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ 
-                      opacity: glowingLineIndex === index ? 1 : 0,
+            <div className="relative w-full h-1 mt-4 overflow-hidden">
+              {glowingColors.map((color, index) => (
+                <motion.div
+                  key={index}
+                  className="absolute inset-0 flex items-center justify-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ 
+                    opacity: glowingLineIndex === index ? 1 : 0,
+                  }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <div 
+                    className="h-0.5 w-3/4 mx-auto" 
+                    style={{ 
+                      background: `linear-gradient(90deg, transparent 0%, ${color} 20%, ${color} 80%, transparent 100%)`,
+                      boxShadow: `0 0 8px ${color}, 0 0 12px ${color}`
                     }}
-                    transition={{ duration: 0.5 }}
                   >
-                    <div 
-                      className="h-0.5 w-3/4 mx-auto" 
-                      style={{ 
-                        background: `linear-gradient(90deg, transparent 0%, ${color} 20%, ${color} 80%, transparent 100%)`,
-                        boxShadow: `0 0 8px ${color}, 0 0 12px ${color}`
-                      }}
-                    >
-                      <div className="absolute inset-0 flex justify-between">
-                        {[...Array(8)].map((_, i) => (
-                          <div 
-                            key={i} 
-                            className="h-0.5 w-4" 
-                            style={{ 
-                              background: 'transparent',
-                              boxShadow: `0 0 4px ${color}`
-                            }}
-                          ></div>
-                        ))}
-                      </div>
+                    <div className="absolute inset-0 flex justify-between">
+                      {[...Array(8)].map((_, i) => (
+                        <div 
+                          key={i} 
+                          className="h-0.5 w-4" 
+                          style={{ 
+                            background: 'transparent',
+                            boxShadow: `0 0 4px ${color}`
+                          }}
+                        ></div>
+                      ))}
                     </div>
-                  </motion.div>
-                ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="w-full max-w-2xl mx-auto mt-6 sm:mt-8 md:mt-10 px-2"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
+          >
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/10 to-blue-600/10 rounded-lg blur-xl"></div>
+              <div className="relative bg-gray-900/80 backdrop-blur-sm rounded-lg border border-gray-800 hover:border-purple-500/50 transition-all duration-300">
+                <TerminalCard 
+                  commands={terminalCommands}
+                  language="javascript"
+                  className="shadow-xl rounded-xl overflow-hidden"
+                />
               </div>
-            </motion.div>
-            
-            <motion.div 
-              className="w-full max-w-2xl mx-auto mt-10"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
-              transition={{ duration: 0.7, delay: 0.6 }}
-            >
-              <TerminalCard 
-                commands={terminalCommands}
-                language="javascript"
-                className="shadow-xl dark:shadow-gray-900/30 rounded-xl overflow-hidden"
-              />
-            </motion.div>
-            
-            <motion.div 
-              className="mt-12"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
-              transition={{ duration: 0.7, delay: 0.8 }}
-            >
-              <TechStacks />
-            </motion.div>
-            
-            <motion.div 
-              className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-800"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isVisible ? 1 : 0 }}
-              transition={{ duration: 0.7, delay: 1 }}
-            >
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
-                TRUSTED BY INNOVATIVE TEAMS
-              </p>
-              <div className="flex flex-wrap justify-center gap-8 opacity-70">
-                <div className="h-8 flex items-center grayscale hover:grayscale-0 transition-all duration-300">
-                  <span className="text-gray-400">Company 1</span>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="mt-6 sm:mt-8 md:mt-10 lg:mt-12 px-2"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+            transition={{ duration: 0.7, delay: 0.8 }}
+          >
+            <TechStacks />
+          </motion.div>
+          
+          <motion.div 
+            className="mt-10 sm:mt-12 md:mt-14 lg:mt-16 pt-6 sm:pt-8 border-t border-gray-800 px-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isVisible ? 1 : 0 }}
+            transition={{ duration: 0.7, delay: 1 }}
+          >
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+              <span className="text-purple-400 text-xs sm:text-sm font-medium tracking-wide">TRUSTED BY INNOVATIVE TEAMS</span>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+              {['Company 1', 'Company 2', 'Company 3', 'Company 4'].map((company, index) => (
+                <div 
+                  key={index}
+                  className="px-3 sm:px-4 py-2 bg-gray-900/60 backdrop-blur-sm rounded border border-gray-800 hover:border-purple-500/50 transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  <span className="text-gray-400 hover:text-purple-400 transition-colors text-xs sm:text-sm md:text-base">{company}</span>
                 </div>
-                <div className="h-8 flex items-center grayscale hover:grayscale-0 transition-all duration-300">
-                  <span className="text-gray-400">Company 2</span>
-                </div>
-                <div className="h-8 flex items-center grayscale hover:grayscale-0 transition-all duration-300">
-                  <span className="text-gray-400">Company 3</span>
-                </div>
-                <div className="h-8 flex items-center grayscale hover:grayscale-0 transition-all duration-300">
-                  <span className="text-gray-400">Company 4</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
+      </div>
 
-        <div
-          className="pointer-events-none hidden md:block z-20"
-          style={{ position: 'absolute', left: '-96px', top: '12%' }}
-          aria-hidden="true"
-        >
-          <div className="space-y-6">
-            <motion.div
-              className="relative w-24 h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-white/5"
-              initial={{ opacity: 0, y: 12, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-              style={{ willChange: 'transform' }}
-              aria-hidden="true"
-            >
-              <motion.img
-                src="/images/avatars/avatar-left-1.png"
-                alt=""
-                className="object-cover w-full h-full rounded-full"
-                loading="lazy"
-                animate={{ y: [0, -10, 0], rotate: [0, 3, 0] }}
-                transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-              />
-              <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(120,40,200,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
-            </motion.div>
+      <div
+        className="pointer-events-none hidden xl:block z-20"
+        style={{ position: 'absolute', left: '8%', top: '15%' }}
+        aria-hidden="true"
+      >
+        <div className="space-y-6">
+          <motion.div
+            className="relative w-20 h-20 xl:w-24 xl:h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
+            initial={{ opacity: 0, y: 12, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
+            style={{ willChange: 'transform' }}
+            aria-hidden="true"
+          >
+            <motion.img
+              src="/images/avatars/avatar-left-1.png"
+              alt=""
+              className="object-cover w-full h-full rounded-full"
+              loading="lazy"
+              animate={{ y: [0, -10, 0], rotate: [0, 3, 0] }}
+              transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
+            />
+            <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(139,92,246,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
+          </motion.div>
 
-            <motion.div
-              className="relative w-16 h-16 rounded-full ring-6 ring-white/20 shadow-2xl overflow-hidden bg-white/5"
-              initial={{ opacity: 0, y: 12, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
-              style={{ willChange: 'transform' }}
-              aria-hidden="true"
-            >
-              <motion.img
-                src="/images/avatars/avatar-left-2.png"
-                alt=""
-                className="object-cover w-full h-full rounded-full"
-                loading="lazy"
-                animate={{ y: [0, -8, 0], rotate: [0, 2, 0] }}
-                transition={{ duration: 4.2, ease: "easeInOut", repeat: Infinity }}
-              />
-              <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(200,40,150,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
-            </motion.div>
-          </div>
+          <motion.div
+            className="relative w-14 h-14 xl:w-16 xl:h-16 rounded-full ring-6 ring-blue-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
+            initial={{ opacity: 0, y: 12, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
+            style={{ willChange: 'transform' }}
+            aria-hidden="true"
+          >
+            <motion.img
+              src="/images/avatars/avatar-left-2.png"
+              alt=""
+              className="object-cover w-full h-full rounded-full"
+              loading="lazy"
+              animate={{ y: [0, -8, 0], rotate: [0, 2, 0] }}
+              transition={{ duration: 4.2, ease: "easeInOut", repeat: Infinity }}
+            />
+            <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(59,130,246,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
+          </motion.div>
         </div>
+      </div>
 
-        <div
-          className="pointer-events-none hidden md:block z-20"
-          style={{ position: 'absolute', right: '-96px', top: '30%' }}
-          aria-hidden="true"
-        >
-          <div className="space-y-6">
-            <motion.div
-              className="relative w-24 h-24 rounded-full ring-8 ring-pink-800/20 shadow-2xl overflow-hidden bg-white/5"
-              initial={{ opacity: 0, y: -12, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-              style={{ willChange: 'transform' }}
-              aria-hidden="true"
-            >
-              <motion.img
-                src="/images/avatars/avatar-right-1.png"
-                alt=""
-                className="object-cover w-full h-full rounded-full"
-                loading="lazy"
-                animate={{ y: [0, -10, 0], rotate: [0, -3, 0] }}
-                transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-              />
-              <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(160,40,200,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
-            </motion.div>
+      <div
+        className="pointer-events-none hidden xl:block z-20"
+        style={{ position: 'absolute', right: '8%', top: '30%' }}
+        aria-hidden="true"
+      >
+        <div className="space-y-6">
+          <motion.div
+            className="relative w-20 h-20 xl:w-24 xl:h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
+            initial={{ opacity: 0, y: -12, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
+            style={{ willChange: 'transform' }}
+            aria-hidden="true"
+          >
+            <motion.img
+              src="/images/avatars/avatar-right-1.png"
+              alt=""
+              className="object-cover w-full h-full rounded-full"
+              loading="lazy"
+              animate={{ y: [0, -10, 0], rotate: [0, -3, 0] }}
+              transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
+            />
+            <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(139,92,246,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
+          </motion.div>
 
-            <motion.div
-              className="relative w-12 h-12 rounded-full ring-4 ring-white/12 shadow-2xl overflow-hidden bg-white/5"
-              initial={{ opacity: 0, y: -12, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
-              style={{ willChange: 'transform' }}
-              aria-hidden="true"
-            >
-              <motion.img
-                src="/images/avatars/avatar-right-2.png"
-                alt=""
-                className="object-cover w-full h-full rounded-full"
-                loading="lazy"
-                animate={{ y: [0, -8, 0], rotate: [0, -2, 0] }}
-                transition={{ duration: 4.2, ease: "easeInOut", repeat: Infinity }}
-              />
-              <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(100,180,240,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
-            </motion.div>
-          </div>
+          <motion.div
+            className="relative w-10 h-10 xl:w-12 xl:h-12 rounded-full ring-4 ring-blue-900/12 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
+            initial={{ opacity: 0, y: -12, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
+            style={{ willChange: 'transform' }}
+            aria-hidden="true"
+          >
+            <motion.img
+              src="/images/avatars/avatar-right-2.png"
+              alt=""
+              className="object-cover w-full h-full rounded-full"
+              loading="lazy"
+              animate={{ y: [0, -8, 0], rotate: [0, -2, 0] }}
+              transition={{ duration: 4.2, ease: "easeInOut", repeat: Infinity }}
+            />
+            <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(59,130,246,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
+          </motion.div>
         </div>
-      </GridBackground>
+      </div>
+
+      <div className="absolute inset-0 w-full h-full" style={{ zIndex: 2 }}>
+        <ParticlesBackground 
+          colors={['#8B5CF6', '#3B82F6', '#FFD700']}
+          size={3}
+          countDesktop={60}
+          countTablet={50}
+          countMobile={40}
+          zIndex={2}
+          height="100%"
+          width="100%"
+        />
+      </div>
       
       <motion.div 
         className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 hidden md:block"
@@ -377,7 +416,7 @@ builds.createApp();`
         animate={{ opacity: [0, 1, 0], y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
         </svg>
       </motion.div>

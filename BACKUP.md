@@ -1,297 +1,313 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { GridBackground } from "../../../components/ui/grid-dot-background";
-import ParticlesBackground from "../../../components/ui/particles-background";
-import TerminalCard from "../../../components/ui/terminal-card";
-import TechStacks from "../../../components/ui/stacks";
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useRef, useEffect, useState } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+} from "framer-motion";
 
-const Hero = () => {
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const [glowingLineIndex, setGlowingLineIndex] = useState(0);
-  const heroRef = useRef(null);
+/**
+ * PROJECTS.JSX
+ * ---------------------------------------------------------------------------
+ * A single-file React + Tailwind component that reproduces a dark landing
+ * section with animated pipe/wire SVGs, flow diagram cards, and rockets that
+ * travel along the wires in response to the page scroll. This file is
+ * intentionally self-contained and uses only inline SVGs and CSS classes
+ * (Tailwind) for styling. It uses Framer Motion for smooth motion and
+ * useScroll for scroll progress.
+ *
+ * HOW TO USE
+ * - Place this file in your React (Vite) project (e.g. src/components/Projects.jsx)
+ * - Ensure Tailwind CSS is configured and Framer Motion is installed.
+ * - Import and render <Projects /> on a page. Header is intentionally excluded
+ *   as requested by the user.
+ *
+ * NOTES ON ACCURACY
+ * - The layout, colors, glow, and animations are designed to closely match
+ *   the provided screenshots. Exact pixel-perfect replication can require
+ *   tuning of spacing values and SVG curve control points; adjust if needed.
+ */
 
-  const rotatingTexts = ["Optimize Cost, Time & Ship Faster ?", "Build cutting-edge solutions ?", "Ship secure software ?"];
-  
-  const textColors = [
-    'text-primary dark:text-primary', // First text - primary color
-    'text-white dark:text-white',     // Second text - white
-    'text-purple-500 dark:text-purple-400' // Third text - purple
-  ];
-  
-  const glowingColors = [
-    'rgba(102, 126, 234, 0.8)',
-    'rgba(237, 100, 166, 0.8)',
-    'rgba(246, 173, 85, 0.8)',
-    'rgba(72, 187, 120, 0.8)',
-    'rgba(99, 179, 237, 0.8)'
-  ];
+// Utility: simple clamp
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 
-  const terminalCommands = [
-    `// Welcome to my portfolio
-const developer = {
-  name: "Emmanuel U. Iziogo",
-  skills: ["Python", "React", "Tailwind CSS", "JavaScript", "Node.js"],
-  passion: "Building beautiful web experiences"
-};
+export default function Projects() {
+  const containerRef = useRef(null);
 
-// Let's create something amazing together!
-developer.createArt();`,
+  // Global scroll progress for the container (0..1)
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start end", "end start"] });
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 25 });
 
-    `// My services 1:
-const builds = {
-  offers: "AI Integration",
-  services: ["Governance", "Security", "Compliance", "Auditing", "Monitoring"],
-  passion: "Creating a protective layer between enterprises (YOU) and the AI models you use."
-};
+  // Map global progress to local segments for two rockets (top pipe, bottom pipe)
+  // The maps are loose and can be tweaked to match the original.
+  const topRocketProgress = useTransform(smoothProgress, [0, 0.7, 1], [0, 0.9, 1]);
+  const middleRocketProgress = useTransform(smoothProgress, [0.15, 0.65, 1], [0, 0.8, 1]);
 
-// Providing You Zero-Trust API Gateway for AI !
-builds.createAI();`,
+  // Have a spring for nicer motion
+  const topRocketSpring = useSpring(topRocketProgress, { stiffness: 200, damping: 30 });
+  const middleRocketSpring = useSpring(middleRocketProgress, { stiffness: 220, damping: 28 });
 
-    `// My services 2:
-const builds = {
-  offers: "Software Solutions",
-  services: ["Web applications", "Mobile applications", "Cloud solutions", "Workflow automation"],
-  passion: "Developing innovative software solutions that drive business success."
-};
+  // Refs to SVG path elements so we can query length and points
+  const topPathRef = useRef(null);
+  const middlePathRef = useRef(null);
 
-// Let's build cutting-edge solutions !
-builds.createApp();`
-  ];
+  // Coordinates for rockets
+  const [topRocketCoords, setTopRocketCoords] = useState({ x: 0, y: 0, angle: 0 });
+  const [middleRocketCoords, setMiddleRocketCoords] = useState({ x: 0, y: 0, angle: 0 });
 
-  // Split the paragraph into groups of 3 words for underlining
-  const mainText = "Let me help you in Transforming ideas into exceptional digital experiences with modern web technologies and creative design solutions.";
-  const words = mainText.split(' ');
-  const wordGroups = [];
-  
-  for (let i = 0; i < words.length; i += 3) {
-    wordGroups.push(words.slice(i, i + 3).join(' '));
-  }
-  
-  const underlineColors = [
-    '#646cff', // primary
-    '#5d1eb2', // purple
-    '#ff7300', // orange
-    '#00c4cc', // teal
-    '#ff223e', // red
-  ];
-
+  // Helper that samples path and sets coordinates
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
-    }, 3000);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-    
-    if (heroRef.current) {
-      observer.observe(heroRef.current);
-    }
-    
+    let mounted = true;
+    const unsubTop = topRocketSpring.onChange((p) => {
+      const path = topPathRef.current;
+      if (!path) return;
+      const len = path.getTotalLength();
+      const clamped = clamp(p, 0, 1);
+      const point = path.getPointAtLength(len * clamped);
+      // find a small forward point to calculate angle
+      const ahead = path.getPointAtLength(Math.min(len, len * clamped + 1));
+      const angle = Math.atan2(ahead.y - point.y, ahead.x - point.x) * (180 / Math.PI);
+      if (mounted) setTopRocketCoords({ x: point.x, y: point.y, angle });
+    });
+    const unsubMid = middleRocketSpring.onChange((p) => {
+      const path = middlePathRef.current;
+      if (!path) return;
+      const len = path.getTotalLength();
+      const clamped = clamp(p, 0, 1);
+      const point = path.getPointAtLength(len * clamped);
+      const ahead = path.getPointAtLength(Math.min(len, len * clamped + 1));
+      const angle = Math.atan2(ahead.y - point.y, ahead.x - point.x) * (180 / Math.PI);
+      if (mounted) setMiddleRocketCoords({ x: point.x, y: point.y, angle });
+    });
+
     return () => {
-      if (heroRef.current) {
-        observer.unobserve(heroRef.current);
-      }
+      mounted = false;
+      if (unsubTop) unsubTop();
+      if (unsubMid) unsubMid();
     };
-  }, []);
-  
+  }, [topRocketSpring, middleRocketSpring]);
+
+  // Flow nodes data
+  const nodes = [
+    { id: "frontend", title: "frontend", subtitle: "frontend-prod.up.railway.app", x: 720, y: 120 },
+    { id: "api", title: "api gateway", subtitle: "api-prod.up.railway.app", x: 920, y: 220 },
+    { id: "backend", title: "backend", subtitle: "Just deployed", x: 920, y: 320 },
+    { id: "analytics", title: "ackee analytics", subtitle: "ackee-prod.up.railway.app", x: 600, y: 220 },
+    { id: "postgres", title: "postgres", subtitle: "pg-data", x: 740, y: 360 },
+  ];
+
+  // small helper to animate nodes into view
+  const cardVariants = {
+    off: { opacity: 0, y: 12, scale: 0.98 },
+    on: (i) => ({ opacity: 1, y: 0, scale: 1, transition: { delay: i * 0.08, duration: 0.6 } }),
+  };
+
+  return (
+    <div ref={containerRef} className="min-h-screen bg-[#050507] text-white overflow-hidden relative">
+      {/* Centered content wrapper */}
+      <div className="max-w-[1200px] mx-auto py-28 px-6">
+        {/* Two-column layout: left text, right flow diagram */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          {/* LEFT COLUMN: Content / heading */}
+          <div className="lg:col-span-5">
+            <div className="max-w-lg">
+              <p className="text-sm text-[#8b5cf6] mb-3">Network and Connect</p>
+              <h1 className="text-3xl sm:text-4xl font-bold leading-tight mb-4">Interconnect your application seamlessly with highly performant networking</h1>
+              <p className="text-sm text-[#8b98a6] mb-6">Railway provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.</p>
+
+              <div className="flex items-center gap-3 text-xs text-[#9aa6b0]">
+                <button className="px-3 py-2 rounded-md border border-[#2b2f36] bg-[#0b0b0c] hover:bg-[rgba(255,255,255,0.02)]">Learn More →</button>
+                <div className="flex items-center gap-2 opacity-80">
+                  {/* Small icons placeholders */}
+                  <div className="w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center">R</div>
+                  <div className="w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center">N</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Decorative left vertical pipe (like screenshot) */}
+            <div className="mt-16 relative h-[420px]">
+              <svg className="absolute left-0 top-0 h-full w-24" viewBox="0 0 80 420" preserveAspectRatio="xMinYMid slice">
+                {/* vertical pipe track */}
+                <defs>
+                  <linearGradient id="pipeGradient" x1="0" x2="1">
+                    <stop offset="0%" stopColor="#6d28d9" stopOpacity="0.7" />
+                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.25" />
+                  </linearGradient>
+                </defs>
+                <path d="M40 8 L40 80 C40 120 40 120 20 150 L10 160" stroke="url(#pipeGradient)" strokeWidth="6" strokeLinecap="round" fill="none" />
+                {/* small glow dot */}
+                <circle cx="40" cy="80" r="6" fill="#7c3aed" opacity="0.9" />
+              </svg>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Flow Diagram */}
+          <div className="lg:col-span-7 relative">
+            {/* SVG canvas for pipes / wires */}
+            <div className="relative h-[520px] w-full">
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1100 520" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="6" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {/* Top wire path */}
+                <path
+                  ref={topPathRef}
+                  id="topWire"
+                  d="M200 120 C300 80 420 80 520 120 C610 150 660 170 720 140"
+                  stroke="#1f2937"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  fill="none"
+                  style={{ filter: "url(#glow)" }}
+                />
+                {/* middle wire path */}
+                <path
+                  ref={middlePathRef}
+                  id="middleWire"
+                  d="M260 320 C380 280 520 260 660 320 C740 360 820 380 920 360"
+                  stroke="#0f172a"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  fill="none"
+                  style={{ filter: "url(#glow)" }}
+                />
+
+                {/* Decorative dot pattern behind nodes */}
+                <g opacity="0.06">
+                  {Array.from({ length: 200 }).map((_, i) => {
+                    const cx = 400 + (i % 20) * 20;
+                    const cy = 40 + Math.floor(i / 20) * 20;
+                    return <circle key={i} cx={cx} cy={cy} r="1.2" fill="#9ca3af" />;
+                  })}
+                </g>
+
+                {/* Draw connectors from wires to nodes (small animated circles) */}
+                <motion.circle cx="520" cy="120" r="6" fill="#06b6d4" opacity={0.9} animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} />
+                <motion.circle cx="660" cy="320" r="6" fill="#7c3aed" opacity={0.9} animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2, delay: 0.3 }} />
+
+                {/* Top rocket - positioned via absolute div over svg, but we draw a small path head for reference here (optional) */}
+              </svg>
+
+              {/* Rocket elements: absolutely positioned - their coordinates are in SVG space; we must transform to DOM */}
+              <Rocket x={topRocketCoords.x} y={topRocketCoords.y} angle={topRocketCoords.angle} color="#7c3aed" size={22} containerViewBox={{ width: 1100, height: 520 }} containerClassName="absolute left-0 top-0 w-full h-full pointer-events-none" />
+              <Rocket x={middleRocketCoords.x} y={middleRocketCoords.y} angle={middleRocketCoords.angle} color="#06b6d4" size={20} containerViewBox={{ width: 1100, height: 520 }} containerClassName="absolute left-0 top-0 w-full h-full pointer-events-none" />
+
+              {/* Flow cards (nodes) - absolutely positioned to match screenshot layout */}
+              {nodes.map((n, i) => (
+                <motion.div
+                  key={n.id}
+                  custom={i}
+                  initial="off"
+                  whileInView="on"
+                  viewport={{ once: false, amount: 0.2 }}
+                  variants={cardVariants}
+                  className="absolute bg-[#0b0b0d] border border-[#1f2937] rounded-lg shadow-2xl p-4 w-48"
+                  style={{ left: n.x, top: n.y }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-[#9ca3af]">{n.id === 'frontend' ? <strong className="uppercase tracking-wide text-[#f3f4f6]">{n.title}</strong> : <span className="text-sm font-semibold">{n.title}</span>}</div>
+                      <div className="text-[11px] text-[#7b8794]">{n.subtitle}</div>
+                    </div>
+                    <div className="text-[11px] text-[#22c1ff]">●</div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {/* Large backend card lower-left to emulate screenshot cluster */}
+              <motion.div className="absolute left-48 top-[380px] w-64 bg-[#0b0b0d] border border-[#1f2937] rounded-lg p-4 shadow-2xl" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}>
+                <div className="text-sm font-semibold">backend [EU]</div>
+                <div className="text-xs text-[#7b8794] mt-2">Just deployed via CLI</div>
+                <div className="mt-3 w-full h-12 bg-[#05060a] rounded-md border border-[#15161a] flex items-center justify-center text-[10px] text-[#9aa6b0]">16x CPU</div>
+              </motion.div>
+
+            </div>
+
+            {/* Bottom section: scale and grow (small text) */}
+            <div className="mt-8 text-right text-sm text-[#9aa6b0]">Scale your applications with intuitive controls</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Rocket component
+ * - x,y are in SVG coordinate space (matching the svg viewBox width/height)
+ * - we render the rocket as an HTML absolute element overlaying the SVG and
+ *   translate the SVG coordinates to DOM pixels using the container bounding box
+ */
+function Rocket({ x = 0, y = 0, angle = 0, color = "#7c3aed", size = 20, containerViewBox = { width: 1100, height: 520 }, containerClassName = "" }) {
+  const elRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const [style, setStyle] = useState({ left: -9999, top: -9999, rotate: 0 });
+
+  // convert svg coordinate to DOM pixels by comparing viewBox to wrapper size
   useEffect(() => {
-    const interval = setInterval(() => {
-      setGlowingLineIndex((prevIndex) => (prevIndex + 1) % glowingColors.length);
-    }, 1500);
-    
-    return () => clearInterval(interval);
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const update = () => {
+      const { width: domW, height: domH } = wrapper.getBoundingClientRect();
+      const svgW = containerViewBox.width;
+      const svgH = containerViewBox.height;
+      // maintain aspect ratio (preserveAspectRatio="xMidYMid slice") used in svg
+      // we approximate by scaling both by min(domW/svgW, domH/svgH) and centering
+      const scale = Math.min(domW / svgW, domH / svgH);
+      const offsetX = (domW - svgW * scale) / 2;
+      const offsetY = (domH - svgH * scale) / 2;
+      const left = offsetX + x * scale - size / 2;
+      const top = offsetY + y * scale - size / 2;
+      setStyle({ left, top, rotate: angle });
+    };
+    update();
+    // update on resize
+    const ro = new ResizeObserver(update);
+    ro.observe(wrapper);
+    return () => ro.disconnect();
+  }, [x, y, angle, size, containerViewBox]);
+
+  // subtle bobbing animation to make rocket feel alive
+  const bobY = useSpring(0, { stiffness: 80, damping: 8 });
+  useEffect(() => {
+    let mounted = true;
+    let t = 0;
+    const loop = () => {
+      if (!mounted) return;
+      t += 0.03;
+      const v = Math.sin(t) * 3; // +/- 3 px
+      bobY.set(v);
+      requestAnimationFrame(loop);
+    };
+    loop();
+    return () => (mounted = false);
   }, []);
 
   return (
-    <section 
-      ref={heroRef}
-      className="relative w-full min-h-screen overflow-hidden"
-      aria-label="Hero section"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-950 to-black dark:from-black dark:to-gray-950 z-0" />
-    
-      <div className="absolute inset-0 bg-black/40 z-0" />
-
-      <GridBackground 
-        className="w-full min-h-screen"
-        gridSize={20}
-        gridColor="rgba(228, 228, 231, 0.4)"
-        darkGridColor="rgba(38, 38, 38, 0.5)"
-        showFade={true}
-        fadeIntensity={30}
+    <div ref={wrapperRef} className={containerClassName} style={{ position: "absolute", inset: 0 }}>
+      <motion.div
+        ref={elRef}
+        className="absolute pointer-events-none"
+        style={{ left: style.left, top: style.top, rotate: `${style.rotate}deg`, zIndex: 60 }}
+        animate={{ y: [0, -4, 0] }}
+        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
       >
-        <div className="absolute inset-0 w-full h-full">
-          <ParticlesBackground 
-            colors={['var(--color-primary)', '#5d1eb2', '#ff7300']}
-            size={3}
-            countDesktop={60}
-            countTablet={50}
-            countMobile={40}
-            zIndex={10}
-            height="100%"
-            width="100%"
-          />
-        </div>
-
-        <div className="absolute top-1/4 -right-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-10" />
-        <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-purple-500/5 rounded-full blur-3xl -z-10" />
-                
-        <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center min-h-screen py-20">
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.h1 
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-            >
-              <span className="block text-foreground dark:text-white">Let's Create And Craft</span>
-              <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ART</span>
-            </motion.h1>
-            
-            <div className="h-12 sm:h-16 mb-8 overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={currentTextIndex}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                  className={`text-xl sm:text-2xl md:text-3xl font-semibold ${textColors[currentTextIndex]}`}
-                >
-                  {rotatingTexts[currentTextIndex]}
-                </motion.p>
-              </AnimatePresence>
-            </div>
-            
-            <motion.div 
-              className="mt-6 relative"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isVisible ? 1 : 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
-            >
-              <div className="text-lg sm:text-xl text-foreground/80 dark:text-gray-300 max-w-2xl mx-auto">
-                {wordGroups.map((group, index) => (
-                  <span key={index} className="relative inline">
-                    {group}{' '}
-                    <span 
-                      className="absolute bottom-0 left-0 w-full h-0.5"
-                      style={{ 
-                        backgroundColor: underlineColors[index % underlineColors.length],
-                        boxShadow: `0 0 4px ${underlineColors[index % underlineColors.length]}`
-                      }}
-                    ></span>
-                  </span>
-                ))}
-              </div>
-              
-              <div className="relative w-full h-1 mt-4 overflow-hidden">
-                {glowingColors.map((color, index) => (
-                  <motion.div
-                    key={index}
-                    className="absolute inset-0 flex items-center justify-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ 
-                      opacity: glowingLineIndex === index ? 1 : 0,
-                    }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div 
-                      className="h-0.5 w-3/4 mx-auto" 
-                      style={{ 
-                        background: `linear-gradient(90deg, transparent 0%, ${color} 20%, ${color} 80%, transparent 100%)`,
-                        boxShadow: `0 0 8px ${color}, 0 0 12px ${color}`
-                      }}
-                    >
-                      <div className="absolute inset-0 flex justify-between">
-                        {[...Array(8)].map((_, i) => (
-                          <div 
-                            key={i} 
-                            className="h-0.5 w-4" 
-                            style={{ 
-                              background: 'transparent',
-                              boxShadow: `0 0 4px ${color}`
-                            }}
-                          ></div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              className="w-full max-w-2xl mx-auto mt-10"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
-              transition={{ duration: 0.7, delay: 0.6 }}
-            >
-              <TerminalCard 
-                commands={terminalCommands}
-                language="javascript"
-                className="shadow-xl dark:shadow-gray-900/30 rounded-xl overflow-hidden"
-              />
-            </motion.div>
-            
-            <motion.div 
-              className="mt-12"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
-              transition={{ duration: 0.7, delay: 0.8 }}
-            >
-              <TechStacks />
-            </motion.div>
-            
-            <motion.div 
-              className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-800"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isVisible ? 1 : 0 }}
-              transition={{ duration: 0.7, delay: 1 }}
-            >
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
-                TRUSTED BY INNOVATIVE TEAMS
-              </p>
-              <div className="flex flex-wrap justify-center gap-8 opacity-70">
-                <div className="h-8 flex items-center grayscale hover:grayscale-0 transition-all duration-300">
-                  <span className="text-gray-400">Company 1</span>
-                </div>
-                <div className="h-8 flex items-center grayscale hover:grayscale-0 transition-all duration-300">
-                  <span className="text-gray-400">Company 2</span>
-                </div>
-                <div className="h-8 flex items-center grayscale hover:grayscale-0 transition-all duration-300">
-                  <span className="text-gray-400">Company 3</span>
-                </div>
-                <div className="h-8 flex items-center grayscale hover:grayscale-0 transition-all duration-300">
-                  <span className="text-gray-400">Company 4</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </GridBackground>
-      
-      <motion.div 
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 hidden md:block"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: [0, 1, 0], y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(2 2)">
+            <path d="M8 0 L10 8 L8 6 L6 8 Z" fill={color} opacity="0.95" />
+            <rect x="3" y="7" width="8" height="6" rx="2" fill="#0b1020" stroke={color} strokeWidth="0.8" />
+            <circle cx="7" cy="10" r="1.2" fill="#0ea5e9" />
+          </g>
         </svg>
       </motion.div>
-    </section>
+    </div>
   );
-};
-
-export default Hero;
+}
