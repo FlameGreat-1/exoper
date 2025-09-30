@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HamburgerMenuOverlay } from "../ui/hamburger-menu-overlay";
@@ -35,6 +35,46 @@ const NAV = [
     ],
   },
 ];
+
+const LogoComponent = ({ className = "", alt = "Exoper Logo" }) => {
+  const [triedPng, setTriedPng] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const onError = useCallback(
+    (e) => {
+      if (!triedPng) {
+        e.currentTarget.src = "/images/logo.png";
+        setTriedPng(true);
+        return;
+      }
+      setFailed(true);
+    },
+    [triedPng]
+  );
+
+  if (failed) {
+    return (
+      <div className={className} aria-hidden="true">
+        <span className="sr-only">{alt}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src="/images/logo.svg"
+      alt={alt}
+      className={`${className} bg-transparent block transform-gpu origin-left`}
+      style={{ transformOrigin: "left center" }}
+      loading="eager"
+      decoding="async"
+      onError={onError}
+      draggable="false"
+      role="img"
+      aria-label={alt}
+    />
+  );
+};
 
 const Header = () => {
   const location = useLocation();
@@ -115,13 +155,18 @@ const Header = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-6">
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <Link to="/" aria-label="Exoper — Home" className="flex items-center">
-                <img 
-                  src="/images/logo.svg" 
-                  alt="Exoper Logo" 
-                  className="h-10 sm:h-12 md:h-14 w-auto"
-                />
+            <div className="flex items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
+              <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-3">
+                <LogoComponent className="h-10 sm:h-12 md:h-14 w-auto scale-150" alt="Exoper Logo" />
+                <span
+                  className="text-white font-extrabold uppercase tracking-widest text-xl sm:text-2xl md:text-3xl bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
+                  }}
+                >
+                  XOPER
+                </span>
               </Link>
             </div>
 
@@ -133,7 +178,9 @@ const Header = () => {
               <ul className="inline-flex items-center space-x-6">
                 {NAV.map((item, idx) => {
                   const hasChildren = Array.isArray(item.children);
-                  const active = isActive(item.href) || (hasChildren && item.children.some((c) => isActive(c.href)));
+                  const active =
+                    isActive(item.href) ||
+                    (hasChildren && item.children.some((c) => isActive(c.href)));
                   return (
                     <li key={item.label} className="relative group">
                       {hasChildren ? (
