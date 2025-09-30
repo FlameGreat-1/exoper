@@ -1,4 +1,3 @@
-// components/header/Header.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,7 +41,6 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const headerRef = useRef(null);
 
   useEffect(() => {
@@ -63,14 +61,12 @@ const Header = () => {
 
   useEffect(() => {
     setOpenDropdown(null);
-    setIsMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
         setOpenDropdown(null);
-        setIsMenuOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -98,7 +94,7 @@ const Header = () => {
           buttonTop="18px"
           buttonRight="18px"
           buttonSize="md"
-          buttonColor="linear-gradient(90deg,#8b3cf0,#ff44cc)"
+          buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6)"
           overlayBackground="linear-gradient(180deg,#0b0210 0%, #1f032a 60%)"
           textColor="#fff"
           fontSize="md"
@@ -112,18 +108,20 @@ const Header = () => {
         ref={headerRef}
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-slate-900/90 dark:bg-black/70 backdrop-blur-md shadow-sm py-2"
-            : "bg-transparent py-3"
+            ? "bg-gray-900/90 backdrop-blur-md shadow-sm py-2"
+            : "bg-black/40 backdrop-blur-sm py-3"
         }`}
         aria-label="Primary site header"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-6">
-            <div className="flex items-center gap-6 flex-shrink-0">
-              <Link to="/" aria-label="Flamo — Home" className="flex items-center">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff2dd4] to-[#6b3cff] font-extrabold tracking-tight text-2xl md:text-3xl">
-                  Flamo
-                </span>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <Link to="/" aria-label="Exoper — Home" className="flex items-center">
+                <img 
+                  src="/images/logo.svg" 
+                  alt="Exoper Logo" 
+                  className="h-10 sm:h-12 md:h-14 w-auto"
+                />
               </Link>
             </div>
 
@@ -207,7 +205,7 @@ const Header = () => {
               </ul>
             </nav>
 
-            <div className="flex items-center justify-end flex-shrink-0 space-x-4">
+            <div className="flex items-center justify-end flex-shrink-0">
               <Link
                 to="/start-project"
                 className="hidden md:inline-flex items-center px-4 md:px-6 py-2.5 rounded-full text-sm md:text-base font-semibold bg-gradient-to-r from-[#8b3cf0] to-[#ff2dd4] text-white shadow-lg transform-gpu transition-transform duration-200 hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0]"
@@ -216,69 +214,12 @@ const Header = () => {
                 START A PROJECT
                 <span className="ml-3 inline-block transform rotate-0">→</span>
               </Link>
-
-              <button
-                className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-slate-200 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0]"
-                aria-label="Open menu"
-                onClick={() => setIsMenuOpen((s) => !s)}
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
       </header>
 
       <div className="h-16 md:h-20" />
-
-      <AnimatePresence>
-        {isMenuOpen && isMobile && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            className="md:hidden fixed top-16 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur py-4 shadow-lg"
-          >
-            <div className="px-4">
-              <ul className="space-y-2">
-                {NAV.map((item) => (
-                  <li key={item.label}>
-                    <Link
-                      to={item.href}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="block px-3 py-2 rounded-md text-white font-medium"
-                    >
-                      {item.label}
-                    </Link>
-                    {item.children && (
-                      <ul className="pl-4 mt-1 space-y-1">
-                        {item.children.map((c) => (
-                          <li key={c.href}>
-                            <Link to={c.href} onClick={() => setIsMenuOpen(false)} className="block px-3 py-1 rounded-md text-slate-300 text-sm">
-                              {c.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                ))}
-                <li className="pt-2">
-                  <Link
-                    to="/start-project"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center px-4 py-2 rounded-full bg-gradient-to-r from-[#8b3cf0] to-[#ff2dd4] text-white font-semibold"
-                  >
-                    START A PROJECT
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 };

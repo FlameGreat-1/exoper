@@ -10,6 +10,7 @@ const Hero = () => {
   const [glowingLineIndex, setGlowingLineIndex] = useState(0);
   const [scrollY, setScrollY] = useState(0);
   const heroRef = useRef(null);
+  const animationFrameRef = useRef(null);
 
   const rotatingTexts = ["Optimize Cost, Time & Ship Faster ?", "Build cutting-edge solutions ?", "Ship secure software ?"];
   
@@ -62,9 +63,23 @@ builds.createApp();`
   const mainText = "Let me help you in Transforming ideas into exceptional digital experiences with modern web technologies and creative design solutions.";
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        animationFrameRef.current = window.requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (animationFrameRef.current) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -120,7 +135,7 @@ builds.createApp();`
         ></div>
       </div>
 
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1, willChange: 'auto' }}>
         <defs>
           <linearGradient id="heroGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8">
@@ -134,17 +149,17 @@ builds.createApp();`
             </stop>
           </linearGradient>
           
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+          <filter id="glow" filterUnits="userSpaceOnUse">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
             <feMerge>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
 
-          <filter id="pulseGlow">
+          <filter id="pulseGlow" filterUnits="userSpaceOnUse">
             <feGaussianBlur stdDeviation="2">
-              <animate attributeName="stdDeviation" values="2;4;2" dur="2s" repeatCount="indefinite" />
+              <animate attributeName="stdDeviation" values="2;3;2" dur="2s" repeatCount="indefinite" />
             </feGaussianBlur>
           </filter>
         </defs>
@@ -156,6 +171,7 @@ builds.createApp();`
           fill="none"
           filter="url(#glow)"
           opacity="0.5"
+          vectorEffect="non-scaling-stroke"
         >
           <animate attributeName="stroke-dasharray" from="0 1000" to="1000 0" dur="4s" repeatCount="indefinite" />
         </path>
@@ -167,14 +183,15 @@ builds.createApp();`
           fill="none"
           filter="url(#glow)"
           opacity="0.5"
+          vectorEffect="non-scaling-stroke"
         />
 
         <circle cx="200" cy="150" r="4" fill="#8B5CF6" filter="url(#pulseGlow)">
-          <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
+          <animate attributeName="r" values="4;5;4" dur="2s" repeatCount="indefinite" />
         </circle>
         
         <circle cx="900" cy="250" r="4" fill="#3B82F6" filter="url(#pulseGlow)">
-          <animate attributeName="r" values="4;6;4" dur="2.5s" repeatCount="indefinite" />
+          <animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite" />
         </circle>
       </svg>
 
@@ -316,7 +333,6 @@ builds.createApp();`
             initial={{ opacity: 0, y: 12, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-            style={{ willChange: 'transform' }}
             aria-hidden="true"
           >
             <motion.img
@@ -335,7 +351,6 @@ builds.createApp();`
             initial={{ opacity: 0, y: 12, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
-            style={{ willChange: 'transform' }}
             aria-hidden="true"
           >
             <motion.img
@@ -362,7 +377,6 @@ builds.createApp();`
             initial={{ opacity: 0, y: -12, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-            style={{ willChange: 'transform' }}
             aria-hidden="true"
           >
             <motion.img
@@ -381,7 +395,6 @@ builds.createApp();`
             initial={{ opacity: 0, y: -12, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
-            style={{ willChange: 'transform' }}
             aria-hidden="true"
           >
             <motion.img
@@ -397,13 +410,13 @@ builds.createApp();`
         </div>
       </div>
 
-      <div className="absolute inset-0 w-full h-full" style={{ zIndex: 2 }}>
+      <div className="absolute inset-0 w-full h-full" style={{ zIndex: 2, willChange: 'auto' }}>
         <ParticlesBackground 
           colors={['#8B5CF6', '#3B82F6', '#FFD700']}
           size={3}
-          countDesktop={60}
-          countTablet={50}
-          countMobile={40}
+          countDesktop={50}
+          countTablet={35}
+          countMobile={25}
           zIndex={2}
           height="100%"
           width="100%"
