@@ -147,11 +147,13 @@ const Header = () => {
       <header
         ref={headerRef}
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-          isScrolled
-            ? "bg-gray-900/90 backdrop-blur-md shadow-sm py-2"
-            : "bg-black/40 backdrop-blur-sm py-3"
-        }`}
-        aria-label="Primary site header"
+          isMobile
+            ? "bg-black py-2" // Solid black for mobile, no transparency or blur
+            : isScrolled
+              ? "bg-gray-900/90 backdrop-blur-md shadow-sm py-2"
+              : "bg-black/40 backdrop-blur-sm py-3"
+       }`}
+       aria-label="Primary site header"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-6">
