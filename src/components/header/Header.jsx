@@ -141,19 +141,16 @@ const Header = () => {
           enableBlur={true}
           zIndex={1200}
           currentPath={location.pathname}
+          buttonPosition="right"
         />
       )}
 
       <header
         ref={headerRef}
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-          isMobile
-            ? "bg-black py-2" // Solid black for mobile, no transparency or blur
-            : isScrolled
-              ? "bg-gray-900/90 backdrop-blur-md shadow-sm py-2"
-              : "bg-black/40 backdrop-blur-sm py-3"
-       }`}
-       aria-label="Primary site header"
+          isScrolled ? "bg-black py-2 shadow-sm" : "bg-black py-3"
+        }`}
+        aria-label="Primary site header"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-6">
@@ -212,7 +209,7 @@ const Header = () => {
                                 transition={{ duration: 0.16 }}
                                 onMouseEnter={() => setOpenDropdown(idx)}
                                 onMouseLeave={() => setOpenDropdown(null)}
-                                className="absolute left-1/2 -translate-x-1/2 mt-3 w-56 bg-slate-800/90 backdrop-blur rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 py-2 z-50"
+                                className="absolute left-1/2 -translate-x-1/2 mt-3 w-56 bg-black rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 py-2 z-50"
                                 role="menu"
                                 aria-label={`${item.label} submenu`}
                               >
@@ -223,8 +220,8 @@ const Header = () => {
                                       role="menuitem"
                                       className={`block px-4 py-2 text-sm font-medium transition-colors ${
                                         isActive(child.href)
-                                          ? "text-white bg-slate-900"
-                                          : "text-slate-200 hover:text-white hover:bg-slate-700/40"
+                                          ? "text-white bg-gray-900"
+                                          : "text-slate-200 hover:text-white hover:bg-gray-800"
                                       }`}
                                     >
                                       {child.label}
