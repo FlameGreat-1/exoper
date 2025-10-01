@@ -136,7 +136,7 @@ const Header = () => {
         aria-label="Primary site header"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
               <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-3">
                 <LogoComponent className="h-10 sm:h-12 md:h-14 w-auto scale-150" alt="Exoper Logo" />
@@ -235,11 +235,9 @@ const Header = () => {
             </nav>
 
             {isMobile && (
-              <div className="flex items-center justify-end">
+              <div className="flex items-center h-full">
                 <HamburgerMenuOverlay
                   items={NAV}
-                  buttonTop="18px"
-                  buttonRight="18px"
                   buttonSize="md"
                   buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6)"
                   overlayBackground="linear-gradient(180deg,#0b0210 0%, #1f032a 60%)"
