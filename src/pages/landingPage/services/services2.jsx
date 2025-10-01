@@ -97,7 +97,7 @@ const Projects = () => {
             performant networking
           </h1>
           <p className="text-gray-400 text-lg mb-8 max-w-2xl">
-            Railway provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
+            Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
           </p>
           <button className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2">
             Learn More <ChevronRight className="w-4 h-4" />
@@ -225,7 +225,7 @@ const Projects = () => {
                 <div className="bg-[#0B0E1A] rounded-lg p-4 mb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Activity className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-gray-400">frontend-prod.up.railway.app</span>
+                    <span className="text-sm text-gray-400">frontend-prod.Exoper.app</span>
                   </div>
                   <button className="text-sm text-purple-400 hover:text-purple-300 transition-colors">
                     Just deployed
@@ -246,7 +246,7 @@ const Projects = () => {
                 <div className="bg-[#0B0E1A] rounded-lg p-4 mb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Lock className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm text-gray-400">api-prod.up.railway.app</span>
+                    <span className="text-sm text-gray-400">api-prod.Exoper.app</span>
                   </div>
                   <button className="text-sm text-purple-400 hover:text-purple-300 transition-colors">
                     Just deployed

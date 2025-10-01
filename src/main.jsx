@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './styles/global.css'; // Updated CSS import path
 import App from './App.jsx';
-import Hero from './pages/landingPage/heroPage/hero'; // Changed extension for consistency
+import ServicesPage from './pages/landingPage/services/ServicesPage'; // Import the combined Services component
+import Home from './pages/landingPage/Home'; // Import the new Home component
 
 // Create router with routes
 const router = createBrowserRouter([
@@ -13,7 +14,11 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Hero />
+        element: <Home /> // Home component that includes Hero, Services1, and Services2
+      },
+      {
+        path: '/services', 
+        element: <ServicesPage />, // Use the combined ServicesPage component
       },
       {
         path: '/about',

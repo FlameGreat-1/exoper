@@ -128,7 +128,7 @@ const Projects = () => {
             </h2>
 
             <p className="text-gray-400 text-lg leading-relaxed">
-              Railway provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
+              Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
             </p>
 
             <div className="flex items-center space-x-2 text-white hover:text-purple-400 transition-colors cursor-pointer group">
@@ -175,7 +175,7 @@ const Projects = () => {
                     </div>
                     <div>
                       <div className="text-white font-medium">frontend</div>
-                      <div className="text-purple-400 text-xs">frontend-prod.up.railway.app</div>
+                      <div className="text-purple-400 text-xs">frontend-prod.Exoper.app</div>
                     </div>
                   </div>
                 </div>
@@ -191,7 +191,7 @@ const Projects = () => {
                     <Activity className="w-6 h-6 text-purple-500" />
                     <div>
                       <div className="text-white font-medium text-sm">ackee analytics</div>
-                      <div className="text-purple-400 text-xs">ackee-prod.up.railway.app</div>
+                      <div className="text-purple-400 text-xs">ackee-prod.Exoper.app</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -205,7 +205,7 @@ const Projects = () => {
                     <Globe className="w-6 h-6 text-blue-500" />
                     <div>
                       <div className="text-white font-medium text-sm">api gateway</div>
-                      <div className="text-purple-400 text-xs">api-prod.up.railway.app</div>
+                      <div className="text-purple-400 text-xs">api-prod.Exoper.app</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">

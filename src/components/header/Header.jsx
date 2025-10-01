@@ -5,6 +5,7 @@ import { HamburgerMenuOverlay } from "../ui/hamburger-menu-overlay";
 
 const NAV = [
   { label: "Home", href: "/" },
+  { label: "Services", href: "/services" },
   {
     label: "About",
     href: "/about",
