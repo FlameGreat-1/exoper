@@ -134,7 +134,7 @@ const Projects = () => {
             </h1>
 
             <p className="text-gray-400 text-lg leading-relaxed max-w-lg">
-              Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
+              Railway provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
             </p>
 
             <button className="inline-flex items-center space-x-2 text-white hover:text-purple-400 transition-colors group">
@@ -205,7 +205,7 @@ const Projects = () => {
                     </div>
                     <div>
                       <div className="text-white font-semibold">frontend</div>
-                      <div className="text-purple-400 text-xs mt-0.5">frontend-prod.up.Exoper.app</div>
+                      <div className="text-purple-400 text-xs mt-0.5">frontend-prod.up.railway.app</div>
                     </div>
                   </div>
                 </div>
@@ -225,7 +225,7 @@ const Projects = () => {
                     </div>
                     <div className="flex-1">
                       <div className="text-white font-medium text-sm">ackee analytics</div>
-                      <div className="text-purple-400 text-[11px] mt-0.5 truncate">ackee-prod.up.Exoper.app</div>
+                      <div className="text-purple-400 text-[11px] mt-0.5 truncate">ackee-prod.up.railway.app</div>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center space-x-2">
@@ -241,7 +241,7 @@ const Projects = () => {
                     </div>
                     <div className="flex-1">
                       <div className="text-white font-medium text-sm">api gateway</div>
-                      <div className="text-purple-400 text-[11px] mt-0.5 truncate">api-prod.up.Exoper.app</div>
+                      <div className="text-purple-400 text-[11px] mt-0.5 truncate">api-prod.up.railway.app</div>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center space-x-2">

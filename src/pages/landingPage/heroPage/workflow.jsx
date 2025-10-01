@@ -29,7 +29,7 @@ export default function NetworkFlow() {
             </h1>
             
             <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
-              Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
+              Railway provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
             </p>
             
             <div className="flex items-center gap-2 text-white font-medium">
@@ -97,7 +97,7 @@ export default function NetworkFlow() {
                 </div>
                 <span className="font-medium">ackee analytics</span>
               </div>
-              <div className="text-xs text-gray-400 mb-2">ackee-prod.up.Exoper.app</div>
+              <div className="text-xs text-gray-400 mb-2">ackee-prod.up.railway.app</div>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <CheckCircle className="w-3 h-3" />
                 <span>Just deployed</span>
@@ -134,7 +134,7 @@ export default function NetworkFlow() {
                 </div>
                 <span className="font-medium">frontend</span>
               </div>
-              <div className="text-xs text-gray-400 mb-2">frontend-prod.up.Exoper.app</div>
+              <div className="text-xs text-gray-400 mb-2">frontend-prod.up.railway.app</div>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <CheckCircle className="w-3 h-3" />
                 <span>Just deployed</span>
@@ -157,7 +157,7 @@ export default function NetworkFlow() {
                 </div>
                 <span className="font-medium">api gateway</span>
               </div>
-              <div className="text-xs text-gray-400 mb-2">api-prod.up.Exoper.app</div>
+              <div className="text-xs text-gray-400 mb-2">api-prod.up.railway.app</div>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <CheckCircle className="w-3 h-3" />
                 <span>Just deployed</span>

@@ -1,235 +1,358 @@
+"use client";
+
 import React from 'react';
-import { Globe, CheckCircle, Database } from 'lucide-react';
+import { BorderBeam } from "../../../components/ui/border-beam";
+import { ThreeDScrollTriggerContainer, ThreeDScrollTriggerRow } from "../../../components/ui/3d-scroll-trigger";
 
-export default function NetworkFlow() {
+const Testimonial = () => {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-hidden">
-      {/* Main Content Container */}
-      <div className="flex h-screen">
-        {/* Left Side - Text Content */}
-        <div className="w-2/5 flex flex-col justify-center pl-20 pr-12 relative">
-          {/* Vertical Line with Circle */}
-          <div className="absolute left-20 top-0 bottom-0 w-px">
-            <div className="relative h-full">
-              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3 h-3 bg-purple-500 rounded-full"></div>
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-0.5 h-24 bg-gradient-to-b from-purple-600 to-purple-900"></div>
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 translate-y-24 w-12 h-24 border-l-2 border-b-2 border-purple-900 rounded-bl-3xl"></div>
-            </div>
-          </div>
+    <div className="bg-[#0a0a0f] min-h-screen text-white overflow-x-hidden w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 overflow-hidden">
+        
+        <div className="text-center mb-12 sm:mb-16">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-5">
+            Trusted by the best in business
+          </h1>
+          <p className="text-gray-400 text-base sm:text-lg mb-4 max-w-3xl mx-auto px-4">
+            EXOPER supports great software teams anywhere, they are. Hear from some of the teams, building their products on EXOPER.
+          </p>
+          <a href="#" className="text-purple-400 hover:text-purple-300 text-sm sm:text-base inline-flex items-center gap-2 transition-colors">
+            Read customer stories →
+          </a>
+        </div>
 
-          <div className="space-y-6 z-10">
-            <div className="inline-block">
-              <span className="text-purple-400 text-sm font-medium tracking-wide">Network and Connect</span>
-            </div>
+        <div className="relative mb-32 sm:mb-40 lg:mb-48 overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] max-w-[600px] aspect-square bg-purple-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] max-w-[400px] aspect-square bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+          
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-6xl mx-auto">
             
-            <h1 className="text-5xl font-bold leading-tight">
-              Interconnect your application<br />
-              seamlessly with highly<br />
-              performant networking
-            </h1>
-            
-            <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
-              Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
-            </p>
-            
-            <div className="flex items-center gap-2 text-white font-medium">
-              <span>Learn More</span>
-              <span>→</span>
-            </div>
-
-            {/* Replaces Icons */}
-            <div className="flex items-center gap-4 mt-12 pt-8">
-              <span className="text-gray-500 text-sm flex items-center gap-2">
-                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 2a6 6 0 100 12A6 6 0 008 2zM4 8a4 4 0 118 0 4 4 0 01-8 0z"/>
-                </svg>
-                Replaces
-              </span>
+            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
+              <BorderBeam 
+                size={40} 
+                duration={8} 
+                colorFrom="#7400ff" 
+                colorTo="#9b41ff" 
+                opacity={0.7}
+                glowIntensity={1}
+                pauseOnHover={true}
+              />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                  <img src="/logo1.svg" alt="Amcat" className="w-6 h-6" />
+                </div>
+                <span className="text-white font-semibold text-lg">Amcat</span>
+              </div>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                "EXOPER is where we host all of our backend services along with our databases. It's been an integral part of our infrastructure since the very beginning."
+              </p>
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src="/avatar1.jpg" alt="Paul O'Connell" className="w-full h-full object-cover" />
                 </div>
-                <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center">
-                  <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                <div>
+                  <div className="text-white font-medium text-sm">Paul O'Connell</div>
+                  <div className="text-gray-400 text-xs">Founder & CEO of Amcat</div>
                 </div>
-                <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center text-green-500 font-bold text-xs">
-                  N
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
+              <BorderBeam 
+                size={40} 
+                duration={8} 
+                colorFrom="#7400ff" 
+                colorTo="#9b41ff" 
+                opacity={0.7}
+                glowIntensity={1}
+                pauseOnHover={true}
+                reverse={true}
+              />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                  <img src="/logo-spacex.svg" alt="Spacex" className="w-6 h-6" />
                 </div>
-                <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center">
-                  <div className="w-3 h-3 bg-blue-400" style={{clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'}}>
-                  </div>
+                <span className="text-white font-semibold text-lg">Spacex</span>
+              </div>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                "Even though we already have an internal Kubernetes cluster and infrastructure-at-scale setup, we decided to go with EXOPER so that we weren't spending time writing YAML files when we could be working on the product."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src="/avatar2.jpg" alt="Paul Boller" className="w-full h-full object-cover" />
                 </div>
-                <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-400" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M0 0h7v7H0zM9 0h7v7H9zM0 9h7v7H0zM9 9h7v7H9z"/>
-                  </svg>
+                <div>
+                  <div className="text-white font-medium text-sm">Paul Boller</div>
+                  <div className="text-gray-400 text-xs">Backend Architect at Spacex</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
+              <BorderBeam 
+                size={40} 
+                duration={8} 
+                colorFrom="#7400ff" 
+                colorTo="#9b41ff" 
+                opacity={0.7}
+                glowIntensity={1}
+                pauseOnHover={true}
+              />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                  <img src="/logo2.svg" alt="Resend" className="w-6 h-6" />
+                </div>
+                <span className="text-white font-semibold text-lg">Resend</span>
+              </div>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                "EXOPER is a game changer for us. We're currently serving more than 80,000 developers with a small team... every minute spent on infrastructure is a minute we're not building the best email product in the world.
+              </p>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                If it wasn't for EXOPER, I don't think we would be able to grow as fast as we are today."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src="/avatar3.jpg" alt="Zeno Rocha" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Zeno Rocha</div>
+                  <div className="text-gray-400 text-xs">Founder & CEO of Resend</div>
+                </div>
+              </div>
+            </div>
+            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
+              <BorderBeam 
+                size={40} 
+                duration={8} 
+                colorFrom="#7400ff" 
+                colorTo="#9b41ff" 
+                opacity={0.7}
+                glowIntensity={1}
+                pauseOnHover={true}
+                reverse={true}
+              />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                  <img src="/logo3.svg" alt="Paloma" className="w-6 h-6" />
+                </div>
+                <span className="text-white font-semibold text-lg">Paloma</span>
+              </div>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                "The flexibility and agility for automation with EXOPER helps us move fast and continuously deploy to production with confidence."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src="/avatar4.jpg" alt="Stannis Riviera" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Stannis Riviera</div>
+                  <div className="text-gray-400 text-xs">Managing Director of Paloma Group</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Side - Network Diagram */}
-        <div className="w-3/5 relative flex items-center justify-center">
-          {/* Globe Icons with Dashed Lines */}
-          <div className="absolute top-20 left-32">
-            <Globe className="w-12 h-12 text-purple-600 opacity-50" strokeWidth={1} />
-            <div className="absolute top-16 left-6 w-px h-32 border-l-2 border-dashed border-purple-900"></div>
-          </div>
-          
-          <div className="absolute top-16 left-1/2 -translate-x-1/2">
-            <Globe className="w-12 h-12 text-purple-600 opacity-50" strokeWidth={1} />
-            <div className="absolute top-16 left-6 w-px h-24 border-l-2 border-dashed border-purple-900"></div>
-          </div>
-          
-          <div className="absolute top-24 right-32">
-            <Globe className="w-12 h-12 text-purple-600 opacity-50" strokeWidth={1} />
-            <div className="absolute top-16 left-6 w-px h-32 border-l-2 border-dashed border-purple-900"></div>
-          </div>
-
-          {/* Main Flow Container */}
-          <div className="relative w-full h-full flex items-center justify-center">
-            {/* Ackee Analytics Card - Left */}
-            <div className="absolute left-12 top-1/2 -translate-y-1/2 bg-[#1a1a24] border border-gray-800 rounded-lg p-4 w-56">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-                  <div className="w-4 h-4 bg-teal-300 rounded-full"></div>
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
+            ...and loved by developers
+          </h2>
+          <p className="text-gray-400 text-base sm:text-lg">
+            Join nearly 5M developers building with EXOPER ↗
+          </p>
+        </div>
+        
+        <div className="overflow-hidden w-full">
+          <ThreeDScrollTriggerContainer className="mb-8 overflow-hidden">
+            <ThreeDScrollTriggerRow baseVelocity={3} direction={1} resetIntervalMs={0}>
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev1.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Liam</div>
+                    <div className="text-gray-500 text-xs">@liamtech</div>
+                  </div>
                 </div>
-                <span className="font-medium">ackee analytics</span>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Team is an easier option. Deploying literally anything on @EXOPER_app is now possible in minutes instead of days. Obsessed. ⚡
+                </p>
               </div>
-              <div className="text-xs text-gray-400 mb-2">ackee-prod.up.Exoper.app</div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <CheckCircle className="w-3 h-3" />
-                <span>Just deployed</span>
-              </div>
-            </div>
 
-            {/* Central Shield Icon */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-              <div className="w-16 h-16 rounded-full bg-[#1a1a24] border-2 border-purple-600 flex items-center justify-center">
-                <svg className="w-8 h-8 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  <path d="M9 12l2 2 4-4"/>
-                </svg>
-              </div>
-            </div>
-
-            {/* Connection Lines - Ackee to Shield */}
-            <svg className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{zIndex: 1}}>
-              <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" style={{stopColor: '#4c1d95', stopOpacity: 0.3}} />
-                  <stop offset="100%" style={{stopColor: '#7c3aed', stopOpacity: 0.6}} />
-                </linearGradient>
-              </defs>
-              {/* Ackee to Shield */}
-              <path d="M 280 50% L 48% 50%" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5"/>
-            </svg>
-
-            {/* Frontend Card - Top Right */}
-            <div className="absolute right-1/4 top-32 bg-[#1a1a24] border border-gray-800 rounded-lg p-4 w-56">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center text-black font-bold text-sm">
-                  JS
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev2.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Benjamin Dolinger</div>
+                    <div className="text-gray-500 text-xs">@bendolinger</div>
+                  </div>
                 </div>
-                <span className="font-medium">frontend</span>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  With other apps, infrastructure, and more work to production is @EXOPER_app. Super excited to work with them.
+                </p>
               </div>
-              <div className="text-xs text-gray-400 mb-2">frontend-prod.up.Exoper.app</div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <CheckCircle className="w-3 h-3" />
-                <span>Just deployed</span>
-              </div>
-            </div>
 
-            {/* Connection Lines - Frontend to Shield */}
-            <svg className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{zIndex: 1}}>
-              <path d="M 57% 200 L 52% 45%" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5"/>
-            </svg>
-
-            {/* API Gateway Card - Right Middle */}
-            <div className="absolute right-12 top-1/2 -translate-y-8 bg-[#1a1a24] border border-gray-800 rounded-lg p-4 w-56">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2"/>
-                  </svg>
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev3.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Jenn</div>
+                    <div className="text-gray-500 text-xs">@jennbuilds</div>
+                  </div>
                 </div>
-                <span className="font-medium">api gateway</span>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  @EXOPER_app for prototypes, utilizing the containerized world, infrastructure-as-code, a custom domain local, connect... and that just becomes what you need...
+                </p>
               </div>
-              <div className="text-xs text-gray-400 mb-2">api-prod.up.Exoper.app</div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <CheckCircle className="w-3 h-3" />
-                <span>Just deployed</span>
-              </div>
-            </div>
-
-            {/* Connection Lines - Shield to API Gateway */}
-            <svg className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{zIndex: 1}}>
-              <path d="M 54% 50% L 72% 48%" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5"/>
-            </svg>
-
-            {/* Message Icon - Center Bottom */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-2/3 translate-y-8">
-              <div className="w-12 h-12 rounded-full bg-[#1a1a24] border-2 border-gray-800 flex items-center justify-center">
-                <svg className="w-6 h-6 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
-              </div>
-            </div>
-
-            {/* Connection Lines - Shield to Message and beyond */}
-            <svg className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{zIndex: 1}}>
-              <path d="M 50% 54% L 50% 62%" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5"/>
-              <path d="M 50% 68% L 50% 75%" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5"/>
-              <path d="M 54% 48% L 70% 58%" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5"/>
-            </svg>
-
-            {/* Backend Card - Right Bottom */}
-            <div className="absolute right-20 bottom-32 bg-[#1a1a24] border border-gray-800 rounded-lg p-4 w-56">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                  <div className="w-4 h-4 bg-white rounded"></div>
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev4.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Arnav</div>
+                    <div className="text-gray-500 text-xs">@arnavbuilds</div>
+                  </div>
                 </div>
-                <span className="font-medium">backend</span>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Assisted in organizing my services to @EXOPER_app.
+                </p>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <CheckCircle className="w-3 h-3" />
-                <span>Just deployed</span>
-              </div>
-            </div>
 
-            {/* Postgres Card - Bottom Center */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-20 bg-[#1a1a24] border border-gray-800 rounded-lg p-4 w-56">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Database className="w-5 h-5 text-white" />
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev5.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Team Sparky</div>
+                    <div className="text-gray-500 text-xs">@teamsparky</div>
+                  </div>
                 </div>
-                <span className="font-medium">postgres</span>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  This CLI is deploying a small app on @EXOPER_app - has been promising the team for over seven...
+                </p>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                <CheckCircle className="w-3 h-3" />
-                <span>Just deployed</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-600">
-                <Database className="w-3 h-3" />
-                <span>pg-data</span>
-              </div>
-            </div>
 
-            {/* Connection Lines - Backend to Postgres */}
-            <svg className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{zIndex: 1}}>
-              <path d="M 72% 65% L 58% 78%" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5"/>
-            </svg>
-          </div>
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev11.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Jessica Lee</div>
+                    <div className="text-gray-500 text-xs">@jessicacodes</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Just migrated our entire backend to @EXOPER_app and it's been the smoothest deployment experience I've ever had. Highly recommend!
+                </p>
+              </div>
+            </ThreeDScrollTriggerRow>
 
-          {/* Bottom gradient line */}
-          <div className="absolute bottom-0 left-0 right-0 h-32">
-            <div className="absolute bottom-0 left-20 w-96 h-0.5 bg-gradient-to-r from-purple-900 via-blue-900 to-transparent rounded-full opacity-50"></div>
-            <div className="absolute bottom-0 left-20 w-64 h-16 border-l-2 border-b-2 border-purple-900 rounded-bl-3xl opacity-50"></div>
-          </div>
+            <ThreeDScrollTriggerRow baseVelocity={3} direction={-1} resetIntervalMs={0} className="mt-4">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev6.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Seb</div>
+                    <div className="text-gray-500 text-xs">@sebcodes</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  EXOPER is really really great. Bring rules for making frontend super optimized, developing with confidence, improving my code time and well managing the process.
+                </p>
+              </div>
+
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev7.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Kyle McDermott</div>
+                    <div className="text-gray-500 text-xs">@kylemcdermott</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Damn, @EXOPER_app. Its the first backend I've ever had to deploy that didn't feel like a hassle.
+                </p>
+              </div>
+
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev8.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Jeremy Su</div>
+                    <div className="text-gray-500 text-xs">@jeremysu_</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  @EXOPER_app for prototypes, utilizing the best tools and code, to use my code, with the @EXOPER_app, utilizing.
+                </p>
+              </div>
+
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev9.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Emmanuel - zinkdoor</div>
+                    <div className="text-gray-500 text-xs">@emmanuel</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  I have been EXOPER makes it super easy to just drop my and up to Docker for automated over deploying a server.
+                </p>
+              </div>
+
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev10.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">Marco Eidinger</div>
+                    <div className="text-gray-500 text-xs">@marcoeidinger</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  It easy to love to build on @EXOPER_app.
+                </p>
+              </div>
+
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                    <img src="/dev12.jpg" alt="Developer" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">David Chen</div>
+                    <div className="text-gray-500 text-xs">@davidchendev</div>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  After trying multiple deployment platforms, @EXOPER_app is by far the most developer-friendly. Cut our deployment time by 70% and simplified our workflow.
+                </p>
+              </div>
+            </ThreeDScrollTriggerRow>
+          </ThreeDScrollTriggerContainer>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Testimonial;
+
+
