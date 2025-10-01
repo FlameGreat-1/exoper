@@ -137,15 +137,15 @@ const Header = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
-              <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-3">
-                <LogoComponent className="h-10 sm:h-12 md:h-14 w-auto scale-150" alt="Exoper Logo" />
-                <span
-                  className="text-white font-extrabold uppercase tracking-widest text-xl sm:text-2xl md:text-3xl bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
-                  }}
+          <div className="flex items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
+            <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-1.5">
+              <LogoComponent className="h-10 sm:h-12 md:h-14 w-auto scale-150" alt="Exoper Logo" />
+              <span
+                className="text-white font-extrabold uppercase tracking-widest text-xl sm:text-2xl md:text-3xl bg-clip-text text-transparent -ml-1"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
+                }}
                 >
                   XOPER
                 </span>
