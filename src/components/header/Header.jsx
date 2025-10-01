@@ -237,11 +237,20 @@ const Header = () => {
             {isMobile && (
               <div className="md:hidden">
                 <HamburgerMenuOverlay
-                  items={NAV}
+                  items={NAV.map(item => {
+                    // For mobile, flatten the structure to include children as top-level items
+                    if (item.children) {
+                      return {
+                        ...item,
+                        onClick: undefined // Remove any onClick to ensure it navigates
+                      };
+                    }
+                    return item;
+                  })}
                   buttonTop="30px"
                   buttonLeft="calc(100% - 30px)"
                   buttonSize="md"
-                  buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6)"
+                  buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6, #8B5CF6)"
                   overlayBackground="linear-gradient(180deg,#0b0210 0%, #1f032a 60%)"
                   textColor="#fff"
                   fontSize="md"
@@ -249,6 +258,9 @@ const Header = () => {
                   zIndex={1200}
                   currentPath={location.pathname}
                   className="w-12 h-12 relative"
+                  menuAlignment="center"
+                  staggerDelay={0.05}
+                  animationDuration={0.8}
                 />
               </div>
             )}
