@@ -134,7 +134,7 @@ const Projects = () => {
               </p>
               
               <p className="text-white text-lg mt-12">
-                Welcome to Railway.
+                Welcome to Exoper.
               </p>
             </div>
           </div>
@@ -151,7 +151,7 @@ const Projects = () => {
                   visual canvas
                 </h2>
                 <p className="text-gray-400 text-lg mb-8">
-                  Railway builds and deploys any combination of services,<br />
+                  Exoper builds and deploys any combination of services,<br />
                   volumes, and databases from GitHub or Docker.
                 </p>
                 <button className="text-white hover:text-gray-300 transition-colors flex items-center gap-2 group">
