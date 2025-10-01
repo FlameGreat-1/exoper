@@ -235,9 +235,11 @@ const Header = () => {
             </nav>
 
             {isMobile && (
-              <div className="flex items-center h-full">
+              <div className="md:hidden">
                 <HamburgerMenuOverlay
                   items={NAV}
+                  buttonTop="30px"
+                  buttonLeft="calc(100% - 30px)"
                   buttonSize="md"
                   buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6)"
                   overlayBackground="linear-gradient(180deg,#0b0210 0%, #1f032a 60%)"
@@ -246,6 +248,7 @@ const Header = () => {
                   enableBlur={true}
                   zIndex={1200}
                   currentPath={location.pathname}
+                  className="w-12 h-12 relative"
                 />
               </div>
             )}
