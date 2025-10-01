@@ -128,23 +128,6 @@ const Header = () => {
         Skip to content
       </a>
 
-      {isMobile && (
-        <HamburgerMenuOverlay
-          items={NAV}
-          buttonTop="18px"
-          buttonRight="18px"
-          buttonSize="md"
-          buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6)"
-          overlayBackground="linear-gradient(180deg,#0b0210 0%, #1f032a 60%)"
-          textColor="#fff"
-          fontSize="md"
-          enableBlur={true}
-          zIndex={1200}
-          currentPath={location.pathname}
-          buttonPosition="right"
-        />
-      )}
-
       <header
         ref={headerRef}
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
@@ -251,16 +234,23 @@ const Header = () => {
               </ul>
             </nav>
 
-            <div className="flex items-center justify-end flex-shrink-0">
-              <Link
-                to="/start-project"
-                className="hidden md:inline-flex items-center px-4 md:px-6 py-2.5 rounded-full text-sm md:text-base font-semibold bg-gradient-to-r from-[#8b3cf0] to-[#ff2dd4] text-white shadow-lg transform-gpu transition-transform duration-200 hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0]"
-                aria-label="Start a project"
-              >
-                START A PROJECT
-                <span className="ml-3 inline-block transform rotate-0">→</span>
-              </Link>
-            </div>
+            {isMobile && (
+              <div className="flex items-center justify-end">
+                <HamburgerMenuOverlay
+                  items={NAV}
+                  buttonTop="18px"
+                  buttonRight="18px"
+                  buttonSize="md"
+                  buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6)"
+                  overlayBackground="linear-gradient(180deg,#0b0210 0%, #1f032a 60%)"
+                  textColor="#fff"
+                  fontSize="md"
+                  enableBlur={true}
+                  zIndex={1200}
+                  currentPath={location.pathname}
+                />
+              </div>
+            )}
           </div>
         </div>
       </header>
