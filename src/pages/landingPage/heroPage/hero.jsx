@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ParticlesBackground from "../../../components/ui/particles-background";
 import TerminalCard from "../../../components/ui/terminal-card";
@@ -9,26 +9,33 @@ const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [glowingLineIndex, setGlowingLineIndex] = useState(0);
   const [scrollY, setScrollY] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const heroRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const textIntervalRef = useRef(null);
+  const glowIntervalRef = useRef(null);
 
-  const rotatingTexts = ["Optimize Cost, Time & Ship Faster ?", "Build cutting-edge solutions ?", "Ship secure software ?"];
+  const rotatingTexts = useMemo(() => [
+    "Optimize Cost, Time & Ship Faster ?",
+    "Build cutting-edge solutions ?",
+    "Ship secure software ?"
+  ], []);
   
-  const textColors = [
+  const textColors = useMemo(() => [
     'text-purple-400',
     'text-white',
     'text-blue-400'
-  ];
+  ], []);
   
-  const glowingColors = [
+  const glowingColors = useMemo(() => [
     'rgba(139, 92, 246, 0.8)',
     'rgba(59, 130, 246, 0.8)',
     'rgba(255, 215, 0, 0.8)',
     'rgba(139, 92, 246, 0.8)',
     'rgba(59, 130, 246, 0.8)'
-  ];
+  ], []);
 
-  const terminalCommands = [
+  const terminalCommands = useMemo(() => [
     `// Welcome to my portfolio
 const developer = {
   name: "Emmanuel U. Iziogo",
@@ -58,21 +65,43 @@ const builds = {
 
 // Let's build cutting-edge solutions !
 builds.createApp();`
-  ];
+  ], []);
 
   const mainText = "Let me help you in Transforming ideas into exceptional digital experiences with modern web technologies and creative design solutions.";
 
+  // Detect mobile device
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Optimized scroll handler with throttling
+  useEffect(() => {
+    if (isMobile) return; // Disable scroll parallax on mobile
+    
     let ticking = false;
+    let lastScrollY = 0;
+    
     const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Only update if scroll changed significantly (reduce calculations)
+      if (Math.abs(currentScrollY - lastScrollY) < 5) return;
+      
       if (!ticking) {
         animationFrameRef.current = window.requestAnimationFrame(() => {
-          setScrollY(window.scrollY);
+          setScrollY(currentScrollY);
+          lastScrollY = currentScrollY;
           ticking = false;
         });
         ticking = true;
       }
     };
+    
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -80,16 +109,22 @@ builds.createApp();`
         window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [isMobile]);
 
+  // Text rotation with cleanup
   useEffect(() => {
-    const interval = setInterval(() => {
+    textIntervalRef.current = setInterval(() => {
       setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
     }, 3000);
     
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (textIntervalRef.current) {
+        clearInterval(textIntervalRef.current);
+      }
+    };
+  }, [rotatingTexts.length]);
   
+  // Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -109,12 +144,32 @@ builds.createApp();`
     };
   }, []);
   
+  // Glowing line animation with cleanup
   useEffect(() => {
-    const interval = setInterval(() => {
+    glowIntervalRef.current = setInterval(() => {
       setGlowingLineIndex((prevIndex) => (prevIndex + 1) % glowingColors.length);
     }, 1500);
     
-    return () => clearInterval(interval);
+    return () => {
+      if (glowIntervalRef.current) {
+        clearInterval(glowIntervalRef.current);
+      }
+    };
+  }, [glowingColors.length]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (textIntervalRef.current) {
+        clearInterval(textIntervalRef.current);
+      }
+      if (glowIntervalRef.current) {
+        clearInterval(glowIntervalRef.current);
+      }
+    };
   }, []);
 
   return (
@@ -130,70 +185,55 @@ builds.createApp();`
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 1px)`,
             backgroundSize: '24px 24px',
-            backgroundPosition: `${scrollY * 0.1}px ${scrollY * 0.1}px`
+            backgroundPosition: isMobile ? '0 0' : `${scrollY * 0.1}px ${scrollY * 0.1}px`,
+            willChange: isMobile ? 'auto' : 'background-position'
           }}
         ></div>
       </div>
 
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1, willChange: 'auto' }}>
-        <defs>
-          <linearGradient id="heroGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8">
-              <animate attributeName="stopOpacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
-            </stop>
-            <stop offset="50%" stopColor="#3B82F6" stopOpacity="1">
-              <animate attributeName="stopOpacity" values="1;0.8;1" dur="3s" repeatCount="indefinite" />
-            </stop>
-            <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.8">
-              <animate attributeName="stopOpacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
-            </stop>
-          </linearGradient>
-          
-          <filter id="glow" filterUnits="userSpaceOnUse">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
+      {/* Simplified SVG - removed infinite animations on mobile */}
+      {!isMobile && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+          <defs>
+            <linearGradient id="heroGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#3B82F6" stopOpacity="1" />
+              <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.8" />
+            </linearGradient>
+            
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
 
-          <filter id="pulseGlow" filterUnits="userSpaceOnUse">
-            <feGaussianBlur stdDeviation="2">
-              <animate attributeName="stdDeviation" values="2;3;2" dur="2s" repeatCount="indefinite" />
-            </feGaussianBlur>
-          </filter>
-        </defs>
+          <path
+            d="M 100 100 Q 200 150 300 100 T 500 100"
+            stroke="url(#heroGradient)"
+            strokeWidth="2"
+            fill="none"
+            filter="url(#glow)"
+            opacity="0.5"
+            vectorEffect="non-scaling-stroke"
+          />
 
-        <path
-          d="M 100 100 Q 200 150 300 100 T 500 100"
-          stroke="url(#heroGradient)"
-          strokeWidth="2"
-          fill="none"
-          filter="url(#glow)"
-          opacity="0.5"
-          vectorEffect="non-scaling-stroke"
-        >
-          <animate attributeName="stroke-dasharray" from="0 1000" to="1000 0" dur="4s" repeatCount="indefinite" />
-        </path>
+          <path
+            d="M 800 200 Q 900 250 1000 200 T 1200 200"
+            stroke="url(#heroGradient)"
+            strokeWidth="2"
+            fill="none"
+            filter="url(#glow)"
+            opacity="0.5"
+            vectorEffect="non-scaling-stroke"
+          />
 
-        <path
-          d="M 800 200 Q 900 250 1000 200 T 1200 200"
-          stroke="url(#heroGradient)"
-          strokeWidth="2"
-          fill="none"
-          filter="url(#glow)"
-          opacity="0.5"
-          vectorEffect="non-scaling-stroke"
-        />
-
-        <circle cx="200" cy="150" r="4" fill="#8B5CF6" filter="url(#pulseGlow)">
-          <animate attributeName="r" values="4;5;4" dur="2s" repeatCount="indefinite" />
-        </circle>
-        
-        <circle cx="900" cy="250" r="4" fill="#3B82F6" filter="url(#pulseGlow)">
-          <animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite" />
-        </circle>
-      </svg>
+          <circle cx="200" cy="150" r="4" fill="#8B5CF6" filter="url(#glow)" />
+          <circle cx="900" cy="250" r="4" fill="#3B82F6" filter="url(#glow)" />
+        </svg>
+      )}
 
       <div className="absolute top-1/4 -right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl"></div>
       <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl"></div>
@@ -235,39 +275,21 @@ builds.createApp();`
               {mainText}
             </div>
             
+            {/* Simplified glowing line - single element instead of 5 overlays */}
             <div className="relative w-full h-1 mt-4 overflow-hidden">
-              {glowingColors.map((color, index) => (
-                <motion.div
-                  key={index}
-                  className="absolute inset-0 flex items-center justify-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ 
-                    opacity: glowingLineIndex === index ? 1 : 0,
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <div 
+                  className="h-0.5 w-3/4 mx-auto" 
+                  style={{ 
+                    background: `linear-gradient(90deg, transparent 0%, ${glowingColors[glowingLineIndex]} 20%, ${glowingColors[glowingLineIndex]} 80%, transparent 100%)`,
+                    boxShadow: `0 0 8px ${glowingColors[glowingLineIndex]}`
                   }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div 
-                    className="h-0.5 w-3/4 mx-auto" 
-                    style={{ 
-                      background: `linear-gradient(90deg, transparent 0%, ${color} 20%, ${color} 80%, transparent 100%)`,
-                      boxShadow: `0 0 8px ${color}, 0 0 12px ${color}`
-                    }}
-                  >
-                    <div className="absolute inset-0 flex justify-between">
-                      {[...Array(8)].map((_, i) => (
-                        <div 
-                          key={i} 
-                          className="h-0.5 w-4" 
-                          style={{ 
-                            background: 'transparent',
-                            boxShadow: `0 0 4px ${color}`
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                />
+              </motion.div>
             </div>
           </motion.div>
           
@@ -322,101 +344,95 @@ builds.createApp();`
         </div>
       </div>
 
-      <div
-        className="pointer-events-none hidden xl:block z-20"
-        style={{ position: 'absolute', left: '8%', top: '15%' }}
-        aria-hidden="true"
-      >
-        <div className="space-y-6">
-          <motion.div
-            className="relative w-20 h-20 xl:w-24 xl:h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
-            initial={{ opacity: 0, y: 12, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
+      {/* Simplified avatar animations - no infinite loops on mobile */}
+      {!isMobile && (
+        <>
+          <div
+            className="pointer-events-none hidden xl:block z-20"
+            style={{ position: 'absolute', left: '8%', top: '15%' }}
             aria-hidden="true"
           >
-            <motion.img
-              src="/images/avatars/avatar-left-1.png"
-              alt=""
-              className="object-cover w-full h-full rounded-full"
-              loading="lazy"
-              animate={{ y: [0, -10, 0], rotate: [0, 3, 0] }}
-              transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-            />
-            <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(139,92,246,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
-          </motion.div>
+            <div className="space-y-6">
+              <motion.div
+                className="relative w-20 h-20 xl:w-24 xl:h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
+                initial={{ opacity: 0, y: 12, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
+              >
+                <img
+                  src="/images/avatars/avatar-left-1.png"
+                  alt=""
+                  className="object-cover w-full h-full rounded-full"
+                  loading="lazy"
+                />
+                <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(139,92,246,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
+              </motion.div>
 
-          <motion.div
-            className="relative w-14 h-14 xl:w-16 xl:h-16 rounded-full ring-6 ring-blue-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
-            initial={{ opacity: 0, y: 12, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
+              <motion.div
+                className="relative w-14 h-14 xl:w-16 xl:h-16 rounded-full ring-6 ring-blue-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
+                initial={{ opacity: 0, y: 12, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
+              >
+                <img
+                  src="/images/avatars/avatar-left-2.png"
+                  alt=""
+                  className="object-cover w-full h-full rounded-full"
+                  loading="lazy"
+                />
+                <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(59,130,246,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
+              </motion.div>
+            </div>
+          </div>
+
+          <div
+            className="pointer-events-none hidden xl:block z-20"
+            style={{ position: 'absolute', right: '8%', top: '30%' }}
             aria-hidden="true"
           >
-            <motion.img
-              src="/images/avatars/avatar-left-2.png"
-              alt=""
-              className="object-cover w-full h-full rounded-full"
-              loading="lazy"
-              animate={{ y: [0, -8, 0], rotate: [0, 2, 0] }}
-              transition={{ duration: 4.2, ease: "easeInOut", repeat: Infinity }}
-            />
-            <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(59,130,246,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
-          </motion.div>
-        </div>
-      </div>
+            <div className="space-y-6">
+              <motion.div
+                className="relative w-20 h-20 xl:w-24 xl:h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
+                initial={{ opacity: 0, y: -12, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
+              >
+                <img
+                  src="/images/avatars/avatar-right-1.png"
+                  alt=""
+                  className="object-cover w-full h-full rounded-full"
+                  loading="lazy"
+                />
+                <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(139,92,246,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
+              </motion.div>
 
-      <div
-        className="pointer-events-none hidden xl:block z-20"
-        style={{ position: 'absolute', right: '8%', top: '30%' }}
-        aria-hidden="true"
-      >
-        <div className="space-y-6">
-          <motion.div
-            className="relative w-20 h-20 xl:w-24 xl:h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
-            initial={{ opacity: 0, y: -12, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-            aria-hidden="true"
-          >
-            <motion.img
-              src="/images/avatars/avatar-right-1.png"
-              alt=""
-              className="object-cover w-full h-full rounded-full"
-              loading="lazy"
-              animate={{ y: [0, -10, 0], rotate: [0, -3, 0] }}
-              transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-            />
-            <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(139,92,246,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
-          </motion.div>
+              <motion.div
+                className="relative w-10 h-10 xl:w-12 xl:h-12 rounded-full ring-4 ring-blue-900/12 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
+                initial={{ opacity: 0, y: -12, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
+              >
+                <img
+                  src="/images/avatars/avatar-right-2.png"
+                  alt=""
+                  className="object-cover w-full h-full rounded-full"
+                  loading="lazy"
+                />
+                <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(59,130,246,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
+              </motion.div>
+            </div>
+          </div>
+        </>
+      )}
 
-          <motion.div
-            className="relative w-10 h-10 xl:w-12 xl:h-12 rounded-full ring-4 ring-blue-900/12 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
-            initial={{ opacity: 0, y: -12, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
-            aria-hidden="true"
-          >
-            <motion.img
-              src="/images/avatars/avatar-right-2.png"
-              alt=""
-              className="object-cover w-full h-full rounded-full"
-              loading="lazy"
-              animate={{ y: [0, -8, 0], rotate: [0, -2, 0] }}
-              transition={{ duration: 4.2, ease: "easeInOut", repeat: Infinity }}
-            />
-            <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(59,130,246,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
-          </motion.div>
-        </div>
-      </div>
-
-      <div className="absolute inset-0 w-full h-full" style={{ zIndex: 2, willChange: 'auto' }}>
+      {/* Reduced particle count on mobile */}
+      <div className="absolute inset-0 w-full h-full" style={{ zIndex: 2 }}>
         <ParticlesBackground 
           colors={['#8B5CF6', '#3B82F6', '#FFD700']}
-          size={3}
-          countDesktop={50}
-          countTablet={35}
-          countMobile={25}
+          size={isMobile ? 2 : 3}
+          countDesktop={isMobile ? 15 : 50}
+          countTablet={isMobile ? 10 : 35}
+          countMobile={15}
           zIndex={2}
           height="100%"
           width="100%"
