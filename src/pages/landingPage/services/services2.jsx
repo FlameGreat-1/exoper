@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronRight, GitBranch, Database, Globe, Shield, Zap, Server, Cloud, Lock, Activity, Terminal, Code, Box, Layers, Cpu } from 'lucide-react';
+import { ChevronRight, GitBranch, Database, Globe, Shield, Server, Cloud, Lock, Activity, Terminal, Layers, Cpu } from 'lucide-react';
 
 const Projects = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -26,83 +26,86 @@ const Projects = () => {
   const rocketPosition = scrollProgress * 100;
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0B0E1A] text-white overflow-hidden">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-b from-[#0B0E1A] via-[#101526] to-[#0B0E1A] text-white overflow-hidden relative">
+      <div className="absolute inset-0 pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full" style={{ height: '200vh' }}>
+          <defs>
+            <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.35" />
+              <stop offset="50%" stopColor="#3B82F6" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.35" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          
+          <path
+            d="M 150 100 L 150 400 Q 150 450 200 450 L 600 450 Q 650 450 650 500 L 650 800"
+            stroke="url(#pipeGradient)"
+            strokeWidth="3"
+            fill="none"
+            filter="url(#glow)"
+          />
+          
+          <path
+            d="M 300 200 L 300 350 Q 300 400 350 400 L 700 400"
+            stroke="url(#pipeGradient)"
+            strokeWidth="3"
+            fill="none"
+            filter="url(#glow)"
+          />
+          
+          <path
+            d="M 500 150 L 500 600 Q 500 650 550 650 L 800 650"
+            stroke="url(#pipeGradient)"
+            strokeWidth="3"
+            fill="none"
+            filter="url(#glow)"
+          />
+
+          <g transform={`translate(150, ${100 + rocketPosition * 7})`}>
+            <circle cx="0" cy="0" r="12" fill="#8B5CF6" opacity="0.3">
+              <animate attributeName="r" values="12;15;12" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <polygon points="-6,-10 6,-10 8,5 0,12 -8,5" fill="#8B5CF6" filter="url(#glow)">
+              <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="4s" repeatCount="indefinite"/>
+            </polygon>
+          </g>
+
+          <g transform={`translate(${300 + rocketPosition * 4}, 350)`}>
+            <circle cx="0" cy="0" r="10" fill="#3B82F6" opacity="0.3">
+              <animate attributeName="r" values="10;13;10" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+            <polygon points="-5,-8 5,-8 7,4 0,10 -7,4" fill="#3B82F6" filter="url(#glow)">
+              <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="-360 0 0" dur="3s" repeatCount="indefinite"/>
+            </polygon>
+          </g>
+        </svg>
+      </div>
+
       <div className="relative max-w-7xl mx-auto px-6 py-20">
-        <div className="absolute inset-0 pointer-events-none">
-          <svg className="absolute inset-0 w-full h-full" style={{ height: '200vh' }}>
-            <defs>
-              <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.3" />
-                <stop offset="50%" stopColor="#3B82F6" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.3" />
-              </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            
-            <path
-              d="M 150 100 L 150 400 Q 150 450 200 450 L 600 450 Q 650 450 650 500 L 650 800"
-              stroke="url(#pipeGradient)"
-              strokeWidth="3"
-              fill="none"
-              filter="url(#glow)"
-            />
-            
-            <path
-              d="M 300 200 L 300 350 Q 300 400 350 400 L 700 400"
-              stroke="url(#pipeGradient)"
-              strokeWidth="3"
-              fill="none"
-              filter="url(#glow)"
-            />
-            
-            <path
-              d="M 500 150 L 500 600 Q 500 650 550 650 L 800 650"
-              stroke="url(#pipeGradient)"
-              strokeWidth="3"
-              fill="none"
-              filter="url(#glow)"
-            />
-
-            <g transform={`translate(150, ${100 + rocketPosition * 7})`}>
-              <circle cx="0" cy="0" r="12" fill="#8B5CF6" opacity="0.3">
-                <animate attributeName="r" values="12;15;12" dur="2s" repeatCount="indefinite"/>
-              </circle>
-              <polygon points="-6,-10 6,-10 8,5 0,12 -8,5" fill="#8B5CF6" filter="url(#glow)">
-                <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="4s" repeatCount="indefinite"/>
-              </polygon>
-            </g>
-
-            <g transform={`translate(${300 + rocketPosition * 4}, 350)`}>
-              <circle cx="0" cy="0" r="10" fill="#3B82F6" opacity="0.3">
-                <animate attributeName="r" values="10;13;10" dur="1.5s" repeatCount="indefinite"/>
-              </circle>
-              <polygon points="-5,-8 5,-8 7,4 0,10 -7,4" fill="#3B82F6" filter="url(#glow)">
-                <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="-360 0 0" dur="3s" repeatCount="indefinite"/>
-              </polygon>
-            </g>
-          </svg>
-        </div>
-
+        <section className="relative z-10 mb-32 flex justify-end">
+          <div className="text-right max-w-2xl">
+            <div className="text-sm text-purple-400 mb-4 tracking-wide">Network and Connect</div>
+            <h1 className="text-5xl font-bold mb-6 leading-tight">
+              Interconnect your application<br />
+              seamlessly with highly<br />
+              performant networking
+            </h1>
+            <p className="text-gray-400 text-lg mb-8">
+              Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
+            </p>
+            <button className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2 ml-auto">
+              Learn More <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </section>
         <section className="relative z-10 mb-32">
-          <div className="text-sm text-purple-400 mb-4 tracking-wide">Network and Connect</div>
-          <h1 className="text-5xl font-bold mb-6 leading-tight">
-            Interconnect your application<br />
-            seamlessly with highly<br />
-            performant networking
-          </h1>
-          <p className="text-gray-400 text-lg mb-8 max-w-2xl">
-            Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
-          </p>
-          <button className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2">
-            Learn More <ChevronRight className="w-4 h-4" />
-          </button>
-
           <div className="grid grid-cols-3 gap-8 mt-20">
             <div className="bg-[#1A1F2E] rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
               <div className="flex items-center gap-3 mb-4">
@@ -304,3 +307,4 @@ const Projects = () => {
 };
 
 export default Projects;
+

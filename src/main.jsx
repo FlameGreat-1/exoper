@@ -5,6 +5,7 @@ import './styles/global.css'; // Updated CSS import path
 import App from './App.jsx';
 import ServicesPage from './pages/landingPage/services/ServicesPage'; // Import the combined Services component
 import Home from './pages/landingPage/Home'; // Import the new Home component
+import AboutCompany from './pages/landingPage/about/aboutCompany'; // Import the combined About component
 
 // Create router with routes
 const router = createBrowserRouter([
@@ -22,7 +23,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/about',
-        element: <div>About Page</div>, // Placeholder for About page
+        element: <AboutCompany />, // Use the combined AboutCompany component
       },
       {
         path: '/projects',

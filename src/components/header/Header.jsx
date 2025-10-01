@@ -2,13 +2,15 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HamburgerMenuOverlay } from "../ui/hamburger-menu-overlay";
+import CompanyDropdownCard from "../ui/company/aboutCard";
 
 const NAV = [
   { label: "Home", href: "/" },
   { label: "Services", href: "/services" },
   {
-    label: "About",
+    label: "Company",
     href: "/about",
+    hasCustomDropdown: true,
     children: [
       { label: "Who I am", href: "/about#who" },
       { label: "Process", href: "/about#process" },
@@ -161,12 +163,47 @@ const Header = () => {
               <ul className="inline-flex items-center space-x-6">
                 {NAV.map((item, idx) => {
                   const hasChildren = Array.isArray(item.children);
+                  const hasCustomDropdown = item.hasCustomDropdown;
                   const active =
                     isActive(item.href) ||
                     (hasChildren && item.children.some((c) => isActive(c.href)));
                   return (
                     <li key={item.label} className="relative group">
-                      {hasChildren ? (
+                      {hasCustomDropdown ? (
+                        <>
+                          <button
+                            onMouseEnter={() => setOpenDropdown(idx)}
+                            onMouseLeave={() => setOpenDropdown(null)}
+                            onFocus={() => setOpenDropdown(idx)}
+                            onBlur={() => setOpenDropdown(null)}
+                            aria-haspopup="true"
+                            aria-expanded={openDropdown === idx}
+                            className={`uppercase tracking-widest text-sm font-semibold transition-colors px-2 py-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
+                              active
+                                ? "text-[#ff2dd4]"
+                                : "text-slate-200 hover:text-[#ff2dd4] dark:text-slate-300"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+
+                          <AnimatePresence>
+                            {openDropdown === idx && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.16 }}
+                                onMouseEnter={() => setOpenDropdown(idx)}
+                                onMouseLeave={() => setOpenDropdown(null)}
+                                className="absolute left-1/2 -translate-x-1/2 mt-3 z-50"
+                              >
+                                <CompanyDropdownCard />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </>
+                      ) : hasChildren ? (
                         <>
                           <button
                             onMouseEnter={() => setOpenDropdown(idx)}
@@ -239,11 +276,10 @@ const Header = () => {
               <div className="md:hidden">
                 <HamburgerMenuOverlay
                   items={NAV.map(item => {
-                    // For mobile, flatten the structure to include children as top-level items
                     if (item.children) {
                       return {
                         ...item,
-                        onClick: undefined // Remove any onClick to ensure it navigates
+                        onClick: undefined
                       };
                     }
                     return item;

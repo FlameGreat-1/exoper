@@ -120,11 +120,11 @@ const Projects = () => {
           <div className="flex flex-col justify-center space-y-6">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-              <span className="text-purple-400 text-sm font-medium tracking-wide">Network and Connect</span>
+              <span className="text-purple-400 text-sm font-medium tracking-wide">AI Integration, Governance, Securty and Compliance</span>
             </div>
 
             <h2 className="text-5xl font-bold text-white leading-tight">
-              Interconnect your application seamlessly with highly performant networking
+              Integrate AI into your business with Exoper Zero Trust Security API Gateway
             </h2>
 
             <p className="text-gray-400 text-lg leading-relaxed">
