@@ -1,313 +1,355 @@
-import React, { useRef, useEffect, useState } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useSpring,
-} from "framer-motion";
+"use client";
 
-/**
- * PROJECTS.JSX
- * ---------------------------------------------------------------------------
- * A single-file React + Tailwind component that reproduces a dark landing
- * section with animated pipe/wire SVGs, flow diagram cards, and rockets that
- * travel along the wires in response to the page scroll. This file is
- * intentionally self-contained and uses only inline SVGs and CSS classes
- * (Tailwind) for styling. It uses Framer Motion for smooth motion and
- * useScroll for scroll progress.
- *
- * HOW TO USE
- * - Place this file in your React (Vite) project (e.g. src/components/Projects.jsx)
- * - Ensure Tailwind CSS is configured and Framer Motion is installed.
- * - Import and render <Projects /> on a page. Header is intentionally excluded
- *   as requested by the user.
- *
- * NOTES ON ACCURACY
- * - The layout, colors, glow, and animations are designed to closely match
- *   the provided screenshots. Exact pixel-perfect replication can require
- *   tuning of spacing values and SVG curve control points; adjust if needed.
- */
+import React from 'react';
+import { BorderBeam } from "../../../components/ui/border-beam";
+import { ThreeDScrollTriggerContainer, ThreeDScrollTriggerRow } from "../../../components/ui/3d-scroll-trigger";
 
-// Utility: simple clamp
-const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-
-export default function Projects() {
-  const containerRef = useRef(null);
-
-  // Global scroll progress for the container (0..1)
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start end", "end start"] });
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 25 });
-
-  // Map global progress to local segments for two rockets (top pipe, bottom pipe)
-  // The maps are loose and can be tweaked to match the original.
-  const topRocketProgress = useTransform(smoothProgress, [0, 0.7, 1], [0, 0.9, 1]);
-  const middleRocketProgress = useTransform(smoothProgress, [0.15, 0.65, 1], [0, 0.8, 1]);
-
-  // Have a spring for nicer motion
-  const topRocketSpring = useSpring(topRocketProgress, { stiffness: 200, damping: 30 });
-  const middleRocketSpring = useSpring(middleRocketProgress, { stiffness: 220, damping: 28 });
-
-  // Refs to SVG path elements so we can query length and points
-  const topPathRef = useRef(null);
-  const middlePathRef = useRef(null);
-
-  // Coordinates for rockets
-  const [topRocketCoords, setTopRocketCoords] = useState({ x: 0, y: 0, angle: 0 });
-  const [middleRocketCoords, setMiddleRocketCoords] = useState({ x: 0, y: 0, angle: 0 });
-
-  // Helper that samples path and sets coordinates
-  useEffect(() => {
-    let mounted = true;
-    const unsubTop = topRocketSpring.onChange((p) => {
-      const path = topPathRef.current;
-      if (!path) return;
-      const len = path.getTotalLength();
-      const clamped = clamp(p, 0, 1);
-      const point = path.getPointAtLength(len * clamped);
-      // find a small forward point to calculate angle
-      const ahead = path.getPointAtLength(Math.min(len, len * clamped + 1));
-      const angle = Math.atan2(ahead.y - point.y, ahead.x - point.x) * (180 / Math.PI);
-      if (mounted) setTopRocketCoords({ x: point.x, y: point.y, angle });
-    });
-    const unsubMid = middleRocketSpring.onChange((p) => {
-      const path = middlePathRef.current;
-      if (!path) return;
-      const len = path.getTotalLength();
-      const clamped = clamp(p, 0, 1);
-      const point = path.getPointAtLength(len * clamped);
-      const ahead = path.getPointAtLength(Math.min(len, len * clamped + 1));
-      const angle = Math.atan2(ahead.y - point.y, ahead.x - point.x) * (180 / Math.PI);
-      if (mounted) setMiddleRocketCoords({ x: point.x, y: point.y, angle });
-    });
-
-    return () => {
-      mounted = false;
-      if (unsubTop) unsubTop();
-      if (unsubMid) unsubMid();
-    };
-  }, [topRocketSpring, middleRocketSpring]);
-
-  // Flow nodes data
-  const nodes = [
-    { id: "frontend", title: "frontend", subtitle: "frontend-prod.up.railway.app", x: 720, y: 120 },
-    { id: "api", title: "api gateway", subtitle: "api-prod.up.railway.app", x: 920, y: 220 },
-    { id: "backend", title: "backend", subtitle: "Just deployed", x: 920, y: 320 },
-    { id: "analytics", title: "ackee analytics", subtitle: "ackee-prod.up.railway.app", x: 600, y: 220 },
-    { id: "postgres", title: "postgres", subtitle: "pg-data", x: 740, y: 360 },
-  ];
-
-  // small helper to animate nodes into view
-  const cardVariants = {
-    off: { opacity: 0, y: 12, scale: 0.98 },
-    on: (i) => ({ opacity: 1, y: 0, scale: 1, transition: { delay: i * 0.08, duration: 0.6 } }),
-  };
-
+const Testimonial = () => {
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#050507] text-white overflow-hidden relative">
-      {/* Centered content wrapper */}
-      <div className="max-w-[1200px] mx-auto py-28 px-6">
-        {/* Two-column layout: left text, right flow diagram */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          {/* LEFT COLUMN: Content / heading */}
-          <div className="lg:col-span-5">
-            <div className="max-w-lg">
-              <p className="text-sm text-[#8b5cf6] mb-3">Network and Connect</p>
-              <h1 className="text-3xl sm:text-4xl font-bold leading-tight mb-4">Interconnect your application seamlessly with highly performant networking</h1>
-              <p className="text-sm text-[#8b98a6] mb-6">Railway provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.</p>
+    <div className="bg-[#0a0a0f] min-h-screen text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+        
+        <div className="text-center mb-12 sm:mb-16">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-5">
+            Trusted by the best in business
+          </h1>
+          <p className="text-gray-400 text-base sm:text-lg mb-4 max-w-3xl mx-auto px-4">
+            EXOPER supports great software teams anywhere, they are. Hear from some of the teams, building their products on EXOPER.
+          </p>
+          <a href="#" className="text-purple-400 hover:text-purple-300 text-sm sm:text-base inline-flex items-center gap-2 transition-colors">
+            Read customer stories →
+          </a>
+        </div>
 
-              <div className="flex items-center gap-3 text-xs text-[#9aa6b0]">
-                <button className="px-3 py-2 rounded-md border border-[#2b2f36] bg-[#0b0b0c] hover:bg-[rgba(255,255,255,0.02)]">Learn More →</button>
-                <div className="flex items-center gap-2 opacity-80">
-                  {/* Small icons placeholders */}
-                  <div className="w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center">R</div>
-                  <div className="w-6 h-6 rounded-full bg-[#18181b] flex items-center justify-center">N</div>
+        <div className="relative mb-32 sm:mb-40 lg:mb-48">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+          
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-6xl mx-auto">
+            
+            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
+              <BorderBeam 
+                size={40} 
+                duration={8} 
+                colorFrom="#7400ff" 
+                colorTo="#9b41ff" 
+                opacity={0.7}
+                glowIntensity={1}
+                pauseOnHover={true}
+              />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                  <img src="/logo1.svg" alt="Amcat" className="w-6 h-6" />
+                </div>
+                <span className="text-white font-semibold text-lg">Amcat</span>
+              </div>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                "EXOPER is where we host all of our backend services along with our databases. It's been an integral part of our infrastructure since the very beginning."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src="/avatar1.jpg" alt="Paul O'Connell" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Paul O'Connell</div>
+                  <div className="text-gray-400 text-xs">Founder & CEO of Amcat</div>
                 </div>
               </div>
             </div>
 
-            {/* Decorative left vertical pipe (like screenshot) */}
-            <div className="mt-16 relative h-[420px]">
-              <svg className="absolute left-0 top-0 h-full w-24" viewBox="0 0 80 420" preserveAspectRatio="xMinYMid slice">
-                {/* vertical pipe track */}
-                <defs>
-                  <linearGradient id="pipeGradient" x1="0" x2="1">
-                    <stop offset="0%" stopColor="#6d28d9" stopOpacity="0.7" />
-                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.25" />
-                  </linearGradient>
-                </defs>
-                <path d="M40 8 L40 80 C40 120 40 120 20 150 L10 160" stroke="url(#pipeGradient)" strokeWidth="6" strokeLinecap="round" fill="none" />
-                {/* small glow dot */}
-                <circle cx="40" cy="80" r="6" fill="#7c3aed" opacity="0.9" />
-              </svg>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN: Flow Diagram */}
-          <div className="lg:col-span-7 relative">
-            {/* SVG canvas for pipes / wires */}
-            <div className="relative h-[520px] w-full">
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1100 520" preserveAspectRatio="xMidYMid slice">
-                <defs>
-                  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="6" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-
-                {/* Top wire path */}
-                <path
-                  ref={topPathRef}
-                  id="topWire"
-                  d="M200 120 C300 80 420 80 520 120 C610 150 660 170 720 140"
-                  stroke="#1f2937"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  fill="none"
-                  style={{ filter: "url(#glow)" }}
-                />
-                {/* middle wire path */}
-                <path
-                  ref={middlePathRef}
-                  id="middleWire"
-                  d="M260 320 C380 280 520 260 660 320 C740 360 820 380 920 360"
-                  stroke="#0f172a"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  fill="none"
-                  style={{ filter: "url(#glow)" }}
-                />
-
-                {/* Decorative dot pattern behind nodes */}
-                <g opacity="0.06">
-                  {Array.from({ length: 200 }).map((_, i) => {
-                    const cx = 400 + (i % 20) * 20;
-                    const cy = 40 + Math.floor(i / 20) * 20;
-                    return <circle key={i} cx={cx} cy={cy} r="1.2" fill="#9ca3af" />;
-                  })}
-                </g>
-
-                {/* Draw connectors from wires to nodes (small animated circles) */}
-                <motion.circle cx="520" cy="120" r="6" fill="#06b6d4" opacity={0.9} animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} />
-                <motion.circle cx="660" cy="320" r="6" fill="#7c3aed" opacity={0.9} animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2, delay: 0.3 }} />
-
-                {/* Top rocket - positioned via absolute div over svg, but we draw a small path head for reference here (optional) */}
-              </svg>
-
-              {/* Rocket elements: absolutely positioned - their coordinates are in SVG space; we must transform to DOM */}
-              <Rocket x={topRocketCoords.x} y={topRocketCoords.y} angle={topRocketCoords.angle} color="#7c3aed" size={22} containerViewBox={{ width: 1100, height: 520 }} containerClassName="absolute left-0 top-0 w-full h-full pointer-events-none" />
-              <Rocket x={middleRocketCoords.x} y={middleRocketCoords.y} angle={middleRocketCoords.angle} color="#06b6d4" size={20} containerViewBox={{ width: 1100, height: 520 }} containerClassName="absolute left-0 top-0 w-full h-full pointer-events-none" />
-
-              {/* Flow cards (nodes) - absolutely positioned to match screenshot layout */}
-              {nodes.map((n, i) => (
-                <motion.div
-                  key={n.id}
-                  custom={i}
-                  initial="off"
-                  whileInView="on"
-                  viewport={{ once: false, amount: 0.2 }}
-                  variants={cardVariants}
-                  className="absolute bg-[#0b0b0d] border border-[#1f2937] rounded-lg shadow-2xl p-4 w-48"
-                  style={{ left: n.x, top: n.y }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xs text-[#9ca3af]">{n.id === 'frontend' ? <strong className="uppercase tracking-wide text-[#f3f4f6]">{n.title}</strong> : <span className="text-sm font-semibold">{n.title}</span>}</div>
-                      <div className="text-[11px] text-[#7b8794]">{n.subtitle}</div>
-                    </div>
-                    <div className="text-[11px] text-[#22c1ff]">●</div>
-                  </div>
-                </motion.div>
-              ))}
-
-              {/* Large backend card lower-left to emulate screenshot cluster */}
-              <motion.div className="absolute left-48 top-[380px] w-64 bg-[#0b0b0d] border border-[#1f2937] rounded-lg p-4 shadow-2xl" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}>
-                <div className="text-sm font-semibold">backend [EU]</div>
-                <div className="text-xs text-[#7b8794] mt-2">Just deployed via CLI</div>
-                <div className="mt-3 w-full h-12 bg-[#05060a] rounded-md border border-[#15161a] flex items-center justify-center text-[10px] text-[#9aa6b0]">16x CPU</div>
-              </motion.div>
-
+            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
+              <BorderBeam 
+                size={40} 
+                duration={8} 
+                colorFrom="#7400ff" 
+                colorTo="#9b41ff" 
+                opacity={0.7}
+                glowIntensity={1}
+                pauseOnHover={true}
+                reverse={true}
+              />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                  <img src="/logo-spacex.svg" alt="Spacex" className="w-6 h-6" />
+                </div>
+                <span className="text-white font-semibold text-lg">Spacex</span>
+              </div>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                "Even though we already have an internal Kubernetes cluster and infrastructure-at-scale setup, we decided to go with EXOPER so that we weren't spending time writing YAML files when we could be working on the product."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src="/avatar2.jpg" alt="Paul Boller" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Paul Boller</div>
+                  <div className="text-gray-400 text-xs">Backend Architect at Spacex</div>
+                </div>
+              </div>
             </div>
 
-            {/* Bottom section: scale and grow (small text) */}
-            <div className="mt-8 text-right text-sm text-[#9aa6b0]">Scale your applications with intuitive controls</div>
+            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
+              <BorderBeam 
+                size={40} 
+                duration={8} 
+                colorFrom="#7400ff" 
+                colorTo="#9b41ff" 
+                opacity={0.7}
+                glowIntensity={1}
+                pauseOnHover={true}
+              />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                  <img src="/logo2.svg" alt="Resend" className="w-6 h-6" />
+                </div>
+                <span className="text-white font-semibold text-lg">Resend</span>
+              </div>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                "EXOPER is a game changer for us. We're currently serving more than 80,000 developers with a small team... every minute spent on infrastructure is a minute we're not building the best email product in the world.
+              </p>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                If it wasn't for EXOPER, I don't think we would be able to grow as fast as we are today."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src="/avatar3.jpg" alt="Zeno Rocha" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Zeno Rocha</div>
+                  <div className="text-gray-400 text-xs">Founder & CEO of Resend</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
+              <BorderBeam 
+                size={40} 
+                duration={8} 
+                colorFrom="#7400ff" 
+                colorTo="#9b41ff" 
+                opacity={0.7}
+                glowIntensity={1}
+                pauseOnHover={true}
+                reverse={true}
+              />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                  <img src="/logo3.svg" alt="Paloma" className="w-6 h-6" />
+                </div>
+                <span className="text-white font-semibold text-lg">Paloma</span>
+              </div>
+              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
+                "The flexibility and agility for automation with EXOPER helps us move fast and continuously deploy to production with confidence."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src="/avatar4.jpg" alt="Stannis Riviera" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Stannis Riviera</div>
+                  <div className="text-gray-400 text-xs">Managing Director of Paloma Group</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
+            ...and loved by developers
+          </h2>
+          <p className="text-gray-400 text-base sm:text-lg">
+            Join nearly 5M developers building with EXOPER ↗
+          </p>
+        </div>
+        <ThreeDScrollTriggerContainer className="mb-8">
+          <ThreeDScrollTriggerRow baseVelocity={3} direction={1} resetIntervalMs={0}>
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev1.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Liam</div>
+                  <div className="text-gray-500 text-xs truncate">@liamtech</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                Team is an easier option. Deploying literally anything on @EXOPER_app is now possible in minutes instead of days. Obsessed. ⚡
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev2.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Benjamin Dolinger</div>
+                  <div className="text-gray-500 text-xs truncate">@bendolinger</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                With other apps, infrastructure, and more work to production is @EXOPER_app. Super excited to work with them.
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev3.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Jenn</div>
+                  <div className="text-gray-500 text-xs truncate">@jennbuilds</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                @EXOPER_app for prototypes, utilizing the containerized world, infrastructure-as-code, a custom domain local, connect... and that just becomes what you need...
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev4.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Arnav</div>
+                  <div className="text-gray-500 text-xs truncate">@arnavbuilds</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                Assisted in organizing my services to @EXOPER_app.
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev5.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Team Sparky</div>
+                  <div className="text-gray-500 text-xs truncate">@teamsparky</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                This CLI is deploying a small app on @EXOPER_app - has been promising the team for over seven...
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev11.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Jessica Lee</div>
+                  <div className="text-gray-500 text-xs truncate">@jessicacodes</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                Just migrated our entire backend to @EXOPER_app and it's been the smoothest deployment experience I've ever had. Highly recommend!
+              </p>
+            </div>
+          </ThreeDScrollTriggerRow>
+
+          <ThreeDScrollTriggerRow baseVelocity={3} direction={-1} resetIntervalMs={0} className="mt-4">
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev6.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Seb</div>
+                  <div className="text-gray-500 text-xs truncate">@sebcodes</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                EXOPER is really really great. Bring rules for making frontend super optimized, developing with confidence, improving my code time and well managing the process.
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev7.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Kyle McDermott</div>
+                  <div className="text-gray-500 text-xs truncate">@kylemcdermott</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                Damn, @EXOPER_app. Its the first backend I've ever had to deploy that didn't feel like a hassle.
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev8.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Jeremy Su</div>
+                  <div className="text-gray-500 text-xs truncate">@jeremysu_</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                @EXOPER_app for prototypes, utilizing the best tools and code, to use my code, with the @EXOPER_app, utilizing.
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev9.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Emmanuel - zinkdoor</div>
+                  <div className="text-gray-500 text-xs truncate">@emmanuel</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                I have been EXOPER makes it super easy to just drop my and up to Docker for automated over deploying a server.
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev10.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">Marco Eidinger</div>
+                  <div className="text-gray-500 text-xs truncate">@marcoeidinger</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                It easy to love to build on @EXOPER_app.
+              </p>
+            </div>
+
+            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
+                  <img src="/dev12.jpg" alt="Developer" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium text-sm truncate">David Chen</div>
+                  <div className="text-gray-500 text-xs truncate">@davidchendev</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed break-words">
+                After trying multiple deployment platforms, @EXOPER_app is by far the most developer-friendly. Cut our deployment time by 70% and simplified our workflow.
+              </p>
+            </div>
+          </ThreeDScrollTriggerRow>
+        </ThreeDScrollTriggerContainer>
       </div>
     </div>
   );
-}
+};
 
-/**
- * Rocket component
- * - x,y are in SVG coordinate space (matching the svg viewBox width/height)
- * - we render the rocket as an HTML absolute element overlaying the SVG and
- *   translate the SVG coordinates to DOM pixels using the container bounding box
- */
-function Rocket({ x = 0, y = 0, angle = 0, color = "#7c3aed", size = 20, containerViewBox = { width: 1100, height: 520 }, containerClassName = "" }) {
-  const elRef = useRef(null);
-  const wrapperRef = useRef(null);
-  const [style, setStyle] = useState({ left: -9999, top: -9999, rotate: 0 });
-
-  // convert svg coordinate to DOM pixels by comparing viewBox to wrapper size
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const update = () => {
-      const { width: domW, height: domH } = wrapper.getBoundingClientRect();
-      const svgW = containerViewBox.width;
-      const svgH = containerViewBox.height;
-      // maintain aspect ratio (preserveAspectRatio="xMidYMid slice") used in svg
-      // we approximate by scaling both by min(domW/svgW, domH/svgH) and centering
-      const scale = Math.min(domW / svgW, domH / svgH);
-      const offsetX = (domW - svgW * scale) / 2;
-      const offsetY = (domH - svgH * scale) / 2;
-      const left = offsetX + x * scale - size / 2;
-      const top = offsetY + y * scale - size / 2;
-      setStyle({ left, top, rotate: angle });
-    };
-    update();
-    // update on resize
-    const ro = new ResizeObserver(update);
-    ro.observe(wrapper);
-    return () => ro.disconnect();
-  }, [x, y, angle, size, containerViewBox]);
-
-  // subtle bobbing animation to make rocket feel alive
-  const bobY = useSpring(0, { stiffness: 80, damping: 8 });
-  useEffect(() => {
-    let mounted = true;
-    let t = 0;
-    const loop = () => {
-      if (!mounted) return;
-      t += 0.03;
-      const v = Math.sin(t) * 3; // +/- 3 px
-      bobY.set(v);
-      requestAnimationFrame(loop);
-    };
-    loop();
-    return () => (mounted = false);
-  }, []);
-
-  return (
-    <div ref={wrapperRef} className={containerClassName} style={{ position: "absolute", inset: 0 }}>
-      <motion.div
-        ref={elRef}
-        className="absolute pointer-events-none"
-        style={{ left: style.left, top: style.top, rotate: `${style.rotate}deg`, zIndex: 60 }}
-        animate={{ y: [0, -4, 0] }}
-        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-      >
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(2 2)">
-            <path d="M8 0 L10 8 L8 6 L6 8 Z" fill={color} opacity="0.95" />
-            <rect x="3" y="7" width="8" height="6" rx="2" fill="#0b1020" stroke={color} strokeWidth="0.8" />
-            <circle cx="7" cy="10" r="1.2" fill="#0ea5e9" />
-          </g>
-        </svg>
-      </motion.div>
-    </div>
-  );
-}
+export default Testimonial;
