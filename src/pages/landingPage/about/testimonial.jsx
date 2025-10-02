@@ -209,7 +209,7 @@ const Testimonial = () => {
                   @EXOPER_app for prototypes, utilizing the containerized world, infrastructure-as-code, a custom domain local, connect... and that just becomes what you need...
                 </p>
               </div>
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev4.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -219,12 +219,12 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@arnavbuilds</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   Assisted in organizing my services to @EXOPER_app.
                 </p>
               </div>
 
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev5.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -234,12 +234,12 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@teamsparky</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   This CLI is deploying a small app on @EXOPER_app - has been promising the team for over seven...
                 </p>
               </div>
 
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev11.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -249,14 +249,14 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@jessicacodes</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   Just migrated our entire backend to @EXOPER_app and it's been the smoothest deployment experience I've ever had. Highly recommend!
                 </p>
               </div>
             </ThreeDScrollTriggerRow>
 
             <ThreeDScrollTriggerRow baseVelocity={3} direction={-1} resetIntervalMs={0} className="mt-4">
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev6.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -266,12 +266,12 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@sebcodes</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   EXOPER is really really great. Bring rules for making frontend super optimized, developing with confidence, improving my code time and well managing the process.
                 </p>
               </div>
 
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev7.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -281,12 +281,12 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@kylemcdermott</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   Damn, @EXOPER_app. Its the first backend I've ever had to deploy that didn't feel like a hassle.
                 </p>
               </div>
 
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev8.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -296,12 +296,12 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@jeremysu_</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   @EXOPER_app for prototypes, utilizing the best tools and code, to use my code, with the @EXOPER_app, utilizing.
                 </p>
               </div>
 
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev9.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -311,12 +311,12 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@emmanuel</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   I have been EXOPER makes it super easy to just drop my and up to Docker for automated over deploying a server.
                 </p>
               </div>
 
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev10.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -326,12 +326,12 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@marcoeidinger</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   It easy to love to build on @EXOPER_app.
                 </p>
               </div>
 
-              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col">
+              <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 pb-6 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[300px] mx-2 flex flex-col min-h-[200px]">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
                     <img src="/dev12.jpg" alt="Developer" className="w-full h-full object-cover" />
@@ -341,7 +341,7 @@ const Testimonial = () => {
                     <div className="text-gray-500 text-xs">@davidchendev</div>
                   </div>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
                   After trying multiple deployment platforms, @EXOPER_app is by far the most developer-friendly. Cut our deployment time by 70% and simplified our workflow.
                 </p>
               </div>
@@ -355,4 +355,5 @@ const Testimonial = () => {
 
 export default Testimonial;
 
+              
 

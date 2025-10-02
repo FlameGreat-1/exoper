@@ -181,7 +181,7 @@ const Projects = () => {
                 </div>
                 <div className="mt-3 flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-gray-400 text-xs">Just deployed</span>
+                  <span className="text-gray-400 text-xs">Modern UI to run and beta-test LLMs Models before inetgration. Deploy With our UI let's handle all interactions</span>
                 </div>
               </div>
 
@@ -190,13 +190,13 @@ const Projects = () => {
                   <div className="flex items-center space-x-3 mb-3">
                     <Activity className="w-6 h-6 text-purple-500" />
                     <div>
-                      <div className="text-white font-medium text-sm">ackee analytics</div>
-                      <div className="text-purple-400 text-xs">ackee-prod.Exoper.app</div>
+                      <div className="text-white font-medium text-sm">Analytics, Monitoring and Logging</div>
+                      <div className="text-purple-400 text-xs">exope-prod.Exoper.app</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-gray-400 text-xs">Just deployed</span>
+                    <span className="text-gray-400 text-xs">Monitor allrequests and Analyze performance in real-time</span>
                   </div>
                 </div>
 
@@ -210,7 +210,7 @@ const Projects = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-gray-400 text-xs">Just deployed</span>
+                    <span className="text-gray-400 text-xs">Gaurdrail LLMs with our Zero trus security api gateway</span>
                   </div>
                 </div>
               </div>
@@ -223,7 +223,7 @@ const Projects = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-gray-400 text-xs">Just deployed</span>
+                    <span className="text-gray-400 text-xs">Deploy our AI infrastructure with blazing ease</span>
                   </div>
                 </div>
 
@@ -231,13 +231,13 @@ const Projects = () => {
                   <div className="flex items-center space-x-3 mb-3">
                     <Database className="w-6 h-6 text-blue-400" />
                     <div>
-                      <div className="text-white font-medium text-sm">postgres</div>
-                      <div className="text-gray-500 text-xs">pg-data</div>
+                      <div className="text-white font-medium text-sm">Milvus</div>
+                      <div className="text-gray-500 text-xs">BlockChain Transaction</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-gray-400 text-xs">Just deployed</span>
+                    <span className="text-gray-400 text-xs">Store and Encrypt all data going-in and out AI models</span>
                   </div>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import React from 'react';
 import About from './about';
 import Value from './value';
 import Testimonial from './testimonial';
+import Born from './born';
 
 const AboutCompany = () => {
   return (
@@ -11,6 +12,7 @@ const AboutCompany = () => {
       <About />
       <Value />
       <Testimonial />
+      <Born />
     </div>
   );
 };
