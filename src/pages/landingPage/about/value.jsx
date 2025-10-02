@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from 'react-router-dom';
 
 const Value = () => {
   return (
@@ -131,7 +132,12 @@ const Value = () => {
           </div>
 
           <div className="mt-12 flex justify-center relative z-10">
-            <button className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white font-semibold px-8 sm:px-10 py-3 sm:py-4 rounded-lg text-base sm:text-lg transition transform hover:scale-[1.03] shadow-[0_10px_30px_rgba(139,92,246,0.16)]">See Open Positions</button>
+          <Link 
+            to="/careers/all-positions"
+            className="inline-block bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white font-semibold px-8 sm:px-10 py-3 sm:py-4 rounded-lg text-base sm:text-lg transition transform hover:scale-[1.03] shadow-[0_10px_30px_rgba(139,92,246,0.16)]"
+          >
+           See Open Positions
+          </Link>
           </div>
         </div>
       </div>

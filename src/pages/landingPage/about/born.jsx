@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Globe from "../../../components/ui/globe";
-
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 const Born = () => {
   const [webglSupported, setWebglSupported] = useState(true);
 
@@ -38,10 +39,13 @@ const Born = () => {
           <p className="text-gray-400 text-base sm:text-lg md:text-xl mb-6 lg:mb-10 max-w-2xl mx-auto px-4">
             We're building something amazing and we want you to be part of it.
           </p>
-
-          <button className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white text-sm sm:text-base font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transform hover:scale-105">
-            See Open Positions
-          </button>
+          <Link 
+            to="/careers/all-positions" 
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 text-sm"
+          >
+           <ArrowLeft size={16} />
+           SEE OPEN POSITIONS
+          </Link>
         </div>
 
         {/* Globe Section */}
@@ -101,9 +105,12 @@ const Born = () => {
 
         {/* Bottom Button */}
         <div className="mt-12 lg:mt-20">
-          <button className="px-5 sm:px-6 py-2.5 sm:py-3 bg-transparent border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white text-sm sm:text-base rounded-lg transition-all duration-300">
-            About the Company
-          </button>
+        <Link 
+          to="/about" 
+          className="inline-block px-5 sm:px-6 py-2.5 sm:py-3 bg-transparent border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white text-sm sm:text-base rounded-lg transition-all duration-300 relative z-50"
+       >
+        About the Company
+       </Link>
         </div>
       </div>
 
