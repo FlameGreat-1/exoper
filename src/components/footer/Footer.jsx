@@ -1,4 +1,3 @@
-// components/footer/Footer.jsx
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 
@@ -9,7 +8,6 @@ const Footer = () => {
   const handleSubscribe = (e) => {
     e.preventDefault();
     if (email && email.includes('@')) {
-      // In a real implementation, you would call an API here
       setSubscribed(true);
       setEmail('');
       setTimeout(() => setSubscribed(false), 5000);
@@ -18,24 +16,23 @@ const Footer = () => {
   
   const currentYear = new Date().getFullYear();
   
-  // Footer navigation sections
   const footerSections = [
     {
       title: 'Services',
       links: [
-        { name: 'Web Development', href: '/services/web-development' },
-        { name: 'UI/UX Design', href: '/services/ui-ux-design' },
-        { name: 'Mobile Apps', href: '/services/mobile-apps' },
-        { name: 'Consulting', href: '/services/consulting' },
+        { name: 'Web Development', href: '/services' },
+        { name: 'UI/UX Design', href: '/services' },
+        { name: 'Mobile Apps', href: '/services' },
+        { name: 'Consulting', href: '/consult' },
       ]
     },
     {
       title: 'Resources',
       links: [
-        { name: 'Blog', href: '/resources/blog' },
-        { name: 'Tutorials', href: '/resources/tutorials' },
-        { name: 'Case Studies', href: '/resources/case-studies' },
-        { name: 'Documentation', href: '/resources/docs' },
+        { name: 'Articles', href: '/resources/articles' },
+        { name: 'Tools', href: '/resources/tools' },
+        { name: 'Freebies', href: '/resources/freebies' },
+        { name: 'Guides', href: '/learn/guides' },
       ]
     },
     {
@@ -43,13 +40,12 @@ const Footer = () => {
       links: [
         { name: 'About', href: '/about' },
         { name: 'Projects', href: '/projects' },
-        { name: 'Hire Me', href: '/hire-me' },
-        { name: 'Contact', href: '/contact' },
+        { name: 'Careers', href: '/careers/all-positions' },
+        { name: 'Contact', href: '/careers/contact' },
       ]
     },
   ];
   
-  // Social media links
   const socialLinks = [
     { 
       name: 'GitHub', 
@@ -90,32 +86,36 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800" aria-labelledby="footer-heading">
+    <footer className="bg-[#0a0b14] border-t border-[#2a2a2a]" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">Footer</h2>
       
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          {/* Brand and newsletter section */}
           <div className="space-y-8 xl:col-span-1">
             <div>
-              <Link to="/" className="flex items-center">
-                <span className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Flamo</span>
+              <Link to="/" className="flex items-center gap-1.5">
+                <span 
+                  className="text-white font-extrabold uppercase tracking-widest text-2xl bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage: "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
+                  }}
+                >
+                  EXOPER
+                </span>
               </Link>
-              <p className="mt-4 text-base text-gray-500 dark:text-gray-400 max-w-xs">
+              <p className="mt-4 text-base text-gray-300 max-w-xs leading-relaxed">
                 Creating exceptional digital experiences with modern technologies and creative design solutions.
               </p>
             </div>
             
-            {/* Newsletter subscription */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wider">
+            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] rounded-xl p-6 border border-[#2a2a2a]">
+              <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-2">
                 Subscribe to newsletter
               </h3>
-              <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-400 mb-4">
                 Get the latest updates and resources delivered to your inbox.
               </p>
-              <form className="mt-4 sm:flex sm:max-w-md" onSubmit={handleSubscribe}>
-                <label htmlFor="email-address" className="sr-only">Email address</label>
+              <form className="space-y-3" onSubmit={handleSubscribe}>
                 <input
                   type="email"
                   name="email-address"
@@ -124,42 +124,38 @@ const Footer = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none min-w-0 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm py-2 px-4 text-base text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="w-full bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                   placeholder="Enter your email"
                 />
-                <div className="mt-3 rounded-md sm:mt-0 sm:ml-3 sm:flex-shrink-0">
-                  <button
-                    type="submit"
-                    className="w-full bg-primary hover:bg-primary-hover flex items-center justify-center border border-transparent rounded-md py-2 px-4 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                  >
-                    Subscribe
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-medium py-3 px-4 rounded-lg transition-all"
+                >
+                  Subscribe
+                </button>
               </form>
               
-              {/* Subscription confirmation message */}
               {subscribed && (
-                <p className="mt-3 text-sm text-green-600 dark:text-green-400">
+                <p className="mt-3 text-sm text-green-400">
                   Thanks for subscribing! Check your email for confirmation.
                 </p>
               )}
             </div>
           </div>
           
-          {/* Footer navigation links */}
           <div className="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               {footerSections.slice(0, 2).map((section) => (
                 <div key={section.title} className="mt-12 md:mt-0">
-                  <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wider">
+                  <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
                     {section.title}
                   </h3>
-                  <ul className="mt-4 space-y-4">
+                  <ul className="space-y-3">
                     {section.links.map((link) => (
                       <li key={link.name}>
                         <Link 
                           to={link.href} 
-                          className="text-base text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-sm text-gray-300 hover:text-purple-400 transition-colors"
                         >
                           {link.name}
                         </Link>
@@ -172,15 +168,15 @@ const Footer = () => {
             <div className="md:grid md:grid-cols-1 md:gap-8">
               {footerSections.slice(2).map((section) => (
                 <div key={section.title}>
-                  <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wider">
+                  <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
                     {section.title}
                   </h3>
-                  <ul className="mt-4 space-y-4">
+                  <ul className="space-y-3">
                     {section.links.map((link) => (
                       <li key={link.name}>
                         <Link 
                           to={link.href} 
-                          className="text-base text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-sm text-gray-300 hover:text-purple-400 transition-colors"
                         >
                           {link.name}
                         </Link>
@@ -193,26 +189,29 @@ const Footer = () => {
           </div>
         </div>
         
-        {/* Bottom section with social links and copyright */}
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+        <div className="mt-12 pt-8 border-t border-[#2a2a2a]">
           <div className="md:flex md:items-center md:justify-between">
-            <div className="flex space-x-6 md:order-2">
+            <div className="flex space-x-4 md:order-2">
               {socialLinks.map((item) => (
                 <a 
                   key={item.name} 
                   href={item.href} 
-                  className="text-gray-400 hover:text-primary transition-colors"
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] border border-[#2a2a2a] flex items-center justify-center text-gray-400 hover:text-purple-400 hover:border-purple-500/50 transition-all duration-200 backdrop-blur-sm"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`${item.name} profile`}
+                  style={{
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                  }}
                 >
                   <span className="sr-only">{item.name}</span>
                   {item.icon}
                 </a>
               ))}
             </div>
-            <p className="mt-8 text-base text-gray-500 dark:text-gray-400 md:mt-0 md:order-1">
-              &copy; {currentYear} Flamo. All rights reserved.
+            <p className="mt-8 text-sm text-gray-400 md:mt-0 md:order-1">
+              &copy; {currentYear} Exoper. All rights reserved.
             </p>
           </div>
         </div>

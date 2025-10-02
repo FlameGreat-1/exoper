@@ -97,7 +97,7 @@ function ThreeDScrollTriggerConstantRow({
     if (block) {
       unitWidthRef.current = block.scrollWidth;
       const containerWidth = container.offsetWidth;
-      const needed = Math.max(2, Math.ceil(containerWidth / unitWidthRef.current) + 1);
+      const needed = Math.max(4, Math.ceil(containerWidth / unitWidthRef.current) + 2);
       setNumCopies(needed);
     }
   }, [childrenArray]);
@@ -187,7 +187,7 @@ function ThreeDScrollTriggerRowImpl({
     if (block) {
       unitWidthRef.current = block.scrollWidth;
       const containerWidth = container.offsetWidth;
-      const needed = Math.max(2, Math.ceil(containerWidth / unitWidthRef.current) + 1);
+      const needed = Math.max(4, Math.ceil(containerWidth / unitWidthRef.current) + 2);
       setNumCopies(needed);
     }
   }, [childrenArray]);

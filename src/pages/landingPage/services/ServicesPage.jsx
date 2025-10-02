@@ -1,4 +1,3 @@
-// Create a new file at src/pages/landingPage/services/ServicesPage.jsx
 import React from 'react';
 import Services1 from './services1';
 import Services2 from './services2';

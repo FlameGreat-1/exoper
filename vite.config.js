@@ -11,6 +11,6 @@ export default defineConfig({
   preview: {
     port: process.env.PORT || 8080,
     host: true,
-    allowedHosts: ['flamo.up.railway.app', 'exoper.com', '.railway.app']
+    allowedHosts: ['flamo.up.Exoper.app', 'exoper.com', '.Exoper.app']
   }
 })

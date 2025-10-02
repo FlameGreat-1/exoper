@@ -61,17 +61,26 @@ const CompanyDropdownCard = () => {
           <p className="text-gray-400 text-sm mb-4">Shape the future with us</p>
           
           <div className="space-y-2">
-            <div className="bg-[#1f1f1f] hover:bg-[#252525] transition-colors duration-200 rounded-lg px-4 py-3 border border-[#2a2a2a] cursor-pointer">
+            <Link 
+              to="/careers/senior-fullstack-engineer" 
+              className="block bg-[#1f1f1f] hover:bg-[#252525] transition-colors duration-200 rounded-lg px-4 py-3 border border-[#2a2a2a] cursor-pointer"
+            >
               <p className="text-gray-300 text-sm font-medium">Senior Full-Stack Engineer, Product</p>
-            </div>
+            </Link>
             
-            <div className="bg-[#1f1f1f] hover:bg-[#252525] transition-colors duration-200 rounded-lg px-4 py-3 border border-[#2a2a2a] cursor-pointer">
-              <p className="text-gray-300 text-sm font-medium">Senior Infrastructure Engineer, Platform</p>
-            </div>
+            <Link 
+              to="/careers/backend-engineer" 
+              className="block bg-[#1f1f1f] hover:bg-[#252525] transition-colors duration-200 rounded-lg px-4 py-3 border border-[#2a2a2a] cursor-pointer"
+            >
+              <p className="text-gray-300 text-sm font-medium">Backend Engineer</p>
+            </Link>
             
-            <div className="bg-[#1f1f1f] hover:bg-[#252525] transition-colors duration-200 rounded-lg px-4 py-3 border border-[#2a2a2a] cursor-pointer">
+            <Link 
+              to="/careers/senior-product-marketer" 
+              className="block bg-[#1f1f1f] hover:bg-[#252525] transition-colors duration-200 rounded-lg px-4 py-3 border border-[#2a2a2a] cursor-pointer"
+            >
               <p className="text-gray-300 text-sm font-medium">Senior Product Marketer</p>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
