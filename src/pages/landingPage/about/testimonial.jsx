@@ -39,9 +39,9 @@ const Testimonial = () => {
               />
               <div className="flex items-center gap-3 mb-6 flex-shrink-0">
                 <div className="w-8 h-8 bg-white rounded flex items-center justify-center flex-shrink-0">
-                  <img src="/logo1.svg" alt="Amcat" className="w-6 h-6" />
+                  <img src="/images/logo-md.png" alt="Raspaas" className="w-6 h-6" />
                 </div>
-                <span className="text-white font-semibold text-lg truncate">Amcat</span>
+                <span className="text-white font-semibold text-lg truncate">Raspaas</span>
               </div>
               <div className="flex-grow flex flex-col justify-between">
                 <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
@@ -49,11 +49,11 @@ const Testimonial = () => {
                 </p>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/avatar1.jpg" alt="Paul O'Connell" className="w-full h-full object-cover" />
+                    <img src="/images/avatar-2.jpg" alt="Paul O'Connell" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-white font-medium text-sm truncate">Paul O'Connell</div>
-                    <div className="text-gray-400 text-xs truncate">Founder & CEO of Amcat</div>
+                    <div className="text-white font-medium text-sm truncate">Peter O'Well</div>
+                    <div className="text-gray-400 text-xs truncate">Founder & CEO of Raspaas</div>
                   </div>
                 </div>
               </div>
@@ -72,9 +72,9 @@ const Testimonial = () => {
               />
               <div className="flex items-center gap-3 mb-6 flex-shrink-0">
                 <div className="w-8 h-8 bg-white rounded flex items-center justify-center flex-shrink-0">
-                  <img src="/logo-spacex.svg" alt="Spacex" className="w-6 h-6" />
+                  <img src="/images/Lunexa.svg" alt="Lunexa" className="w-6 h-6" />
                 </div>
-                <span className="text-white font-semibold text-lg truncate">Spacex</span>
+                <span className="text-white font-semibold text-lg truncate">Lunexa</span>
               </div>
               <div className="flex-grow flex flex-col justify-between">
                 <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
@@ -82,11 +82,11 @@ const Testimonial = () => {
                 </p>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/avatar2.jpg" alt="Paul Boller" className="w-full h-full object-cover" />
+                    <img src="/images/avatar-1.jpg" alt="Paul Boller" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-white font-medium text-sm truncate">Paul Boller</div>
-                    <div className="text-gray-400 text-xs truncate">Backend Architect at Spacex</div>
+                    <div className="text-white font-medium text-sm truncate">Marie Christ</div>
+                    <div className="text-gray-400 text-xs truncate">Backend Architect at Lunexa</div>
                   </div>
                 </div>
               </div>
@@ -104,9 +104,9 @@ const Testimonial = () => {
               />
               <div className="flex items-center gap-3 mb-6 flex-shrink-0">
                 <div className="w-8 h-8 bg-white rounded flex items-center justify-center flex-shrink-0">
-                  <img src="/logo2.svg" alt="Resend" className="w-6 h-6" />
+                  <img src="/images/BuildHive.jpg" alt="BuildHive" className="w-6 h-6" />
                 </div>
-                <span className="text-white font-semibold text-lg truncate">Resend</span>
+                <span className="text-white font-semibold text-lg truncate">BuildHive</span>
               </div>
               <div className="flex-grow flex flex-col justify-between">
                 <div className="flex-grow">
@@ -119,11 +119,11 @@ const Testimonial = () => {
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/avatar3.jpg" alt="Zeno Rocha" className="w-full h-full object-cover" />
+                    <img src="/images/avatar-1.jpg" alt="Xero Richie" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-white font-medium text-sm truncate">Zeno Rocha</div>
-                    <div className="text-gray-400 text-xs truncate">Founder & CEO of Resend</div>
+                    <div className="text-white font-medium text-sm truncate">Xero Richie</div>
+                    <div className="text-gray-400 text-xs truncate">Founder & CEO of BuildHive</div>
                   </div>
                 </div>
               </div>
@@ -142,9 +142,9 @@ const Testimonial = () => {
               />
               <div className="flex items-center gap-3 mb-6 flex-shrink-0">
                 <div className="w-8 h-8 bg-white rounded flex items-center justify-center flex-shrink-0">
-                  <img src="/logo3.svg" alt="Paloma" className="w-6 h-6" />
+                  <img src="/images/Odookit.png" alt="Odookit" className="w-6 h-6" />
                 </div>
-                <span className="text-white font-semibold text-lg truncate">Paloma</span>
+                <span className="text-white font-semibold text-lg truncate">Odookit</span>
               </div>
               <div className="flex-grow flex flex-col justify-between">
                 <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
@@ -152,11 +152,11 @@ const Testimonial = () => {
                 </p>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/avatar4.jpg" alt="Stannis Riviera" className="w-full h-full object-cover" />
+                    <img src="/images/avatar-2.jpg" alt="Stannis Riviera" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-white font-medium text-sm truncate">Stannis Riviera</div>
-                    <div className="text-gray-400 text-xs truncate">Managing Director of Paloma Group</div>
+                    <div className="text-white font-medium text-sm truncate">Stephen Caris</div>
+                    <div className="text-gray-400 text-xs truncate">Managing Director of Odookit Group</div>
                   </div>
                 </div>
               </div>
@@ -180,7 +180,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev1.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-1.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Liam</div>
@@ -195,7 +195,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev2.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-1.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Benjamin Dolinger</div>
@@ -210,7 +210,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev3.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-1.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Jenn</div>
@@ -225,7 +225,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev4.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-2.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Arnav</div>
@@ -240,7 +240,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev5.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-2.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Team Sparky</div>
@@ -255,7 +255,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev11.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-2.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Jessica Lee</div>
@@ -272,7 +272,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev6.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-2.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Seb</div>
@@ -287,7 +287,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev7.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-1.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Kyle McDermott</div>
@@ -302,7 +302,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev8.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-1.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Jeremy Su</div>
@@ -316,7 +316,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev9.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-1.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Emmanuel - zinkdoor</div>
@@ -331,7 +331,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev10.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-2.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Marco Eidinger</div>
@@ -346,7 +346,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev12.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-2.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">David Chen</div>
@@ -361,7 +361,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev13.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-1.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Alex Rivera</div>
@@ -376,7 +376,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev14.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-1.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Sarah Kim</div>
@@ -391,7 +391,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev15.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-2.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Mike Johnson</div>
@@ -406,7 +406,7 @@ const Testimonial = () => {
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
                 <div className="flex items-start gap-3 mb-4 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img src="/dev16.jpg" alt="Developer" className="w-full h-full object-cover" />
+                    <img src="/images/dev-2.jpg" alt="Developer" className="w-full h-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Lisa Wang</div>
