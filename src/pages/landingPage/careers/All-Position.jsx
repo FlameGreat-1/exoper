@@ -36,32 +36,32 @@ const AllPositions = () => {
     },
     {
       id: 4,
-      title: "DevOps Engineer",
+      title: "DevOps Engineer - Platform Infrastructure",
       department: "Engineering",
       location: "Remote (anywhere)",
       type: "Full-time",
-      description: "Build and maintain our cloud infrastructure, CI/CD pipelines, and deployment automation.",
+      description: "Design and maintain cloud infrastructure across AWS, GCP, and Azure using Terraform and infrastructure as code best practices.",
       link: "/careers/devops-engineer",
       featured: false
     },
     {
       id: 5,
-      title: "Frontend Engineer - Dashboard",
+      title: "Senior ML Engineer - AI Platform",
       department: "Engineering",
       location: "Remote (anywhere)",
       type: "Full-time",
-      description: "Create intuitive user interfaces and exceptional user experiences for our developer dashboard.",
-      link: "/careers/frontend-engineer",
-      featured: false
+      description: "Design, train, and deploy machine learning models at scale for intelligent code suggestions and automated deployment optimization.",
+      link: "/careers/senior-ml-engineer",
+      featured: true
     },
     {
       id: 6,
-      title: "Technical Writer",
-      department: "Developer Relations",
+      title: "Frontend Engineer",
+      department: "Engineering",
       location: "Remote (anywhere)",
       type: "Full-time",
-      description: "Create comprehensive documentation, tutorials, and guides for our developer community.",
-      link: "/careers/technical-writer",
+      description: "Create intuitive user interfaces and exceptional user experiences for our developer platform.",
+      link: "/careers/frontend-engineer",
       featured: false
     }
   ];
@@ -199,7 +199,7 @@ const AllPositions = () => {
               </p>
               <Link 
                 to="/careers/contact"
-                className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-medium py-3 px-8 rounded-lg transition-all"
+                className="inline-block bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-medium py-3 px-8 rounded-lg transition-all"
               >
                Get in Touch
               </Link>

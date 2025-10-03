@@ -9,6 +9,10 @@ import AboutCompany from './pages/landingPage/about/aboutCompany';
 import CareerCompany from "./pages/landingPage/careers/careerCompany";
 import Job1 from "./pages/landingPage/careers/job1";
 import Job2 from "./pages/landingPage/careers/job2";
+import Job3 from "./pages/landingPage/careers/job3";
+import Job4 from "./pages/landingPage/careers/job4";
+import Job5 from "./pages/landingPage/careers/job5";
+import Job6 from "./pages/landingPage/careers/job6";
 import AllPositions from "./pages/landingPage/careers/All-Position";
 import Apply from "./pages/landingPage/careers/Apply";
 import CareerContact from "./pages/landingPage/careers/CareerContact";
@@ -41,6 +45,22 @@ const router = createBrowserRouter([
       {
         path: '/careers/backend-engineer',
         element: <Job2 />,
+      },
+      {
+        path: '/careers/senior-product-marketer',
+        element: <Job3 />,
+      },
+      {
+        path: '/careers/devops-engineer',
+        element: <Job4 />,
+      },
+      {
+        path: '/careers/senior-ml-engineer',
+        element: <Job5 />,
+      },
+      {
+        path: '/careers/frontend-engineer',
+        element: <Job6 />,
       },
       {
         path: '/careers/all-positions',

@@ -74,13 +74,14 @@ const CompanyDropdownCard = () => {
             >
               <p className="text-gray-300 text-sm font-medium">Backend Engineer</p>
             </Link>
-            
+
             <Link 
               to="/careers/senior-product-marketer" 
               className="block bg-[#1f1f1f] hover:bg-[#252525] transition-colors duration-200 rounded-lg px-4 py-3 border border-[#2a2a2a] cursor-pointer"
             >
               <p className="text-gray-300 text-sm font-medium">Senior Product Marketer</p>
             </Link>
+
           </div>
         </div>
       </div>
