@@ -128,7 +128,7 @@ const PricingDetails = () => {
     </div>
   );
 
-  const Section = ({ title, items, isCheck = false }) => (
+  const Section = ({ title, items }) => (
     <div className="mb-12">
       <h2 className="text-white text-lg md:text-xl font-semibold mb-6 px-4 md:px-0">{title}</h2>
       <div className="space-y-0">
@@ -139,7 +139,7 @@ const PricingDetails = () => {
               idx % 2 === 0 ? 'bg-gray-900/30' : ''
             }`}
           >
-            <div className="col-span-1 flex items-center text-gray-300 text-xs md:text-sm">
+            <div className="col-span-1 flex items-center text-gray-300 text-xs md:text-sm leading-tight">
               {item.name}
             </div>
             {item.values.map((value, vIdx) => (
@@ -151,7 +151,7 @@ const PricingDetails = () => {
                     <span className="text-gray-600 text-xs">-</span>
                   )
                 ) : (
-                  <span className="text-gray-300 text-xs md:text-sm text-center">{value}</span>
+                  <span className="text-gray-300 text-[10px] md:text-sm text-center leading-tight">{value}</span>
                 )}
               </div>
             ))}
@@ -163,21 +163,21 @@ const PricingDetails = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
-      <div className="max-w-7xl mx-auto py-8 md:py-16">
+      <div className="max-w-7xl mx-auto py-8 md:py-16 px-2 md:px-4">
         <h1 className="text-3xl md:text-4xl font-bold text-white text-center mb-12 px-4">
           Compare features
         </h1>
 
-        <div className="mb-8 md:mb-12 px-4 md:px-0">
-          <div className="grid grid-cols-5 gap-2 md:gap-4">
+        <div className="mb-8 md:mb-12 px-2 md:px-0">
+          <div className="grid grid-cols-5 gap-1.5 md:gap-4">
             <div className="col-span-1"></div>
             {tiers.map((tier, idx) => (
               <div key={idx} className="col-span-1 flex flex-col items-center">
-                <h3 className="text-white text-sm md:text-base font-semibold mb-3">
+                <h3 className="text-white text-[11px] md:text-base font-semibold mb-2 md:mb-3 text-center leading-tight">
                   {tier.name}
                 </h3>
                 <button
-                  className={`${tier.color} text-white text-xs md:text-sm font-medium px-3 md:px-6 py-2 md:py-2.5 rounded-lg hover:opacity-90 transition-opacity w-full md:w-auto whitespace-nowrap`}
+                  className={`${tier.color} text-white text-[9px] md:text-sm font-medium px-1.5 md:px-6 py-1.5 md:py-2.5 rounded-md md:rounded-lg hover:opacity-90 transition-opacity w-full leading-tight`}
                 >
                   {tier.cta}
                 </button>
