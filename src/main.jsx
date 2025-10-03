@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './styles/global.css';
 import App from './App.jsx';
 import ServicesPage from './pages/landingPage/services/ServicesPage';
+import PricingPage from "./pages/landingPage/pricing/pricingPage";
 import Home from './pages/landingPage/Home';
 import AboutCompany from './pages/landingPage/about/aboutCompany';
 import CareerCompany from "./pages/landingPage/careers/careerCompany";
@@ -73,7 +74,11 @@ const router = createBrowserRouter([
       {
         path: '/careers/contact',
         element: <CareerContact />,
-      },          
+      }, 
+      {
+        path: '/pricing',
+        element: <PricingPage />,
+      },           
       {
         path: '/projects',
         element: <div>Projects Page</div>,

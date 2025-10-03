@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HamburgerMenuOverlay } from "../ui/hamburger-menu-overlay";
 import CompanyDropdownCard from "../ui/company/aboutCard";
+import PricingDropdownCard from "../ui/company/pricingCard";
 
 const NAV = [
   { label: "Home", href: "/" },
@@ -17,17 +18,13 @@ const NAV = [
       { label: "Testimonials", href: "/about#testimonials" },
     ],
   },
+  {
+    label: "Pricing",
+    href: "/pricing",
+    hasCustomDropdown: true,
+  },
   { label: "Projects", href: "/projects" },
   { label: "Consult Me", href: "/consult" },
-  {
-    label: "Learn From Me",
-    href: "/learn",
-    children: [
-      { label: "Courses", href: "/learn/courses" },
-      { label: "Workshops", href: "/learn/workshops" },
-      { label: "Guides", href: "/learn/guides" },
-    ],
-  },
   {
     label: "Resources",
     href: "/resources",
@@ -198,7 +195,8 @@ const Header = () => {
                                 onMouseLeave={() => setOpenDropdown(null)}
                                 className="absolute left-1/2 -translate-x-1/2 mt-3 z-50"
                               >
-                                <CompanyDropdownCard />
+                                {item.label === "Company" && <CompanyDropdownCard />}
+                                {item.label === "Pricing" && <PricingDropdownCard />}
                               </motion.div>
                             )}
                           </AnimatePresence>
