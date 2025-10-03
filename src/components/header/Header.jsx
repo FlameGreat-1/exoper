@@ -24,7 +24,7 @@ const NAV = [
     hasCustomDropdown: true,
   },
   { label: "Projects", href: "/projects" },
-  { label: "Consult Me", href: "/consult" },
+  { label: "Consult", href: "/consult" },
   {
     label: "Resources",
     href: "/resources",

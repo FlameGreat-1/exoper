@@ -39,9 +39,9 @@ const Testimonial = () => {
               />
               <div className="flex items-center gap-3 mb-6 flex-shrink-0">
                 <div className="w-8 h-8 bg-white rounded flex items-center justify-center flex-shrink-0">
-                  <img src="/images/logo-md.png" alt="Raspaas" className="w-6 h-6" />
+                  <img src="/images/urbix-logo.png" alt="Urbix" className="w-6 h-6" />
                 </div>
-                <span className="text-white font-semibold text-lg truncate">Raspaas</span>
+                <span className="text-white font-semibold text-lg truncate">Urbix</span>
               </div>
               <div className="flex-grow flex flex-col justify-between">
                 <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
@@ -53,7 +53,7 @@ const Testimonial = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-white font-medium text-sm truncate">Peter O'Well</div>
-                    <div className="text-gray-400 text-xs truncate">Founder & CEO of Raspaas</div>
+                    <div className="text-gray-400 text-xs truncate">Founder & CEO of Urbix</div>
                   </div>
                 </div>
               </div>
