@@ -265,7 +265,7 @@ const Services3 = () => {
               </h2>
               
               <p className="text-gray-400 text-base md:text-lg leading-relaxed">
-                Railway dynamically scales highly performant servers, storage, and networking to meet application demands.{' '}
+                Exoper dynamically scales highly performant servers, storage, and networking to meet application demands.{' '}
                 <a href="#" className="text-white inline-flex items-center gap-1 hover:gap-2 transition-all">
                   Learn More <ArrowRight size={16} />
                 </a>
@@ -449,7 +449,7 @@ const Services3 = () => {
               </h2>
               
               <p className="text-gray-400 text-base md:text-lg leading-relaxed">
-                Every application stack is different, but the building blocks are similar. These are the core primitives behind every app hosted on Railway.
+                Every application stack is different, but the building blocks are similar. These are the core primitives behind every app hosted on Exoper.
               </p>
 
               <div className="flex items-center gap-3 md:gap-4 pt-4">
@@ -682,7 +682,7 @@ const Services3 = () => {
 
           <div className="text-center">
             <p className="text-xs md:text-sm text-gray-500 px-4">
-              Railway uses Nixpacks or your Dockerfile to build and deploy your code.
+              Exoper uses Nixpacks or your Dockerfile to build and deploy your code.
             </p>
           </div>
         </div>
