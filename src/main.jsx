@@ -80,8 +80,8 @@ const router = createBrowserRouter([
         element: <PricingPage />,
       },           
       {
-        path: '/projects',
-        element: <div>Projects Page</div>,
+        path: '/products',
+        element: <div>Products Page</div>,
       },
       {
         path: '/hire-me',

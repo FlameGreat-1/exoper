@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <style>
+    .title { font: 600 20px/1.2 "Segoe UI", Roboto, Arial; fill:#0B2B4A; }
+    .box { fill:#ffffff; stroke:#0B2B4A; stroke-width:2; rx:8; }
+    .stack { fill:#f6fbff; stroke:#cfe4ff; stroke-width:1; }
+    .label { font: 600 14px "Segoe UI", Roboto, Arial; fill:#0B2B4A; }
+    .text { font: 400 12px "Segoe UI", Roboto, Arial; fill:#102B44; }
+    .small { font: 400 11px "Segoe UI", Roboto, Arial; fill:#224057; }
+    .arrow { stroke:#0B2B4A; stroke-width:2; marker-end: url(#arrowhead); }
+    .cloud { fill:#eaf3ff; stroke:#bfe0ff; stroke-width:1; rx:12; }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0B2B4A" />
+    </marker>
+  </defs>
+
+  <text x="40" y="36" class="title">Exoper — AI Security & Trust Layer — Architecture (Go + Rust)</text>
+
+  <!-- Edge / Anycast -->
+  <g transform="translate(40,70)">
+    <rect class="cloud" x="0" y="0" width="420" height="80" />
+    <text x="20" y="28" class="label">Edge / Anycast Ingress</text>
+    <text x="20" y="48" class="small">Envoy (Edge) • DDoS mitigation • TLS termination</text>
+    <text x="20" y="64" class="small">WASM filters (Rust) • early heuristics</text>
+  </g>
+
+  <!-- Gateway -->
+  <g transform="translate(500,70)">
+    <rect class="box" x="0" y="0" width="420" height="160" />
+    <text x="16" y="28" class="label">API Gateway / Orchestrator (Go)</text>
+    <text x="16" y="50" class="text">Authn (mTLS, OIDC), routing, tenant lookup</text>
+    <text x="16" y="68" class="text">gRPC orchestration • trace-id propagation</text>
+
+    <!-- connected components inside gateway area -->
+    <g transform="translate(12,84)">
+      <rect class="stack" x="0" y="0" width="190" height="64" />
+      <text x="10" y="22" class="small">Policy Engine (OPA)</text>
+      <text x="10" y="38" class="small">Rego policies (model allowlists)</text>
+
+      <rect class="stack" x="210" y="0" width="190" height="64" />
+      <text x="220" y="22" class="small">Model Proxy / Connectors</text>
+      <text x="220" y="38" class="small">OpenAI, Anthropic, Internal LLMs (mTLS)</text>
+    </g>
+  </g>
+
+  <!-- Rust Threat Detector -->
+  <g transform="translate(500,270)">
+    <rect class="box" x="0" y="0" width="420" height="120" />
+    <text x="16" y="28" class="label">Threat Detection Engine (Rust)</text>
+    <text x="16" y="50" class="text">Inspect (gRPC): prompt-injection, signatures, PII fingerprints</text>
+    <text x="16" y="68" class="small">WASM modules shared with Envoy • tonic gRPC</text>
+  </g>
+
+  <!-- ML Anomaly Service -->
+  <g transform="translate(960,70)">
+    <rect class="box" x="0" y="0" width="360" height="120" />
+    <text x="16" y="28" class="label">ML Anomaly & Classifier Service</text>
+    <text x="16" y="50" class="text">Async scoring, model drift, red-team analyses</text>
+    <text x="16" y="68" class="small">Python FastAPI (PoC) → Rust + ONNX runtime (prod)</text>
+  </g>
+
+  <!-- Audit + Secrets + Observability row -->
+  <g transform="translate(40,380)">
+    <rect class="box" x="0" y="0" width="1280" height="140" />
+    <text x="16" y="26" class="label">Core Infra & Observability</text>
+
+    <g transform="translate(12,40)">
+      <rect x="0" y="0" width="300" height="88" fill="#ffffff" stroke="#0B2B4A" stroke-width="2" rx="6" />
+      <text x="12" y="22" class="small">Secrets & Keys</text>
+      <text x="12" y="40" class="small">HashiCorp Vault • HSM (optional)</text>
+    </g>
+
+    <g transform="translate(340,40)">
+      <rect x="0" y="0" width="300" height="88" fill="#ffffff" stroke="#0B2B4A" stroke-width="2" rx="6" />
+      <text x="12" y="22" class="small">Immutable Audit Store</text>
+      <text x="12" y="40" class="small">Postgres (append-only) + S3 WORM</text>
+    </g>
+
+    <g transform="translate(680,40)">
+      <rect x="0" y="0" width="300" height="88" fill="#ffffff" stroke="#0B2B4A" stroke-width="2" rx="6" />
+      <text x="12" y="22" class="small">Observability & SIEM</text>
+      <text x="12" y="40" class="small">OpenTelemetry • Prometheus • Grafana • ELK</text>
+    </g>
+  </g>
+
+  <!-- Control Plane/Admin -->
+  <g transform="translate(40,560)">
+    <rect class="box" x="0" y="0" width="420" height="120" />
+    <text x="16" y="28" class="label">Control Plane / Admin (Go)</text>
+    <text x="16" y="50" class="text">Tenant onboarding, policy management, red-team jobs</text>
+    <text x="16" y="68" class="small">Push policies to OPA • manage Vault secrets</text>
+  </g>
+
+  <!-- Kubernetes / Deployment layer -->
+  <g transform="translate(500,420)">
+    <rect class="box" x="0" y="0" width="820" height="260" />
+    <text x="16" y="28" class="label">Deployment & Orchestration</text>
+    <text x="16" y="50" class="small">Kubernetes (Helm) • Istio/Linkerd • Terraform • ArgoCD</text>
+    <text x="16" y="72" class="small">Multi-region, on-prem helm bundle</text>
+  </g>
+
+  <!-- arrows / flows -->
+  <!-- Edge -> Gateway -->
+  <line x1="460" y1="110" x2="500" y2="110" class="arrow" />
+  <text x="470" y="100" class="small">HTTPS / TLS1.3</text>
+
+  <!-- Gateway -> Rust Detector -->
+  <line x1="680" y1="230" x2="680" y2="270" class="arrow" />
+  <text x="690" y="250" class="small">gRPC (Inspect)</text>
+
+  <!-- Gateway -> Model Proxy -->
+  <line x1="900" y1="150" x2="960" y2="110" class="arrow" stroke-dasharray="6,4" />
+  <text x="930" y="125" class="small">Model Connectors (mTLS)</text>
+
+  <!-- Gateway -> ML Service async -->
+  <line x1="920" y1="200" x2="960" y2="190" class="arrow" stroke-dasharray="4,4" />
+  <text x="930" y="185" class="small">Async scoring (Kafka/pubsub)</text>
+
+  <!-- Audit & Observability arrows -->
+  <line x1="640" y1="340" x2="520" y2="380" class="arrow" />
+  <text x="560" y="360" class="small">Audit logs → Postgres / S3 WORM</text>
+
+  <line x1="820" y1="340" x2="820" y2="380" class="arrow" />
+  <text x="760" y="360" class="small">Telemetry → OpenTelemetry Collector</text>
+
+  <!-- Control Plane to OPA -->
+  <line x1="420" y1="620" x2="500" y2="160" class="arrow" />
+  <text x="440" y="520" class="small">Policy pushes (GitOps → OPA)</text>
+
+  <!-- Legend -->
+  <g transform="translate(1160,540)">
+    <rect x="0" y="0" width="220" height="140" rx="8" fill="#fff" stroke="#0B2B4A" stroke-width="1.5" />
+    <text x="12" y="24" class="label">Legend</text>
+    <text x="14" y="48" class="small">Envoy + WASM (Rust) — inline filters</text>
+    <text x="14" y="66" class="small">Gateway (Go) — orchestration</text>
+    <text x="14" y="84" class="small">Detectors (Rust) — gRPC</text>
+    <text x="14" y="102" class="small">ML (Python → Rust) — async scoring</text>
+  </g>
+
+</svg>

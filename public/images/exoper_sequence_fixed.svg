@@ -1,0 +1,63 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="1200" height="900" xmlns="http://www.w3.org/2000/svg">
+<style>
+    text { font-family: Arial; font-size: 14px; }
+    rect { stroke: #333; fill: #f9f9f9; }
+    line { stroke: #333; stroke-width: 1; }
+</style>
+
+<!-- Title -->
+<text x="500" y="30" font-size="20" font-weight="bold">Sequence Diagram — Request/Response Path (timings in ms)</text>
+
+<!-- Lifelines -->
+<rect x="50" y="60" width="150" height="30" fill="#D0E1F9"/><text x="60" y="80">Client App</text>
+<rect x="250" y="60" width="180" height="30" fill="#A8D5BA"/><text x="260" y="80">Edge Envoy (WASM)</text>
+<rect x="500" y="60" width="180" height="30" fill="#F9E79F"/><text x="510" y="80">API Gateway (Go)</text>
+<rect x="750" y="60" width="180" height="30" fill="#7FB3D5"/><text x="760" y="80">Rust Detector (gRPC)</text>
+<rect x="1000" y="60" width="180" height="30" fill="#F1948A"/><text x="1010" y="80">Model Proxy</text>
+
+<!-- Lifeline verticals -->
+<line x1="125" y1="90" x2="125" y2="800" stroke-dasharray="4"/>
+<line x1="340" y1="90" x2="340" y2="800" stroke-dasharray="4"/>
+<line x1="590" y1="90" x2="590" y2="800" stroke-dasharray="4"/>
+<line x1="840" y1="90" x2="840" y2="800" stroke-dasharray="4"/>
+<line x1="1090" y1="90" x2="1090" y2="800" stroke-dasharray="4"/>
+
+<!-- Sequence arrows and labels -->
+<line x1="125" y1="150" x2="340" y2="150" marker-end="url(#arrow)"/>
+<text x="150" y="140">TLS handshake + HTTP request (~10-50 ms)</text>
+<text x="150" y="165">trace_id=T-12345</text>
+
+<line x1="340" y1="200" x2="590" y2="200" marker-end="url(#arrow)"/>
+<text x="350" y="190">WASM checks (Rust) ~0.5-2 ms</text>
+
+<line x1="590" y1="250" x2="840" y2="250" marker-end="url(#arrow)"/>
+<text x="600" y="240">Auth, Tenant lookup, OPA ~1-3 ms</text>
+
+<line x1="590" y1="300" x2="840" y2="300" marker-end="url(#arrow)"/>
+<text x="600" y="290">gRPC Inspect (sync) ~2-10 ms</text>
+<text x="600" y="315">Verdict: CLEAN / FLAG / BLOCK</text>
+
+<line x1="590" y1="350" x2="1090" y2="350" marker-end="url(#arrow)"/>
+<text x="600" y="340">Forward to Model (mTLS) ~20-200 ms</text>
+
+<line x1="1090" y1="400" x2="590" y2="400" marker-end="url(#arrow)"/>
+<text x="600" y="390">Model inference ~20-200 ms</text>
+
+<line x1="590" y1="450" x2="840" y2="450" marker-end="url(#arrow)"/>
+<text x="600" y="440">Post-output PII checks (Rust/ML) ~2-15 ms</text>
+
+<line x1="590" y1="500" x2="340" y2="500" marker-end="url(#arrow)"/>
+<text x="350" y="490">Return to Envoy (~1-5 ms)</text>
+
+<line x1="340" y1="550" x2="125" y2="550" marker-end="url(#arrow)"/>
+<text x="150" y="540">Client receives response (~10-50 ms)</text>
+
+<!-- Arrow definition -->
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto" markerUnits="strokeWidth">
+  <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+</marker>
+</defs>
+
+</svg>

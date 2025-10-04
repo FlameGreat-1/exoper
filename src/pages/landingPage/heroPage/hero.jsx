@@ -16,6 +16,7 @@ const Hero = () => {
   const glowIntervalRef = useRef(null);
 
   const rotatingTexts = useMemo(() => [
+    "Integrate AI Zero Trust API Gateway ?",
     "Optimize Cost, Time & Ship Faster ?",
     "Build cutting-edge solutions ?",
     "Ship secure software ?"

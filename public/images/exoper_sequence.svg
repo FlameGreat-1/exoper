@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <style>
+    .title { font: 600 20px/1.2 "Segoe UI", Roboto, Arial; fill:#0B2B4A; }
+    .actor { font: 600 13px "Segoe UI", Roboto, Arial; fill:#083046; }
+    .lifeline { stroke: #C8E1FF; stroke-width:2; stroke-dasharray:4 6; }
+    .box { fill:#ffffff; stroke:#0B2B4A; stroke-width:2; rx:6; }
+    .arrow { stroke:#0B2B4A; stroke-width:2; marker-end: url(#arrowhead); }
+    .text { font: 400 12px "Segoe UI", Roboto, Arial; fill:#102B44; }
+    .small { font: 400 11px "Segoe UI", Roboto, Arial; fill:#224057; }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0B2B4A" />
+    </marker>
+  </defs>
+
+  <text x="40" y="36" class="title">Sequence Diagram — Request/Response Path (timings in ms)</text>
+
+  <!-- Actors -->
+  <g transform="translate(60,80)">
+    <rect class="box" x="0" y="0" width="160" height="36" />
+    <text x="12" y="22" class="actor">Client App</text>
+  </g>
+  <g transform="translate(260,80)">
+    <rect class="box" x="0" y="0" width="160" height="36" />
+    <text x="12" y="22" class="actor">Edge Envoy (WASM)</text>
+  </g>
+  <g transform="translate(460,80)">
+    <rect class="box" x="0" y="0" width="160" height="36" />
+    <text x="12" y="22" class="actor">API Gateway (Go)</text>
+  </g>
+  <g transform="translate(660,80)">
+    <rect class="box" x="0" y="0" width="160" height="36" />
+    <text x="12" y="22" class="actor">Rust Detector (gRPC)</text>
+  </g>
+  <g transform="translate(860,80)">
+    <rect class="box" x="0" y="0" width="160" height="36" />
+    <text x="12" y="22" class="actor">Model Proxy</text>
+  </g>
+
+  <!-- Lifelines -->
+  <line x1="140" y1="140" x2="140" y2="760" class="lifeline" />
+  <line x1="340" y1="140" x2="340" y2="760" class="lifeline" />
+  <line x1="540" y1="140" x2="540" y2="760" class="lifeline" />
+  <line x1="740" y1="140" x2="740" y2="760" class="lifeline" />
+  <line x1="940" y1="140" x2="940" y2="760" class="lifeline" />
+
+  <!-- Sequence arrows and labels with timings -->
+  <!-- 1. Client -> Envoy -->
+  <line x1="160" y1="160" x2="320" y2="160" class="arrow" />
+  <text x="200" y="150" class="small">TLS handshake + HTTP request (~10-50 ms)</text>
+  <text x="200" y="165" class="text">trace_id=T-12345</text>
+
+  <!-- 2. Envoy WASM inline check -->
+  <line x1="320" y1="190" x2="320" y2="220" stroke="#0B2B4A" stroke-width="2" />
+  <rect x="300" y="220" width="80" height="30" rx="4" fill="#f6fbff" stroke="#cfe4ff" />
+  <text x="308" y="240" class="small">WASM checks (Rust) ~0.5-2 ms</text>
+
+  <!-- 3. Envoy -> Gateway -->
+  <line x1="340" y1="260" x2="540" y2="260" class="arrow" />
+  <text x="420" y="250" class="small">Forward request (HTTP/2) ~1-5 ms</text>
+
+  <!-- 4. Gateway auth & OPA check -->
+  <line x1="540" y1="290" x2="540" y2="320" stroke="#0B2B4A" stroke-width="2" />
+  <rect x="520" y="320" width="120" height="34" rx="4" fill="#fff8e6" stroke="#ffdca8" />
+  <text x="528" y="340" class="small">Auth, Tenant lookup, OPA ~1-3 ms</text>
+
+  <!-- 5. Gateway -> Rust Detector (Inspect) -->
+  <line x1="560" y1="370" x2="740" y2="370" class="arrow" />
+  <text x="640" y="360" class="small">gRPC Inspect (sync) ~2-10 ms</text>
+
+  <!-- 6. Detector response -->
+  <line x1="740" y1="400" x2="560" y2="400" class="arrow" />
+  <text x="640" y="390" class="small">Verdict: CLEAN / FLAG / BLOCK</text>
+
+  <!-- 7. Gateway -> Model Proxy (sanitized) -->
+  <line x1="560" y1="430" x2="940" y2="430" class="arrow" />
+  <text x="700" y="420" class="small">Forward to Model (mTLS) ~20-200 ms (depends)</text>
+
+  <!-- 8. Model processing -->
+  <rect x="920" y="460" width="120" height="34" rx="4" fill="#eaf3ff" stroke="#bfe0ff" />
+  <text x="930" y="482" class="small">Model inference ~20-200 ms</text>
+
+  <!-- 9. Model -> Gateway response -->
+  <line x1="940" y1="500" x2="560" y2="500" class="arrow" />
+  <text x="720" y="490" class="small">Response returns (~20-200 ms)</text>
+
+  <!-- 10. Post-output sanitization -->
+  <line x1="560" y1="540" x2="740" y2="540" class="arrow" />
+  <rect x="520" y="540" width="180" height="34" rx="4" fill="#fff8f0" stroke="#ffd9c2" />
+  <text x="528" y="562" class="small">Post-output PII checks (Rust/ML) ~2-15 ms</text>
+
+  <!-- 11. Gateway -> Envoy -> Client -->
+  <line x1="540" y1="590" x2="340" y2="590" class="arrow" />
+  <text x="420" y="580" class="small">Return to Envoy (~1-5 ms)</text>
+  <line x1="320" y1="620" x2="160" y2="620" class="arrow" />
+  <text x="200" y="610" class="small">Client receives response (~10-50 ms)</text>
+
+  <!-- 12. Async telemetry & audit logging (parallel) -->
+  <line x1="540" y1="330" x2="1100" y2="330" stroke="#0B2B4A" stroke-dasharray="6,4" marker-end="url(#arrowhead)" />
+  <text x="720" y="320" class="small">Emit telemetry (OTel) & Append audit (Postgres + S3 WORM)</text>
+
+  <!-- Notes box -->
+  <rect x="60" y="700" width="1260" height="140" rx="8" fill="#fff" stroke="#0B2B4A" stroke-width="1.5" />
+  <text x="76" y="724" class="small">Notes: Timings are illustrative; aim for < 10ms for inline checks, 2-20ms for Rust gRPC detectors, and keep heavy ML async. Trace-id must propagate through all spans.</text>
+
+</svg>
