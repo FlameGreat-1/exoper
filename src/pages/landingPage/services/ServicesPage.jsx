@@ -7,8 +7,8 @@ const ServicesPage = () => {
   return (
     <>
       <Services1 />
-      <Services2 />
       <Services3 />
+      <Services2 />
     </>
   );
 };

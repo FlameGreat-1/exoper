@@ -94,7 +94,7 @@ const Services3 = () => {
                   <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 rounded-xl p-5 border border-gray-800/50 shadow-2xl backdrop-blur-sm w-[280px]">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-7 h-7 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-lg">⚡</span>
+                        <span className="text-lg"></span>
                       </div>
                       <div>
                         <h3 className="text-white font-semibold text-sm">backend [US-West]</h3>
@@ -146,7 +146,7 @@ const Services3 = () => {
                   <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 rounded-xl p-5 border border-gray-800/50 shadow-2xl backdrop-blur-sm w-[280px]">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-7 h-7 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-lg">⚡</span>
+                        <span className="text-lg"></span>
                       </div>
                       <div>
                         <h3 className="text-white font-semibold text-sm">backend [EU]</h3>
