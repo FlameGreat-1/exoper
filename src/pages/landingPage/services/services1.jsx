@@ -25,12 +25,13 @@ const Projects = () => {
   }, []);
 
   const techLogos = [
-    { name: 'replaces', color: '#9CA3AF' },
-    { name: 'nginx', color: '#009639' },
-    { name: 'kubernetes', color: '#326CE5' },
-    { name: 'docker', color: '#2496ED' },
-    { name: 'aws', color: '#FF9900' },
-    { name: 'terraform', color: '#7B42BC' }
+    { name: 'Docker', icon: '/images/icons/docker.png' },
+    { name: 'Amazon ECS', icon: '/images/icons/amazon-ecs.png' },
+    { name: 'Datadog', icon: '/images/icons/datalog.png' },
+    { name: 'BetterStack', icon: '/images/icons/betterstack.png' },
+    { name: 'Kubernetes', icon: '/images/icons/kubernetes.png' },
+    { name: 'Nomad', icon: '/images/icons/nomad.png' },
+    { name: 'Sentry', icon: '/images/icons/sentry.png' }
   ];
 
   return (
@@ -142,16 +143,13 @@ const Projects = () => {
                 {techLogos.map((logo, index) => (
                   <div
                     key={index}
-                    className="w-8 h-8 rounded bg-gray-800/50 flex items-center justify-center transform hover:scale-110 transition-transform"
-                    style={{ 
-                      borderColor: logo.color,
-                      borderWidth: '1px',
-                      borderStyle: 'solid'
-                    }}
+                    className="w-8 h-8 rounded bg-gray-800/50 flex items-center justify-center transform hover:scale-110 transition-transform border border-gray-700/50"
                   >
-                    <span className="text-xs font-bold" style={{ color: logo.color }}>
-                      {logo.name.charAt(0).toUpperCase()}
-                    </span>
+                    <img 
+                      src={logo.icon} 
+                      alt={logo.name}
+                      className="w-5 h-5 object-contain opacity-60 hover:opacity-100 transition-opacity"
+                    />
                   </div>
                 ))}
               </div>

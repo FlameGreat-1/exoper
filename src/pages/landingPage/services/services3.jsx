@@ -27,7 +27,7 @@ const Services3 = () => {
 
       setPipelinePosition(prev => {
         const newPos = prev + scrollDelta * 0.5;
-        return Math.max(-200, Math.min(200, newPos));
+        return Math.max(-150, Math.min(50, newPos));
       });
     };
 
@@ -72,7 +72,7 @@ const Services3 = () => {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             
-            <div className="relative h-[650px] md:h-[750px] lg:h-[800px] w-full overflow-visible order-2 lg:order-1">
+            <div className="relative h-[550px] md:h-[750px] lg:h-[800px] w-full overflow-visible order-2 lg:order-1">
               <div className="absolute top-10 md:top-20 left-0 right-0 flex items-start justify-center gap-4 md:gap-8 px-2">
                 
                 <div className="relative" style={{ marginTop: '60px' }}>
@@ -186,16 +186,16 @@ const Services3 = () => {
                 </div>
               </div>
 
-              <div className="absolute top-[520px] md:top-[680px] left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto">
+              <div className="absolute top-[420px] md:top-[680px] left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto">
                 <div 
-                  className="absolute top-[-480px] md:top-[-620px] left-1/2 w-px h-[1000px] md:h-[1300px] bg-gradient-to-b from-transparent via-blue-400/60 via-blue-500/80 via-blue-400/50 to-transparent -translate-x-1/2 z-0"
+                  className="absolute top-[-380px] md:top-[-620px] left-1/2 w-px h-[1000px] md:h-[1300px] bg-gradient-to-b from-transparent via-blue-400/60 via-blue-500/80 via-blue-400/50 to-transparent -translate-x-1/2 z-0"
                 ></div>
                 
-                <div className="absolute top-[-480px] md:top-[-620px] right-[-70px] md:right-[-140px] w-[70px] md:w-[140px] h-px bg-gradient-to-l from-blue-500/70 to-transparent z-10"></div>
-                <div className="absolute top-[-480px] md:top-[-620px] right-[-70px] md:right-[-140px] w-1 md:w-1.5 h-1 md:h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50 z-10"></div>
+                <div className="absolute top-[-380px] md:top-[-620px] right-[-70px] md:right-[-140px] w-[70px] md:w-[140px] h-px bg-gradient-to-l from-blue-500/70 to-transparent z-10"></div>
+                <div className="absolute top-[-380px] md:top-[-620px] right-[-70px] md:right-[-140px] w-1 md:w-1.5 h-1 md:h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50 z-10"></div>
 
-                <div className="absolute top-[-480px] md:top-[-620px] left-[-70px] md:left-[-140px] w-[70px] md:w-[140px] h-px bg-gradient-to-r from-blue-500/70 to-transparent z-10"></div>
-                <div className="absolute top-[-480px] md:top-[-620px] left-[-70px] md:left-[-140px] w-1 md:w-1.5 h-1 md:h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50 z-10"></div>
+                <div className="absolute top-[-380px] md:top-[-620px] left-[-70px] md:left-[-140px] w-[70px] md:w-[140px] h-px bg-gradient-to-r from-blue-500/70 to-transparent z-10"></div>
+                <div className="absolute top-[-380px] md:top-[-620px] left-[-70px] md:left-[-140px] w-1 md:w-1.5 h-1 md:h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50 z-10"></div>
 
                 <div 
                   ref={pipelineRef}
@@ -242,25 +242,19 @@ const Services3 = () => {
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6" fill="#0080FF">
-                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                    </svg>
+                    <img src="/images/icons/docker.png" alt="Docker" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6" fill="#FF6B35">
-                      <circle cx="12" cy="12" r="10" fill="#FF6B35"/>
-                      <path d="M8 8h8v8H8z" fill="white"/>
-                    </svg>
+                    <img src="/images/icons/helm.png" alt="Helm" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6">
-                      <path d="M12 2l3 7h7l-5.5 4 2 7-6.5-5-6.5 5 2-7L2 9h7z" fill="#00D9B5"/>
-                    </svg>
+                    <img src="/images/icons/heroku.png" alt="Heroku" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6" fill="#9945FF">
-                      <rect x="6" y="6" width="12" height="12" rx="2" fill="#9945FF"/>
-                    </svg>
+                    <img src="/images/icons/cloudrun.png" alt="Cloud Run" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
+                  </div>
+                  <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
+                    <img src="/images/icons/istio.png" alt="Istio" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                 </div>
               </div>
@@ -272,12 +266,12 @@ const Services3 = () => {
       <section className="relative py-12 md:py-24 px-4 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 md:gap-6 mb-12 border-b border-gray-800/50 overflow-x-auto">
-              <button className="pb-3 md:pb-4 px-3 md:px-6 text-white border-b-2 border-white font-medium transition-colors text-sm md:text-base whitespace-nowrap">Deploy</button>
-              <button className="pb-3 md:pb-4 px-3 md:px-6 text-gray-500 hover:text-white transition-colors text-sm md:text-base whitespace-nowrap">Network</button>
-              <button className="pb-3 md:pb-4 px-3 md:px-6 text-gray-500 hover:text-white transition-colors text-sm md:text-base whitespace-nowrap">Scale</button>
-              <button className="pb-3 md:pb-4 px-3 md:px-6 text-gray-500 hover:text-white transition-colors text-sm md:text-base whitespace-nowrap">Monitor</button>
-              <button className="pb-3 md:pb-4 px-3 md:px-6 text-gray-500 hover:text-white transition-colors text-sm md:text-base whitespace-nowrap">Evolve</button>
+            <div className="flex items-center justify-center gap-2 md:gap-4 lg:gap-6 mb-12 border-b border-gray-800/50 overflow-x-auto px-4">
+              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white border-b-2 border-white font-medium transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Deploy</button>
+              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Network</button>
+              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Scale</button>
+              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Monitor</button>
+              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Evolve</button>
             </div>
           </div>
 
@@ -423,34 +417,19 @@ const Services3 = () => {
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6" fill="#0db7ed">
-                      <path d="M13.5 10.5h-3v-3h3v3zm6.5 0h-3v-3h3v3zm-13 0h-3v-3h3v3zm6.5 6.5h-3v-3h3v3zm6.5 0h-3v-3h3v3zm-13 0h-3v-3h3v3z"/>
-                    </svg>
+                    <img src="/images/icons/cilium.png" alt="Cilium" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6">
-                      <path d="M10.9 2.1l9.899 1.415 1.414 9.9-9.192 9.192-1.414 1.414-9.9-1.415-1.415-9.9 9.192-9.192 1.415-1.414z" fill="#326CE5"/>
-                    </svg>
+                    <img src="/images/icons/envoy.png" alt="Envoy" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6" fill="#7B42BC">
-                      <rect x="4" y="4" width="7" height="7" fill="#7B42BC"/>
-                      <rect x="13" y="4" width="7" height="7" fill="#7B42BC"/>
-                      <rect x="4" y="13" width="7" height="7" fill="#7B42BC"/>
-                      <rect x="13" y="13" width="7" height="7" fill="#7B42BC"/>
-                    </svg>
+                    <img src="/images/icons/nginx.png" alt="Nginx" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6">
-                      <circle cx="12" cy="12" r="10" fill="#161616"/>
-                      <path d="M12 2L6 12l6 10 6-10z" fill="#39E09B"/>
-                    </svg>
+                    <img src="/images/icons/haproxy.png" alt="HAProxy" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-6 md:h-6" fill="#632CA6">
-                      <circle cx="12" cy="12" r="10" fill="#632CA6"/>
-                      <circle cx="12" cy="12" r="4" fill="white"/>
-                    </svg>
+                    <img src="/images/icons/sentry.png" alt="Sentry" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                   </div>
                 </div>
               </div>

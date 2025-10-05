@@ -1,19 +1,47 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+
+const LogoComponent = ({ className = "", alt = "Exoper Logo" }) => {
+  const [triedPng, setTriedPng] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const onError = useCallback(
+    (e) => {
+      if (!triedPng) {
+        e.currentTarget.src = "/images/logo.png";
+        setTriedPng(true);
+        return;
+      }
+      setFailed(true);
+    },
+    [triedPng]
+  );
+
+  if (failed) {
+    return (
+      <div className={className} aria-hidden="true">
+        <span className="sr-only">{alt}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src="/images/logo.svg"
+      alt={alt}
+      className={`${className} bg-transparent block transform-gpu origin-left`}
+      style={{ transformOrigin: "left center" }}
+      loading="eager"
+      decoding="async"
+      onError={onError}
+      draggable="false"
+      role="img"
+      aria-label={alt}
+    />
+  );
+};
 
 const Footer = () => {
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-  
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email && email.includes('@')) {
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 5000);
-    }
-  };
-  
   const currentYear = new Date().getFullYear();
   
   const footerSections = [
@@ -93,53 +121,20 @@ const Footer = () => {
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8 xl:col-span-1">
             <div>
-              <Link to="/" className="flex items-center gap-1.5">
+              <Link to="/" className="flex items-center gap-1 lg:gap-1.5">
+                <LogoComponent className="h-8 md:h-10 lg:h-12 xl:h-14 w-auto scale-150" alt="Exoper Logo" />
                 <span 
-                  className="text-white font-extrabold uppercase tracking-widest text-2xl bg-clip-text text-transparent"
+                  className="text-white font-extrabold uppercase tracking-widest text-lg md:text-xl lg:text-2xl xl:text-3xl bg-clip-text text-transparent whitespace-nowrap"
                   style={{
                     backgroundImage: "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
                   }}
                 >
-                  EXOPER
+                  XOPER
                 </span>
               </Link>
               <p className="mt-4 text-base text-gray-300 max-w-xs leading-relaxed">
                 Creating exceptional digital experiences with modern technologies and creative design solutions.
               </p>
-            </div>
-            
-            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] rounded-xl p-6 border border-[#2a2a2a]">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-2">
-                Subscribe to newsletter
-              </h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Get the latest updates and resources delivered to your inbox.
-              </p>
-              <form className="space-y-3" onSubmit={handleSubscribe}>
-                <input
-                  type="email"
-                  name="email-address"
-                  id="email-address"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter your email"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-medium py-3 px-4 rounded-lg transition-all"
-                >
-                  Subscribe
-                </button>
-              </form>
-              
-              {subscribed && (
-                <p className="mt-3 text-sm text-green-400">
-                  Thanks for subscribing! Check your email for confirmation.
-                </p>
-              )}
             </div>
           </div>
           

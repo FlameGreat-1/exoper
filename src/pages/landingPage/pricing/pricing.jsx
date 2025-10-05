@@ -48,7 +48,7 @@ const Pricing = () => {
                 `}
               </style>
               <img 
-                src="/public/images/features/gpu-usage.png" 
+                src="/images/features/gpu-usage.png" 
                 alt="GPU Usage Chart" 
                 className="w-full h-auto object-contain rounded-lg wave-animate"
                 loading="lazy"
@@ -56,7 +56,7 @@ const Pricing = () => {
               
               <div className="absolute top-8 left-8 bg-[#1a1a2e]/90 backdrop-blur-sm border border-[#2a2a3e] rounded-lg px-4 py-2">
                 <p className="text-xs text-gray-400">Only pay for</p>
-                <p className="text-xs text-gray-400">active CPU</p>
+                <p className="text-xs text-gray-400">active GPU, CPU</p>
                 <p className="text-xs text-gray-400">and memory</p>
               </div>
             </div>
