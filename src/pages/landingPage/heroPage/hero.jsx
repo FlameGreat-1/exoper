@@ -279,9 +279,9 @@ builds.createApp();`
       <div className="absolute top-1/4 -right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl"></div>
       <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl"></div>
                 
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-col items-center justify-center min-h-screen py-16 sm:py-20 md:py-24">
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-col items-center justify-center min-h-screen py-8 md:py-12 lg:py-16 xl:py-20">
         
-        <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-8 mb-8">
+        <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-8 mb-4 md:mb-6 lg:mb-8">
           
           <motion.div 
             className="w-full lg:w-[52%] order-2 lg:order-1 mt-2 sm:mt-3 md:mt-4 px-2 lg:px-0 lg:-ml-16 flex justify-center lg:justify-start items-start"
@@ -357,7 +357,7 @@ builds.createApp();`
         </div>
 
         <motion.div 
-          className="mt-6 sm:mt-8 md:mt-10 lg:mt-12 px-2"
+          className="mt-8 sm:mt-10 md:mt-12 lg:mt-16 px-2"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
           transition={{ duration: 0.7, delay: 0.8 }}
@@ -366,7 +366,7 @@ builds.createApp();`
         </motion.div>
         
         <motion.div 
-          className="mt-10 sm:mt-12 md:mt-14 lg:mt-16 pt-6 sm:pt-8 border-t border-gray-800 px-2 w-full flex flex-col items-center"
+          className="mt-6 sm:mt-8 md:mt-10 lg:mt-12 pt-4 sm:pt-6 md:pt-8 border-t border-gray-800 px-2 w-full flex flex-col items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: isVisible ? 1 : 0 }}
           transition={{ duration: 0.7, delay: 1 }}
