@@ -137,10 +137,15 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
   const headerRef = useRef(null);
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768);
+    const onResize = () => {
+      const width = window.innerWidth;
+      setViewportWidth(width);
+      setIsMobile(width < 1024);
+    };
     onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -175,6 +180,22 @@ const Header = () => {
     return location.pathname === href || location.pathname.startsWith(href + "/");
   };
 
+  const getDropdownPosition = (idx, label) => {
+    const isNarrowViewport = viewportWidth < 1200;
+    const isLastItems = idx >= NAV.length - 2;
+    
+    if (label === "Pricing" && isNarrowViewport) {
+      return "right-0";
+    }
+    if (label === "Resources" && isNarrowViewport) {
+      return "right-0";
+    }
+    if (isLastItems && isNarrowViewport) {
+      return "right-0";
+    }
+    return "left-0";
+  };
+
   return (
     <>
       <a
@@ -186,17 +207,22 @@ const Header = () => {
       <header
         ref={headerRef}
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-          isScrolled ? "bg-black py-2 shadow-sm" : "bg-black py-3"
+          isScrolled ? "bg-black py-1.5 shadow-sm" : "bg-black py-2"
         }`}
         aria-label="Primary site header"
       >
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
-              <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-1.5">
-                <LogoComponent className="h-10 sm:h-12 md:h-14 w-auto scale-150" alt="Exoper Logo" />
+        <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 flex-shrink-0" style={{ minWidth: 0 }}>
+              <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-1">
+                <LogoComponent 
+                  className={`${viewportWidth < 1200 ? 'h-8 w-auto scale-125' : 'h-10 sm:h-12 md:h-14 w-auto scale-150'}`} 
+                  alt="Exoper Logo" 
+                />
                 <span
-                  className="text-white font-extrabold uppercase tracking-widest text-xl sm:text-2xl md:text-3xl bg-clip-text text-transparent"
+                  className={`text-white font-extrabold uppercase tracking-widest bg-clip-text text-transparent whitespace-nowrap ${
+                    viewportWidth < 1200 ? 'text-lg' : 'text-xl sm:text-2xl md:text-3xl'
+                  }`}
                   style={{
                     backgroundImage:
                       "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
@@ -208,11 +234,11 @@ const Header = () => {
             </div>
 
             <nav
-              className="hidden md:flex flex-1 justify-start ml-8"
+              className="hidden lg:flex flex-1 justify-center mx-2"
               role="navigation"
               aria-label="Primary"
             >
-              <ul className="inline-flex items-center space-x-4">
+              <ul className="inline-flex items-center space-x-1 xl:space-x-2">
                 {NAV.map((item, idx) => {
                   const hasChildren = Array.isArray(item.children);
                   const hasCustomDropdown = item.hasCustomDropdown;
@@ -220,7 +246,7 @@ const Header = () => {
                     isActive(item.href) ||
                     (hasChildren && item.children.some((c) => isActive(c.href)));
                   return (
-                    <li key={item.label} className="relative group">
+                    <li key={item.label} className="relative group flex-shrink-0">
                       {hasCustomDropdown ? (
                         <>
                           <button
@@ -230,14 +256,16 @@ const Header = () => {
                             onBlur={() => setOpenDropdown(null)}
                             aria-haspopup="true"
                             aria-expanded={openDropdown === idx}
-                            className={`flex items-center gap-1 uppercase tracking-widest text-sm font-semibold transition-colors px-3 py-2 rounded-md bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
+                            className={`flex items-center gap-1 uppercase tracking-widest font-semibold transition-colors rounded-md bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] whitespace-nowrap ${
+                              viewportWidth < 1200 ? 'text-xs px-2 py-1.5' : 'text-sm px-3 py-2'
+                            } ${
                               active
                                 ? "text-white"
                                 : "text-white hover:text-[#ff2dd4]"
                             }`}
                           >
                             {item.label}
-                            <ChevronDown className="w-3 h-3" />
+                            <ChevronDown className={viewportWidth < 1200 ? "w-2.5 h-2.5" : "w-3 h-3"} />
                           </button>
 
                           <AnimatePresence>
@@ -249,7 +277,12 @@ const Header = () => {
                                 transition={{ duration: 0.16 }}
                                 onMouseEnter={() => setOpenDropdown(idx)}
                                 onMouseLeave={() => setOpenDropdown(null)}
-                                className="absolute left-0 mt-3 z-50"
+                                className={`absolute mt-2 z-50 ${getDropdownPosition(idx, item.label)}`}
+                                style={{
+                                  transform: viewportWidth < 1200 && getDropdownPosition(idx, item.label) === "right-0" 
+                                    ? "translateX(-10px)" 
+                                    : "none"
+                                }}
                               >
                                 {item.label === "Company" && <CompanyDropdownCard />}
                                 {item.label === "Pricing" && <PricingDropdownCard />}
@@ -266,14 +299,16 @@ const Header = () => {
                             onBlur={() => setOpenDropdown(null)}
                             aria-haspopup="true"
                             aria-expanded={openDropdown === idx}
-                            className={`flex items-center gap-1 uppercase tracking-widest text-sm font-semibold transition-colors px-3 py-2 rounded-md bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
+                            className={`flex items-center gap-1 uppercase tracking-widest font-semibold transition-colors rounded-md bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] whitespace-nowrap ${
+                              viewportWidth < 1200 ? 'text-xs px-2 py-1.5' : 'text-sm px-3 py-2'
+                            } ${
                               active
                                 ? "text-white"
                                 : "text-white hover:text-[#ff2dd4]"
                             }`}
                           >
                             {item.label}
-                            <ChevronDown className="w-3 h-3" />
+                            <ChevronDown className={viewportWidth < 1200 ? "w-2.5 h-2.5" : "w-3 h-3"} />
                           </button>
 
                           <AnimatePresence>
@@ -285,16 +320,28 @@ const Header = () => {
                                 transition={{ duration: 0.16 }}
                                 onMouseEnter={() => setOpenDropdown(idx)}
                                 onMouseLeave={() => setOpenDropdown(null)}
-                                className="absolute left-1/2 -translate-x-1/2 mt-3 w-56 bg-black rounded-lg shadow-lg ring-1 ring-gray-700 ring-opacity-50 py-2 z-50"
+                                className={`absolute mt-2 bg-black rounded-lg shadow-lg ring-1 ring-gray-700 ring-opacity-50 py-2 z-50 ${getDropdownPosition(idx, item.label)} ${
+                                  viewportWidth < 1200 ? 'w-48' : 'w-56'
+                                }`}
                                 role="menu"
                                 aria-label={`${item.label} submenu`}
+                                style={{
+                                  transform: viewportWidth < 1200 && getDropdownPosition(idx, item.label) === "right-0" 
+                                    ? "translateX(-10px)" 
+                                    : getDropdownPosition(idx, item.label) === "left-0" 
+                                    ? "translateX(-50%)" 
+                                    : "none",
+                                  left: getDropdownPosition(idx, item.label) === "left-0" ? "50%" : "auto"
+                                }}
                               >
                                 {item.children.map((child) => (
                                   <li key={child.href}>
                                     <Link
                                       to={child.href}
                                       role="menuitem"
-                                      className={`block px-4 py-2 text-sm font-medium transition-colors ${
+                                      className={`block px-4 py-2 font-medium transition-colors ${
+                                        viewportWidth < 1200 ? 'text-xs' : 'text-sm'
+                                      } ${
                                         isActive(child.href)
                                           ? "text-white bg-gray-900"
                                           : "text-white hover:text-[#ff2dd4] hover:bg-gray-800"
@@ -311,7 +358,9 @@ const Header = () => {
                       ) : (
                         <Link
                           to={item.href}
-                          className={`uppercase tracking-widest text-sm font-semibold px-3 py-2 rounded-md bg-black transition-colors ${
+                          className={`uppercase tracking-widest font-semibold rounded-md bg-black transition-colors whitespace-nowrap ${
+                            viewportWidth < 1200 ? 'text-xs px-2 py-1.5' : 'text-sm px-3 py-2'
+                          } ${
                             active
                               ? "text-white"
                               : "text-white hover:text-[#ff2dd4]"
@@ -327,23 +376,27 @@ const Header = () => {
               </ul>
             </nav>
 
-            <div className="hidden md:flex items-center gap-3 flex-shrink-0 ml-auto">
+            <div className="hidden lg:flex items-center gap-1.5 xl:gap-3 flex-shrink-0">
               <Link
                 to="/signin"
-                className="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-black text-white rounded-md hover:bg-gray-900 transition-colors border border-gray-700"
+                className={`font-semibold uppercase tracking-wide bg-black text-white rounded-md hover:bg-gray-900 transition-colors border border-gray-700 whitespace-nowrap ${
+                  viewportWidth < 1200 ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm'
+                }`}
               >
                 Sign In
               </Link>
               <Link
                 to="/book-demo"
-                className="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-black text-white rounded-md hover:bg-gray-900 transition-colors border border-gray-700"
+                className={`font-semibold uppercase tracking-wide bg-black text-white rounded-md hover:bg-gray-900 transition-colors border border-gray-700 whitespace-nowrap ${
+                  viewportWidth < 1200 ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm'
+                }`}
               >
                 Book Demo
               </Link>
             </div>
 
             {isMobile && (
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 <HamburgerMenuOverlay
                   items={MOBILE_NAV_ITEMS}
                   buttonTop="30px"
@@ -367,7 +420,7 @@ const Header = () => {
         </div>
       </header>
 
-      <div className="h-16 md:h-20" />
+      <div className="h-14 lg:h-16 xl:h-20" />
     </>
   );
 };
