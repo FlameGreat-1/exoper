@@ -1,44 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Check, Cpu, HardDrive, Database, Network } from 'lucide-react';
 
 const Pricing = () => {
-  const [chartPoints, setChartPoints] = useState([180, 160, 140, 100, 80, 60, 40, 30, 20]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setChartPoints(prev => {
-        const newPoints = [...prev];
-        newPoints.shift();
-        const lastPoint = newPoints[newPoints.length - 1];
-        const variation = (Math.random() - 0.5) * 30;
-        const newPoint = Math.max(10, Math.min(180, lastPoint + variation));
-        newPoints.push(newPoint);
-        return newPoints;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const generatePath = (points) => {
-    const width = 400;
-    const segmentWidth = width / (points.length - 1);
-    let path = `M 0 ${points[0]}`;
-    
-    for (let i = 1; i < points.length; i++) {
-      const x = i * segmentWidth;
-      const y = points[i];
-      path += ` L ${x} ${y}`;
-    }
-    
-    return path;
-  };
-
-  const generateAreaPath = (points) => {
-    const linePath = generatePath(points);
-    return `${linePath} L 400 200 L 0 200 Z`;
-  };
-
   return (
     <div className="min-h-screen bg-[#0a0b14] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
@@ -53,41 +16,45 @@ const Pricing = () => {
           </div>
           
           <div className="relative">
-            <div className="relative bg-gradient-to-br from-[#1a1a2e] to-[#0a0a0a] rounded-2xl p-6 border border-[#2a2a3e]">
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm text-gray-400">100%</span>
-                </div>
-                
-                <svg className="w-full h-48" viewBox="0 0 400 200" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4"/>
-                      <stop offset="100%" stopColor="#6366f1" stopOpacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  
-                  <path 
-                    d={generatePath(chartPoints)}
-                    stroke="#6366f1" 
-                    strokeWidth="3" 
-                    fill="none"
-                    style={{ transition: 'd 1s ease-in-out' }}
-                  />
-                  
-                  <path 
-                    d={generateAreaPath(chartPoints)}
-                    fill="url(#chartGradient)"
-                    style={{ transition: 'd 1s ease-in-out' }}
-                  />
-                </svg>
-
-                <div className="flex justify-between items-end">
-                  <span className="text-sm text-gray-400">0%</span>
-                </div>
-              </div>
+            <div className="relative bg-gradient-to-br from-[#1a1a2e] to-[#0a0a0a] rounded-2xl p-6 border border-[#2a2a3e] overflow-hidden">
+              <style>
+                {`
+                  @keyframes wave-complex {
+                    0% {
+                      transform: translateX(0) translateY(0) scale(1) rotate(0deg);
+                      opacity: 1;
+                    }
+                    25% {
+                      transform: translateX(-15px) translateY(-5px) scale(1.03) rotate(-0.5deg);
+                      opacity: 0.95;
+                    }
+                    50% {
+                      transform: translateX(-20px) translateY(0) scale(1.05) rotate(0deg);
+                      opacity: 0.9;
+                    }
+                    75% {
+                      transform: translateX(-15px) translateY(5px) scale(1.03) rotate(0.5deg);
+                      opacity: 0.95;
+                    }
+                    100% {
+                      transform: translateX(0) translateY(0) scale(1) rotate(0deg);
+                      opacity: 1;
+                    }
+                  }
+                  .wave-animate {
+                    animation: wave-complex 10s ease-in-out infinite;
+                    transform-origin: center center;
+                  }
+                `}
+              </style>
+              <img 
+                src="/public/images/features/gpu-usage.png" 
+                alt="GPU Usage Chart" 
+                className="w-full h-auto object-contain rounded-lg wave-animate"
+                loading="lazy"
+              />
               
-              <div className="absolute top-8 right-8 bg-[#1a1a2e]/90 backdrop-blur-sm border border-[#2a2a3e] rounded-lg px-4 py-2">
+              <div className="absolute top-8 left-8 bg-[#1a1a2e]/90 backdrop-blur-sm border border-[#2a2a3e] rounded-lg px-4 py-2">
                 <p className="text-xs text-gray-400">Only pay for</p>
                 <p className="text-xs text-gray-400">active CPU</p>
                 <p className="text-xs text-gray-400">and memory</p>
