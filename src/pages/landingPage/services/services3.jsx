@@ -87,7 +87,7 @@ const Services3 = () => {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             
-            <div className="relative h-[800px] md:h-[900px] lg:h-[1000px] w-full overflow-visible">
+            <div className="relative h-[650px] md:h-[750px] lg:h-[800px] w-full overflow-visible order-2 lg:order-1">
               <div className="absolute top-10 md:top-20 left-0 right-0 flex items-start justify-center gap-4 md:gap-8 px-2">
                 
                 <div className="relative" style={{ marginTop: '60px' }}>
@@ -254,7 +254,7 @@ const Services3 = () => {
               </div>
             </div>
 
-            <div className="space-y-4 md:space-y-6 px-2">
+            <div className="space-y-4 md:space-y-6 px-2 order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 text-blue-400 font-medium text-xs md:text-sm">
                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                 Scale and Grow

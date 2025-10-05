@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 
 declare global {
   interface Window {
@@ -17,20 +17,24 @@ interface ParticlesBackgroundProps {
 }
 
 const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({
-  colors = ['#ff223e', '#5d1eb2', '#ff7300'],
-  size = 3,
+  colors = ['#ffffff'],
+  size = 1,
   countDesktop = 60,
   countTablet = 50,
   countMobile = 40,
   zIndex = 0,
   height = '100vh',
 }) => {
+  const initializedRef = useRef(false);
+
   useLayoutEffect(() => {
+    if (initializedRef.current) return;
+    
     const script = document.createElement('script');
     script.src = "https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js";
     script.onload = () => {
       const particlesElement = document.getElementById('js-particles');
-      if (particlesElement && window.particlesJS) {
+      if (particlesElement && window.particlesJS && !initializedRef.current) {
         const getParticleCount = () => {
           const screenWidth = window.innerWidth;
           if (screenWidth > 1024) return countDesktop;
@@ -42,6 +46,9 @@ const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({
           particles: {
             number: {
               value: getParticleCount(),
+              density: {
+                enable: false
+              }
             },
             color: {
               value: colors,
@@ -52,21 +59,31 @@ const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({
             opacity: {
               value: 1,
               random: false,
+              anim: {
+                enable: false
+              }
             },
             size: {
               value: size,
               random: true,
+              anim: {
+                enable: false
+              }
             },
             line_linked: {
               enable: false,
             },
             move: {
-              enable: true,
-              speed: 2,
+              enable: false,
+              speed: 0,
               direction: 'none',
-              random: true,
+              random: false,
               straight: false,
               out_mode: 'out',
+              bounce: false,
+              attract: {
+                enable: false
+              }
             },
           },
           interactivity: {
@@ -78,19 +95,31 @@ const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({
               onclick: {
                 enable: false,
               },
-              resize: true,
+              resize: false,
             },
           },
           retina_detect: true,
         });
+        
+        initializedRef.current = true;
+        
+        // Force canvas to be static
+        const canvas = particlesElement.querySelector('canvas');
+        if (canvas) {
+          canvas.style.position = 'absolute';
+          canvas.style.pointerEvents = 'none';
+          canvas.style.willChange = 'auto';
+        }
       }
     };
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
-  }, [colors, size, countDesktop, countTablet, countMobile]);
+  }, []);
 
   return (
     <div
@@ -103,17 +132,21 @@ const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({
         left: 0,
         zIndex: zIndex,
         pointerEvents: 'none',
+        willChange: 'auto',
       }}
     >
       <style>{`
         #js-particles canvas {
-          position: absolute;
+          position: absolute !important;
           width: 100%;
           height: 100%;
+          pointer-events: none !important;
+          will-change: auto !important;
         }
 
         .particles-js-canvas-el {
-          position: absolute;
+          position: absolute !important;
+          pointer-events: none !important;
         }
 
         .particles-js-canvas-el circle {

@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ParticlesBackground from "../../../components/ui/particles-background";
 import TerminalCard from "../../../components/ui/terminal-card";
-import TechStacks from "../../../components/ui/stacks";
+import Companies from "../../../components/ui/companies";
 
 const Hero = () => {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -10,6 +10,10 @@ const Hero = () => {
   const [glowingLineIndex, setGlowingLineIndex] = useState(0);
   const [scrollY, setScrollY] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [devCount, setDevCount] = useState(500);
+  const [communityCount, setCommunityCount] = useState(1);
+  const [isCountingDevs, setIsCountingDevs] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
   const heroRef = useRef(null);
   const animationFrameRef = useRef(null);
   const textIntervalRef = useRef(null);
@@ -70,7 +74,51 @@ builds.createApp();`
 
   const mainText = "Let me help you in Transforming ideas into exceptional digital experiences with modern web technologies and creative design solutions.";
 
-  // Detect mobile device
+  const triggerCelebration = useCallback(() => {
+    setShowCelebration(true);
+    setTimeout(() => setShowCelebration(false), 800);
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const interval = setInterval(() => {
+      if (isCountingDevs) {
+        setDevCount(prev => {
+          const next = prev + Math.floor(Math.random() * 15000) + 5000;
+          if (next >= 500000) {
+            triggerCelebration();
+            setTimeout(() => {
+              setIsCountingDevs(false);
+              setCommunityCount(1);
+            }, 1000);
+            return 500000;
+          }
+          if (next >= 100000 && prev < 100000) triggerCelebration();
+          if (next >= 250000 && prev < 250000) triggerCelebration();
+          return next;
+        });
+      } else {
+        setCommunityCount(prev => {
+          const next = prev + Math.floor(Math.random() * 2) + 1;
+          if (next >= 18) {
+            triggerCelebration();
+            setTimeout(() => {
+              setIsCountingDevs(true);
+              setDevCount(500);
+            }, 1000);
+            return 18;
+          }
+          if (next >= 5 && prev < 5) triggerCelebration();
+          if (next >= 10 && prev < 10) triggerCelebration();
+          return next;
+        });
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [isVisible, isCountingDevs, triggerCelebration]);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
@@ -80,9 +128,8 @@ builds.createApp();`
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Optimized scroll handler with throttling
   useEffect(() => {
-    if (isMobile) return; // Disable scroll parallax on mobile
+    if (isMobile) return;
     
     let ticking = false;
     let lastScrollY = 0;
@@ -90,7 +137,6 @@ builds.createApp();`
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      // Only update if scroll changed significantly (reduce calculations)
       if (Math.abs(currentScrollY - lastScrollY) < 5) return;
       
       if (!ticking) {
@@ -112,7 +158,6 @@ builds.createApp();`
     };
   }, [isMobile]);
 
-  // Text rotation with cleanup
   useEffect(() => {
     textIntervalRef.current = setInterval(() => {
       setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
@@ -125,7 +170,6 @@ builds.createApp();`
     };
   }, [rotatingTexts.length]);
   
-  // Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -145,7 +189,6 @@ builds.createApp();`
     };
   }, []);
   
-  // Glowing line animation with cleanup
   useEffect(() => {
     glowIntervalRef.current = setInterval(() => {
       setGlowingLineIndex((prevIndex) => (prevIndex + 1) % glowingColors.length);
@@ -158,7 +201,6 @@ builds.createApp();`
     };
   }, [glowingColors.length]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (animationFrameRef.current) {
@@ -186,13 +228,11 @@ builds.createApp();`
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 1px)`,
             backgroundSize: '24px 24px',
-            backgroundPosition: isMobile ? '0 0' : `${scrollY * 0.1}px ${scrollY * 0.1}px`,
-            willChange: isMobile ? 'auto' : 'background-position'
+            backgroundPosition: '0 0'
           }}
         ></div>
       </div>
 
-      {/* Simplified SVG - removed infinite animations on mobile */}
       {!isMobile && (
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           <defs>
@@ -240,203 +280,173 @@ builds.createApp();`
       <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl"></div>
                 
       <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-col items-center justify-center min-h-screen py-16 sm:py-20 md:py-24">
-        <div className="w-full max-w-6xl mx-auto text-center">
-          <motion.h1 
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-4 sm:mb-6 px-2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-          >
-            <span className="block text-white">Let's Create And Craft</span>
-            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">ART</span>
-          </motion.h1>
-          
-          <div className="h-auto min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] mb-6 sm:mb-8 overflow-hidden px-2">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={currentTextIndex}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className={`text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium ${textColors[currentTextIndex]}`}
-              >
-                {rotatingTexts[currentTextIndex]}
-              </motion.p>
-            </AnimatePresence>
-          </div>
+        
+        <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-8 mb-8">
           
           <motion.div 
-            className="mt-4 sm:mt-6 relative px-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isVisible ? 1 : 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-          >
-            <div className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              {mainText}
-            </div>
-            
-            {/* Simplified glowing line - single element instead of 5 overlays */}
-            <div className="relative w-full h-1 mt-4 overflow-hidden">
-              <motion.div
-                className="absolute inset-0 flex items-center justify-center"
-                animate={{ opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <div 
-                  className="h-0.5 w-3/4 mx-auto" 
-                  style={{ 
-                    background: `linear-gradient(90deg, transparent 0%, ${glowingColors[glowingLineIndex]} 20%, ${glowingColors[glowingLineIndex]} 80%, transparent 100%)`,
-                    boxShadow: `0 0 8px ${glowingColors[glowingLineIndex]}`
-                  }}
-                />
-              </motion.div>
-            </div>
-          </motion.div>
-          
-          <motion.div 
-            className="w-full max-w-2xl mx-auto mt-6 sm:mt-8 md:mt-10 px-2"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+            className="w-full lg:w-[52%] order-2 lg:order-1 mt-2 sm:mt-3 md:mt-4 px-2 lg:px-0 lg:-ml-16 flex justify-center lg:justify-start items-start"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : -30 }}
             transition={{ duration: 0.7, delay: 0.6 }}
           >
-            <div className="relative">
+            <div className="relative w-full max-w-3xl h-[300px]">
               <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/10 to-blue-600/10 rounded-lg blur-xl"></div>
-              <div className="relative bg-gray-900/80 backdrop-blur-sm rounded-lg border border-gray-800 hover:border-purple-500/50 transition-all duration-300">
+              <div className="relative bg-gray-900/80 backdrop-blur-sm rounded-lg border border-gray-800 hover:border-purple-500/50 transition-all duration-300 h-full overflow-hidden">
                 <TerminalCard 
                   commands={terminalCommands}
                   language="javascript"
-                  className="shadow-xl rounded-xl overflow-hidden"
+                  className="shadow-xl rounded-xl h-full overflow-hidden [&_pre]:text-center [&_.react-syntax-highlighter]:text-center [&>div:last-child]:h-[calc(100%-44px)] [&>div:last-child]:overflow-hidden [&>div:last-child]:max-h-none"
                 />
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
-            className="mt-6 sm:mt-8 md:mt-10 lg:mt-12 px-2"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
-            transition={{ duration: 0.7, delay: 0.8 }}
-          >
-            <TechStacks />
-          </motion.div>
-          
-          <motion.div 
-            className="mt-10 sm:mt-12 md:mt-14 lg:mt-16 pt-6 sm:pt-8 border-t border-gray-800 px-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isVisible ? 1 : 0 }}
-            transition={{ duration: 0.7, delay: 1 }}
-          >
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-              <span className="text-purple-400 text-xs sm:text-sm font-medium tracking-wide">TRUSTED BY INNOVATIVE TEAMS</span>
-            </div>
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-              {['Company 1', 'Company 2', 'Company 3', 'Company 4'].map((company, index) => (
-                <div 
-                  key={index}
-                  className="px-3 sm:px-4 py-2 bg-gray-900/60 backdrop-blur-sm rounded border border-gray-800 hover:border-purple-500/50 transition-all duration-300 transform hover:-translate-y-1"
+
+          <div className="w-full lg:w-[44%] order-1 lg:order-2 text-center lg:text-left px-2 lg:px-0 lg:ml-8">
+            <motion.h1 
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-4 sm:mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
+              <span className="block lg:inline text-white">Let's Create And Craft </span>
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">ART</span>
+            </motion.h1>
+            
+            <div className="h-auto min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] mb-6 sm:mb-8 overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={currentTextIndex}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className={`text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium ${textColors[currentTextIndex]}`}
                 >
-                  <span className="text-gray-400 hover:text-purple-400 transition-colors text-xs sm:text-sm md:text-base">{company}</span>
-                </div>
-              ))}
+                  {rotatingTexts[currentTextIndex]}
+                </motion.p>
+              </AnimatePresence>
             </div>
-          </motion.div>
+            
+            <motion.div 
+              className="mt-4 sm:mt-6 relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isVisible ? 1 : 0 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+            >
+              <div className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                {mainText}
+              </div>
+              
+              <div className="relative w-full h-1 mt-4 overflow-hidden">
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center lg:justify-start"
+                  animate={{ opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <div 
+                    className="h-0.5 w-3/4 mx-auto lg:mx-0" 
+                    style={{ 
+                      background: `linear-gradient(90deg, transparent 0%, ${glowingColors[glowingLineIndex]} 20%, ${glowingColors[glowingLineIndex]} 80%, transparent 100%)`,
+                      boxShadow: `0 0 8px ${glowingColors[glowingLineIndex]}`
+                    }}
+                  />
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
         </div>
+
+        <motion.div 
+          className="mt-6 sm:mt-8 md:mt-10 lg:mt-12 px-2"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+          transition={{ duration: 0.7, delay: 0.8 }}
+        >
+          <Companies />
+        </motion.div>
+        
+        <motion.div 
+          className="mt-10 sm:mt-12 md:mt-14 lg:mt-16 pt-6 sm:pt-8 border-t border-gray-800 px-2 w-full flex flex-col items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isVisible ? 1 : 0 }}
+          transition={{ duration: 0.7, delay: 1 }}
+        >
+          <div className="text-center mb-6 sm:mb-8 relative">
+            <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 font-medium mb-4">
+              Trusted by more than {devCount.toLocaleString()}+ developers at the world's leading AI companies
+            </h3>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 md:gap-12">
+              <div className="flex items-center gap-2 relative">
+                <AnimatePresence>
+                  {showCelebration && isCountingDevs && (
+                    <>
+                      {[...Array(8)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-2 h-2 bg-yellow-400 rounded-full"
+                          initial={{ scale: 0, x: 0, y: 0 }}
+                          animate={{ 
+                            scale: [0, 1, 0],
+                            x: Math.cos((i * Math.PI * 2) / 8) * 40,
+                            y: Math.sin((i * Math.PI * 2) / 8) * 40,
+                            opacity: [1, 1, 0]
+                          }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.8 }}
+                        />
+                      ))}
+                    </>
+                  )}
+                </AnimatePresence>
+                <svg className="w-6 h-6 sm:w-7 sm:h-7 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  ))}
+                </div>
+                <span className="text-gray-300 text-base sm:text-lg md:text-xl font-medium ml-2">4.8 rating</span>
+              </div>
+              <div className="flex items-center gap-2 relative">
+                <AnimatePresence>
+                  {showCelebration && !isCountingDevs && (
+                    <>
+                      {[...Array(8)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-2 h-2 bg-purple-400 rounded-full"
+                          initial={{ scale: 0, x: 0, y: 0 }}
+                          animate={{ 
+                            scale: [0, 1, 0],
+                            x: Math.cos((i * Math.PI * 2) / 8) * 40,
+                            y: Math.sin((i * Math.PI * 2) / 8) * 40,
+                            opacity: [1, 1, 0]
+                          }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.8 }}
+                        />
+                      ))}
+                    </>
+                  )}
+                </AnimatePresence>
+                <svg className="w-6 h-6 sm:w-7 sm:h-7 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+                <span className="text-gray-300 text-base sm:text-lg md:text-xl font-medium">{communityCount}K+ AI native engineering community</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Simplified avatar animations - no infinite loops on mobile */}
-      {!isMobile && (
-        <>
-          <div
-            className="pointer-events-none hidden xl:block z-20"
-            style={{ position: 'absolute', left: '8%', top: '15%' }}
-            aria-hidden="true"
-          >
-            <div className="space-y-6">
-              <motion.div
-                className="relative w-20 h-20 xl:w-24 xl:h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
-                initial={{ opacity: 0, y: 12, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-              >
-                <img
-                  src="/images/avatars/avatar-left-1.png"
-                  alt=""
-                  className="object-cover w-full h-full rounded-full"
-                  loading="lazy"
-                />
-                <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(139,92,246,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
-              </motion.div>
-
-              <motion.div
-                className="relative w-14 h-14 xl:w-16 xl:h-16 rounded-full ring-6 ring-blue-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
-                initial={{ opacity: 0, y: 12, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
-              >
-                <img
-                  src="/images/avatars/avatar-left-2.png"
-                  alt=""
-                  className="object-cover w-full h-full rounded-full"
-                  loading="lazy"
-                />
-                <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(59,130,246,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
-              </motion.div>
-            </div>
-          </div>
-
-          <div
-            className="pointer-events-none hidden xl:block z-20"
-            style={{ position: 'absolute', right: '8%', top: '30%' }}
-            aria-hidden="true"
-          >
-            <div className="space-y-6">
-              <motion.div
-                className="relative w-20 h-20 xl:w-24 xl:h-24 rounded-full ring-8 ring-purple-900/20 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
-                initial={{ opacity: 0, y: -12, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-              >
-                <img
-                  src="/images/avatars/avatar-right-1.png"
-                  alt=""
-                  className="object-cover w-full h-full rounded-full"
-                  loading="lazy"
-                />
-                <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 10px 30px rgba(139,92,246,0.22)", filter: "blur(6px)", opacity: 0.55 }} />
-              </motion.div>
-
-              <motion.div
-                className="relative w-10 h-10 xl:w-12 xl:h-12 rounded-full ring-4 ring-blue-900/12 shadow-2xl overflow-hidden bg-gray-900/60 backdrop-blur-sm border border-gray-800"
-                initial={{ opacity: 0, y: -12, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.24, duration: 0.45, ease: "easeOut" }}
-              >
-                <img
-                  src="/images/avatars/avatar-right-2.png"
-                  alt=""
-                  className="object-cover w-full h-full rounded-full"
-                  loading="lazy"
-                />
-                <span className="absolute inset-0 rounded-full mix-blend-screen" style={{ boxShadow: "0 8px 24px rgba(59,130,246,0.18)", filter: "blur(6px)", opacity: 0.5 }} />
-              </motion.div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Reduced particle count on mobile */}
       <div className="absolute inset-0 w-full h-full" style={{ zIndex: 2 }}>
-        <ParticlesBackground 
-          colors={['#8B5CF6', '#3B82F6', '#FFD700']}
-          size={isMobile ? 2 : 3}
-          countDesktop={isMobile ? 15 : 50}
-          countTablet={isMobile ? 10 : 35}
-          countMobile={15}
-          zIndex={2}
-          height="100%"
-          width="100%"
+      <ParticlesBackground 
+        zIndex={2}
+        height="100%"
+        width="100%"
         />
       </div>
       
