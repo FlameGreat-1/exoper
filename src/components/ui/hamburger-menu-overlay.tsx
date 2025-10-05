@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 
 export interface MenuItem {
   label: string;
@@ -71,6 +71,7 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [buttonPosition, setButtonPosition] = useState({ x: buttonLeft, y: buttonTop });
+  const [expandedItems, setExpandedItems] = useState<{[key: string]: boolean}>({});
   const navRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -88,7 +89,6 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
     "2xl": "text-5xl md:text-6xl",
   };
 
-  // Update button position dynamically
   useEffect(() => {
     const updatePosition = () => {
       if (buttonRef.current) {
@@ -119,20 +119,24 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
       onOpen?.();
     } else {
       document.body.style.overflow = "";
+      setExpandedItems({});
       onClose?.();
     }
   };
 
-  // Flatten items to include children as separate menu items
-  const flattenedItems = items.reduce((acc: MenuItem[], item) => {
-    acc.push(item);
-    if (item.children) {
-      acc.push(...item.children);
-    }
-    return acc;
-  }, []);
+  const toggleDropdown = (label: string) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [label]: !prev[label]
+    }));
+  };
 
-  const handleItemClick = (item: MenuItem) => {
+  const handleItemClick = (item: MenuItem, hasChildren: boolean) => {
+    if (hasChildren) {
+      toggleDropdown(item.label);
+      return;
+    }
+
     if (item.onClick) {
       item.onClick();
     }
@@ -144,6 +148,7 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
     if (!keepOpenOnItemClick) {
       setIsOpen(false);
       document.body.style.overflow = "";
+      setExpandedItems({});
       onClose?.();
     }
   };
@@ -153,6 +158,7 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
       if (e.key === "Escape" && isOpen) {
         setIsOpen(false);
         document.body.style.overflow = "";
+        setExpandedItems({});
         onClose?.();
       }
     };
@@ -228,8 +234,6 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
             width: 100%;
             max-width: 600px;
             padding: 2rem;
-            max-height: 80vh;
-            overflow-y: auto;
             ${menuDirection === "horizontal" ? "display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;" : ""}
             ${menuAlignment === "center" ? "text-align: center;" : ""}
             ${menuAlignment === "right" ? "text-align: right;" : ""}
@@ -279,17 +283,16 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
             transform: translate(-50%, -50%) translateX(0);
           }
           
-          .menu-item-${zIndex} span {
+          .menu-item-${zIndex} .menu-item-content {
             opacity: 0.7;
             transition: opacity 0.25s ease;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            justify-content: ${menuAlignment === "center" ? "center" : menuAlignment === "right" ? "flex-end" : "flex-start"};
           }
           
-          .menu-item-${zIndex}:hover span,
-          .menu-item-${zIndex}.active span {
+          .menu-item-${zIndex}:hover .menu-item-content,
+          .menu-item-${zIndex}.active .menu-item-content {
             opacity: 1;
           }
           
@@ -298,24 +301,45 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
             outline-offset: 2px;
             border-radius: 4px;
           }
-          
-          /* Scrollbar styling */
-          .menu-items-${zIndex}::-webkit-scrollbar {
-            width: 8px;
+
+          .submenu-${zIndex} {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            padding-left: 2rem;
           }
-          
-          .menu-items-${zIndex}::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+
+          .submenu-${zIndex}.expanded {
+            max-height: 500px;
+            opacity: 1;
           }
-          
-          .menu-items-${zIndex}::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
+
+          .submenu-item-${zIndex} {
+            padding: 0.75rem 0;
+            font-size: 0.9em;
+            opacity: 0.8;
+            transition: opacity 0.25s ease;
+            cursor: pointer;
           }
-          
-          .menu-items-${zIndex}::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+
+          .submenu-item-${zIndex}:hover {
+            opacity: 1;
+          }
+
+          .submenu-item-${zIndex}.active {
+            color: #ff2dd4;
+            opacity: 1;
+          }
+
+          .chevron-icon-${zIndex} {
+            transition: transform 0.3s ease;
+            display: inline-block;
+            margin-left: 0.5rem;
+          }
+
+          .chevron-icon-${zIndex}.rotated {
+            transform: rotate(180deg);
           }
           
           @media (max-width: 480px) {
@@ -338,36 +362,83 @@ export const HamburgerMenuOverlay: React.FC<HamburgerMenuOverlayProps> = ({
         aria-hidden={!isOpen}
       >
         <ul className={cn(`menu-items-${zIndex}`)}>
-          {flattenedItems.map((item, index) => (
-            <li
-              key={index}
-              className={cn(
-                `menu-item-${zIndex}`,
-                fontSizes[fontSize],
-                isOpen && "visible",
-                isActive(item.href) && "active",
-                menuItemClassName
-              )}
-              style={{
-                transitionDelay: isOpen ? `${index * staggerDelay}s` : "0s",
-              }}
-              onClick={() => handleItemClick(item)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleItemClick(item);
-                }
-              }}
-              tabIndex={isOpen ? 0 : -1}
-              role="button"
-              aria-label={`Navigate to ${item.label}`}
-            >
-              <span>
-                {item.icon && <span className="menu-icon">{item.icon}</span>}
-                {item.label}
-              </span>
-            </li>
-          ))}
+          {items.map((item, index) => {
+            const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+            const isExpanded = expandedItems[item.label];
+            const itemActive = isActive(item.href) || (hasChildren && item.children?.some((c) => isActive(c.href)));
+
+            return (
+              <li key={index}>
+                <div
+                  className={cn(
+                    `menu-item-${zIndex}`,
+                    fontSizes[fontSize],
+                    isOpen && "visible",
+                    itemActive && "active",
+                    menuItemClassName
+                  )}
+                  style={{
+                    transitionDelay: isOpen ? `${index * staggerDelay}s` : "0s",
+                  }}
+                  onClick={() => handleItemClick(item, hasChildren)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleItemClick(item, hasChildren);
+                    }
+                  }}
+                  tabIndex={isOpen ? 0 : -1}
+                  role="button"
+                  aria-label={hasChildren ? `Toggle ${item.label} submenu` : `Navigate to ${item.label}`}
+                  aria-expanded={hasChildren ? isExpanded : undefined}
+                >
+                  <span className="menu-item-content">
+                    {item.icon && <span className="menu-icon">{item.icon}</span>}
+                    <span>{item.label}</span>
+                    {hasChildren && (
+                      <ChevronDown 
+                        className={cn(`chevron-icon-${zIndex}`, isExpanded && "rotated")}
+                        size={16}
+                      />
+                    )}
+                  </span>
+                </div>
+
+                {hasChildren && (
+                  <div className={cn(`submenu-${zIndex}`, isExpanded && "expanded")}>
+                    {item.children?.map((child, childIndex) => (
+                      <div
+                        key={childIndex}
+                        className={cn(
+                          `submenu-item-${zIndex}`,
+                          isActive(child.href) && "active"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleItemClick(child, false);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleItemClick(child, false);
+                          }
+                        }}
+                        tabIndex={isOpen && isExpanded ? 0 : -1}
+                        role="button"
+                        aria-label={`Navigate to ${child.label}`}
+                      >
+                        <span>
+                          {child.icon && <span className="menu-icon">{child.icon}</span>}
+                          {child.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
 

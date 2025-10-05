@@ -5,8 +5,7 @@ import { GlowingCards, GlowingCard } from '../../../components/ui/glowing-cards'
 const Services3 = () => {
   const gridRef = useRef(null);
   const pipelineRef = useRef(null);
-  const [oscillation, setOscillation] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
+  const [pipelinePosition, setPipelinePosition] = useState(0);
 
   useEffect(() => {
     const cards = document.querySelectorAll('.server-mini-card');
@@ -19,39 +18,25 @@ const Services3 = () => {
       gridRef.current.style.animation = 'rotateGrid 20s linear infinite';
     }
 
-    let animationFrame;
     let lastScrollY = window.scrollY;
-    let velocity = 0;
-    let angle = 0;
 
-    const animate = () => {
+    const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const scrollDelta = currentScrollY - lastScrollY;
       lastScrollY = currentScrollY;
 
-      velocity += scrollDelta * 0.001;
-      velocity *= 0.95;
-
-      if (isHovered) {
-        angle += Math.sin(Date.now() * 0.003) * 0.5;
-      } else {
-        angle += velocity;
-      }
-
-      angle *= 0.92;
-
-      setOscillation(angle);
-      animationFrame = requestAnimationFrame(animate);
+      setPipelinePosition(prev => {
+        const newPos = prev + scrollDelta * 0.5;
+        return Math.max(-200, Math.min(200, newPos));
+      });
     };
 
-    animate();
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
+      window.removeEventListener('scroll', handleScroll);
     };
-  }, [isHovered]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white overflow-hidden">
@@ -204,43 +189,21 @@ const Services3 = () => {
               <div className="absolute top-[520px] md:top-[680px] left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto">
                 <div 
                   className="absolute top-[-480px] md:top-[-620px] left-1/2 w-px h-[1000px] md:h-[1300px] bg-gradient-to-b from-transparent via-blue-400/60 via-blue-500/80 via-blue-400/50 to-transparent -translate-x-1/2 z-0"
-                  style={{
-                    transform: `translateX(-50%) rotate(${oscillation * 0.3}deg)`,
-                    transformOrigin: 'top center',
-                    transition: 'transform 0.1s ease-out'
-                  }}
                 ></div>
                 
-                <div 
-                  className="absolute top-[-480px] md:top-[-620px] right-[-70px] md:right-[-140px] w-[70px] md:w-[140px] h-px bg-gradient-to-l from-blue-500/70 to-transparent z-10"
-                  style={{
-                    transform: `rotate(${oscillation * 0.2}deg)`,
-                    transformOrigin: 'right center',
-                    transition: 'transform 0.1s ease-out'
-                  }}
-                ></div>
+                <div className="absolute top-[-480px] md:top-[-620px] right-[-70px] md:right-[-140px] w-[70px] md:w-[140px] h-px bg-gradient-to-l from-blue-500/70 to-transparent z-10"></div>
                 <div className="absolute top-[-480px] md:top-[-620px] right-[-70px] md:right-[-140px] w-1 md:w-1.5 h-1 md:h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50 z-10"></div>
 
-                <div 
-                  className="absolute top-[-480px] md:top-[-620px] left-[-70px] md:left-[-140px] w-[70px] md:w-[140px] h-px bg-gradient-to-r from-blue-500/70 to-transparent z-10"
-                  style={{
-                    transform: `rotate(${-oscillation * 0.2}deg)`,
-                    transformOrigin: 'left center',
-                    transition: 'transform 0.1s ease-out'
-                  }}
-                ></div>
+                <div className="absolute top-[-480px] md:top-[-620px] left-[-70px] md:left-[-140px] w-[70px] md:w-[140px] h-px bg-gradient-to-r from-blue-500/70 to-transparent z-10"></div>
                 <div className="absolute top-[-480px] md:top-[-620px] left-[-70px] md:left-[-140px] w-1 md:w-1.5 h-1 md:h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50 z-10"></div>
 
                 <div 
                   ref={pipelineRef}
                   className="relative w-10 md:w-12 h-32 md:h-40 cursor-pointer z-20"
                   style={{
-                    transform: `rotate(${oscillation}deg)`,
-                    transformOrigin: 'top center',
+                    transform: `translateY(${pipelinePosition}px)`,
                     transition: 'transform 0.1s ease-out'
                   }}
-                  onMouseEnter={() => setIsHovered(true)}
-                  onMouseLeave={() => setIsHovered(false)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-blue-500/40 via-cyan-400/50 to-blue-500/40 blur-xl animate-pulse"></div>
                   <div className="relative w-full h-full rounded-full bg-gradient-to-b from-blue-500/70 via-cyan-400/80 to-blue-500/70 shadow-2xl shadow-cyan-500/50"></div>

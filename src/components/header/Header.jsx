@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { HamburgerMenuOverlay } from "../ui/hamburger-menu-overlay";
 import CompanyDropdownCard from "../ui/company/aboutCard";
 import PricingDropdownCard from "../ui/company/pricingCard";
+import { ChevronDown } from "lucide-react";
 
 const NAV = [
   { label: "Home", href: "/" },
@@ -13,15 +14,24 @@ const NAV = [
     href: "/about",
     hasCustomDropdown: true,
     children: [
-      { label: "Who I am", href: "/about#who" },
-      { label: "Process", href: "/about#process" },
-      { label: "Testimonials", href: "/about#testimonials" },
+      { label: "About", href: "/about" },
+      { label: "Senior Full-Stack Engineer, Product", href: "/careers/senior-fullstack-engineer" },
+      { label: "Backend Engineer", href: "/careers/backend-engineer" },
+      { label: "Senior Product Marketer", href: "/careers/senior-product-marketer" },
     ],
   },
   {
     label: "Pricing",
     href: "/pricing",
     hasCustomDropdown: true,
+    children: [
+      { label: "Products", href: "/pricing" },
+      { label: "AI Development", href: "/services/ai-development" },
+      { label: "Cloud Infrastructure", href: "/services/cloud-infrastructure" },
+      { label: "Custom Software", href: "/services/custom-software" },
+      { label: "Technical Consulting", href: "/services/consulting" },
+      { label: "24/7 Support", href: "/services/support" },
+    ],
   },
   { label: "Products", href: "/products" },
   { label: "Process", href: "/process" },
@@ -33,6 +43,52 @@ const NAV = [
       { label: "Articles", href: "/resources/articles" },
       { label: "Tools", href: "/resources/tools" },
     ],
+  },
+];
+
+const MOBILE_NAV_ITEMS = [
+  { label: "Home", href: "/" },
+  { label: "Services", href: "/services" },
+  {
+    label: "Company",
+    href: "/about",
+    children: [
+      { label: "About", href: "/about" },
+      { label: "Senior Full-Stack Engineer, Product", href: "/careers/senior-fullstack-engineer" },
+      { label: "Backend Engineer", href: "/careers/backend-engineer" },
+      { label: "Senior Product Marketer", href: "/careers/senior-product-marketer" },
+    ],
+  },
+  {
+    label: "Pricing",
+    href: "/pricing",
+    children: [
+      { label: "Products", href: "/pricing" },
+      { label: "AI Development", href: "/services/ai-development" },
+      { label: "Cloud Infrastructure", href: "/services/cloud-infrastructure" },
+      { label: "Custom Software", href: "/services/custom-software" },
+      { label: "Technical Consulting", href: "/services/consulting" },
+      { label: "24/7 Support", href: "/services/support" },
+    ],
+  },
+  { label: "Products", href: "/products" },
+  { label: "Process", href: "/process" },
+  {
+    label: "Resources",
+    href: "/resources",
+    children: [
+      { label: "Freebies", href: "/resources/freebies" },
+      { label: "Articles", href: "/resources/articles" },
+      { label: "Tools", href: "/resources/tools" },
+    ],
+  },
+  {
+    label: "Sign In",
+    href: "/signin",
+  },
+  {
+    label: "Book Demo",
+    href: "/book-demo",
   },
 ];
 
@@ -127,7 +183,6 @@ const Header = () => {
       >
         Skip to content
       </a>
-
       <header
         ref={headerRef}
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
@@ -135,17 +190,17 @@ const Header = () => {
         }`}
         aria-label="Primary site header"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
-            <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-1.5">
-              <LogoComponent className="h-10 sm:h-12 md:h-14 w-auto scale-150" alt="Exoper Logo" />
-              <span
-                className="text-white font-extrabold uppercase tracking-widest text-xl sm:text-2xl md:text-3xl bg-clip-text text-transparent"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
-                }}
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
+              <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-1.5">
+                <LogoComponent className="h-10 sm:h-12 md:h-14 w-auto scale-150" alt="Exoper Logo" />
+                <span
+                  className="text-white font-extrabold uppercase tracking-widest text-xl sm:text-2xl md:text-3xl bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
+                  }}
                 >
                   XOPER
                 </span>
@@ -153,11 +208,11 @@ const Header = () => {
             </div>
 
             <nav
-              className="hidden md:flex flex-1 justify-center"
+              className="hidden md:flex flex-1 justify-start ml-8"
               role="navigation"
               aria-label="Primary"
             >
-              <ul className="inline-flex items-center space-x-6">
+              <ul className="inline-flex items-center space-x-4">
                 {NAV.map((item, idx) => {
                   const hasChildren = Array.isArray(item.children);
                   const hasCustomDropdown = item.hasCustomDropdown;
@@ -175,13 +230,14 @@ const Header = () => {
                             onBlur={() => setOpenDropdown(null)}
                             aria-haspopup="true"
                             aria-expanded={openDropdown === idx}
-                            className={`uppercase tracking-widest text-sm font-semibold transition-colors px-2 py-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
+                            className={`flex items-center gap-1 uppercase tracking-widest text-sm font-semibold transition-colors px-3 py-2 rounded-md bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
                               active
-                                ? "text-[#ff2dd4]"
-                                : "text-slate-200 hover:text-[#ff2dd4] dark:text-slate-300"
+                                ? "text-white"
+                                : "text-white hover:text-[#ff2dd4]"
                             }`}
                           >
                             {item.label}
+                            <ChevronDown className="w-3 h-3" />
                           </button>
 
                           <AnimatePresence>
@@ -193,7 +249,7 @@ const Header = () => {
                                 transition={{ duration: 0.16 }}
                                 onMouseEnter={() => setOpenDropdown(idx)}
                                 onMouseLeave={() => setOpenDropdown(null)}
-                                className="absolute left-1/2 -translate-x-1/2 mt-3 z-50"
+                                className="absolute left-0 mt-3 z-50"
                               >
                                 {item.label === "Company" && <CompanyDropdownCard />}
                                 {item.label === "Pricing" && <PricingDropdownCard />}
@@ -210,13 +266,14 @@ const Header = () => {
                             onBlur={() => setOpenDropdown(null)}
                             aria-haspopup="true"
                             aria-expanded={openDropdown === idx}
-                            className={`uppercase tracking-widest text-sm font-semibold transition-colors px-2 py-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
+                            className={`flex items-center gap-1 uppercase tracking-widest text-sm font-semibold transition-colors px-3 py-2 rounded-md bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
                               active
-                                ? "text-[#ff2dd4]"
-                                : "text-slate-200 hover:text-[#ff2dd4] dark:text-slate-300"
+                                ? "text-white"
+                                : "text-white hover:text-[#ff2dd4]"
                             }`}
                           >
                             {item.label}
+                            <ChevronDown className="w-3 h-3" />
                           </button>
 
                           <AnimatePresence>
@@ -228,7 +285,7 @@ const Header = () => {
                                 transition={{ duration: 0.16 }}
                                 onMouseEnter={() => setOpenDropdown(idx)}
                                 onMouseLeave={() => setOpenDropdown(null)}
-                                className="absolute left-1/2 -translate-x-1/2 mt-3 w-56 bg-black rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 py-2 z-50"
+                                className="absolute left-1/2 -translate-x-1/2 mt-3 w-56 bg-black rounded-lg shadow-lg ring-1 ring-gray-700 ring-opacity-50 py-2 z-50"
                                 role="menu"
                                 aria-label={`${item.label} submenu`}
                               >
@@ -240,7 +297,7 @@ const Header = () => {
                                       className={`block px-4 py-2 text-sm font-medium transition-colors ${
                                         isActive(child.href)
                                           ? "text-white bg-gray-900"
-                                          : "text-slate-200 hover:text-white hover:bg-gray-800"
+                                          : "text-white hover:text-[#ff2dd4] hover:bg-gray-800"
                                       }`}
                                     >
                                       {child.label}
@@ -254,10 +311,10 @@ const Header = () => {
                       ) : (
                         <Link
                           to={item.href}
-                          className={`uppercase tracking-widest text-sm font-semibold px-2 py-2 rounded-md transition-colors ${
+                          className={`uppercase tracking-widest text-sm font-semibold px-3 py-2 rounded-md bg-black transition-colors ${
                             active
-                              ? "text-[#ff2dd4]"
-                              : "text-slate-200 hover:text-[#ff2dd4] dark:text-slate-300"
+                              ? "text-white"
+                              : "text-white hover:text-[#ff2dd4]"
                           }`}
                           aria-current={active ? "page" : undefined}
                         >
@@ -270,18 +327,25 @@ const Header = () => {
               </ul>
             </nav>
 
+            <div className="hidden md:flex items-center gap-3 flex-shrink-0 ml-auto">
+              <Link
+                to="/signin"
+                className="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-black text-white rounded-md hover:bg-gray-900 transition-colors border border-gray-700"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/book-demo"
+                className="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-black text-white rounded-md hover:bg-gray-900 transition-colors border border-gray-700"
+              >
+                Book Demo
+              </Link>
+            </div>
+
             {isMobile && (
               <div className="md:hidden">
                 <HamburgerMenuOverlay
-                  items={NAV.map(item => {
-                    if (item.children) {
-                      return {
-                        ...item,
-                        onClick: undefined
-                      };
-                    }
-                    return item;
-                  })}
+                  items={MOBILE_NAV_ITEMS}
                   buttonTop="30px"
                   buttonLeft="calc(100% - 30px)"
                   buttonSize="md"
@@ -309,3 +373,4 @@ const Header = () => {
 };
 
 export default Header;
+
