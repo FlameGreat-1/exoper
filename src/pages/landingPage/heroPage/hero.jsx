@@ -218,7 +218,7 @@ builds.createApp();`
   return (
     <section 
       ref={heroRef}
-      className="relative w-full min-h-screen overflow-hidden bg-black"
+      className="relative w-full overflow-hidden bg-black"
       aria-label="Hero section"
     >
       <div className="absolute inset-0">
@@ -279,7 +279,7 @@ builds.createApp();`
       <div className="absolute top-1/4 -right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl"></div>
       <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl"></div>
                 
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-col items-center justify-start min-h-screen pt-20 md:pt-24 lg:pt-28 xl:pt-32 pb-8 md:pb-12 lg:pb-16">
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-col items-center justify-start pt-20 md:pt-24 lg:pt-28 xl:pt-32 pb-8 md:pb-12 lg:pb-16">
         
         <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-8 mb-6 md:mb-8 lg:mb-10">
           
