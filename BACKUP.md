@@ -1,355 +1,376 @@
-"use client";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { HamburgerMenuOverlay } from "../ui/hamburger-menu-overlay";
+import CompanyDropdownCard from "../ui/company/aboutCard";
+import PricingDropdownCard from "../ui/company/pricingCard";
+import { ChevronDown } from "lucide-react";
 
-import React from 'react';
-import { BorderBeam } from "../../../components/ui/border-beam";
-import { ThreeDScrollTriggerContainer, ThreeDScrollTriggerRow } from "../../../components/ui/3d-scroll-trigger";
+const NAV = [
+  { label: "Home", href: "/" },
+  { label: "Services", href: "/services" },
+  {
+    label: "Company",
+    href: "/about",
+    hasCustomDropdown: true,
+    children: [
+      { label: "About", href: "/about" },
+      { label: "Senior Full-Stack Engineer, Product", href: "/careers/senior-fullstack-engineer" },
+      { label: "Backend Engineer", href: "/careers/backend-engineer" },
+      { label: "Senior Product Marketer", href: "/careers/senior-product-marketer" },
+    ],
+  },
+  {
+    label: "Pricing",
+    href: "/pricing",
+    hasCustomDropdown: true,
+    children: [
+      { label: "Products", href: "/pricing" },
+      { label: "AI Development", href: "/services/ai-development" },
+      { label: "Cloud Infrastructure", href: "/services/cloud-infrastructure" },
+      { label: "Custom Software", href: "/services/custom-software" },
+      { label: "Technical Consulting", href: "/services/consulting" },
+      { label: "24/7 Support", href: "/services/support" },
+    ],
+  },
+  { label: "Products", href: "/products" },
+  { label: "Process", href: "/process" },
+  {
+    label: "Resources",
+    href: "/resources",
+    children: [
+      { label: "Freebies", href: "/resources/freebies" },
+      { label: "Articles", href: "/resources/articles" },
+      { label: "Tools", href: "/resources/tools" },
+    ],
+  },
+];
 
-const Testimonial = () => {
-  return (
-    <div className="bg-[#0a0a0f] min-h-screen text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-        
-        <div className="text-center mb-12 sm:mb-16">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-5">
-            Trusted by the best in business
-          </h1>
-          <p className="text-gray-400 text-base sm:text-lg mb-4 max-w-3xl mx-auto px-4">
-            EXOPER supports great software teams anywhere, they are. Hear from some of the teams, building their products on EXOPER.
-          </p>
-          <a href="#" className="text-purple-400 hover:text-purple-300 text-sm sm:text-base inline-flex items-center gap-2 transition-colors">
-            Read customer stories →
-          </a>
-        </div>
+const MOBILE_NAV_ITEMS = [
+  { label: "Home", href: "/" },
+  { label: "Services", href: "/services" },
+  {
+    label: "Company",
+    href: "/about",
+    children: [
+      { label: "About", href: "/about" },
+      { label: "Senior Full-Stack Engineer, Product", href: "/careers/senior-fullstack-engineer" },
+      { label: "Backend Engineer", href: "/careers/backend-engineer" },
+      { label: "Senior Product Marketer", href: "/careers/senior-product-marketer" },
+    ],
+  },
+  {
+    label: "Pricing",
+    href: "/pricing",
+    children: [
+      { label: "Products", href: "/pricing" },
+      { label: "AI Development", href: "/services/ai-development" },
+      { label: "Cloud Infrastructure", href: "/services/cloud-infrastructure" },
+      { label: "Custom Software", href: "/services/custom-software" },
+      { label: "Technical Consulting", href: "/services/consulting" },
+      { label: "24/7 Support", href: "/services/support" },
+    ],
+  },
+  { label: "Products", href: "/products" },
+  { label: "Process", href: "/process" },
+  {
+    label: "Resources",
+    href: "/resources",
+    children: [
+      { label: "Freebies", href: "/resources/freebies" },
+      { label: "Articles", href: "/resources/articles" },
+      { label: "Tools", href: "/resources/tools" },
+    ],
+  },
+  {
+    label: "Sign In",
+    href: "/signin",
+  },
+  {
+    label: "Book Demo",
+    href: "/book-demo",
+  },
+];
 
-        <div className="relative mb-32 sm:mb-40 lg:mb-48">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-          
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-6xl mx-auto">
-            
-            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
-              <BorderBeam 
-                size={40} 
-                duration={8} 
-                colorFrom="#7400ff" 
-                colorTo="#9b41ff" 
-                opacity={0.7}
-                glowIntensity={1}
-                pauseOnHover={true}
-              />
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                  <img src="/logo1.svg" alt="Amcat" className="w-6 h-6" />
-                </div>
-                <span className="text-white font-semibold text-lg">Amcat</span>
-              </div>
-              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
-                "EXOPER is where we host all of our backend services along with our databases. It's been an integral part of our infrastructure since the very beginning."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                  <img src="/avatar1.jpg" alt="Paul O'Connell" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">Paul O'Connell</div>
-                  <div className="text-gray-400 text-xs">Founder & CEO of Amcat</div>
-                </div>
-              </div>
-            </div>
+const LogoComponent = ({ className = "", alt = "Exoper Logo" }) => {
+  const [triedPng, setTriedPng] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
-              <BorderBeam 
-                size={40} 
-                duration={8} 
-                colorFrom="#7400ff" 
-                colorTo="#9b41ff" 
-                opacity={0.7}
-                glowIntensity={1}
-                pauseOnHover={true}
-                reverse={true}
-              />
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                  <img src="/logo-spacex.svg" alt="Spacex" className="w-6 h-6" />
-                </div>
-                <span className="text-white font-semibold text-lg">Spacex</span>
-              </div>
-              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
-                "Even though we already have an internal Kubernetes cluster and infrastructure-at-scale setup, we decided to go with EXOPER so that we weren't spending time writing YAML files when we could be working on the product."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                  <img src="/avatar2.jpg" alt="Paul Boller" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">Paul Boller</div>
-                  <div className="text-gray-400 text-xs">Backend Architect at Spacex</div>
-                </div>
-              </div>
-            </div>
+  const onError = useCallback(
+    (e) => {
+      if (!triedPng) {
+        e.currentTarget.src = "/images/logo.png";
+        setTriedPng(true);
+        return;
+      }
+      setFailed(true);
+    },
+    [triedPng]
+  );
 
-            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
-              <BorderBeam 
-                size={40} 
-                duration={8} 
-                colorFrom="#7400ff" 
-                colorTo="#9b41ff" 
-                opacity={0.7}
-                glowIntensity={1}
-                pauseOnHover={true}
-              />
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                  <img src="/logo2.svg" alt="Resend" className="w-6 h-6" />
-                </div>
-                <span className="text-white font-semibold text-lg">Resend</span>
-              </div>
-              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
-                "EXOPER is a game changer for us. We're currently serving more than 80,000 developers with a small team... every minute spent on infrastructure is a minute we're not building the best email product in the world.
-              </p>
-              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
-                If it wasn't for EXOPER, I don't think we would be able to grow as fast as we are today."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                  <img src="/avatar3.jpg" alt="Zeno Rocha" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">Zeno Rocha</div>
-                  <div className="text-gray-400 text-xs">Founder & CEO of Resend</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="group bg-gradient-to-br from-[#1a1a2e]/90 via-[#16162a]/80 to-[#1a1a2e]/90 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[#2a2a3e] hover:border-[#3a3a4e] transition-all duration-300 relative overflow-hidden">
-              <BorderBeam 
-                size={40} 
-                duration={8} 
-                colorFrom="#7400ff" 
-                colorTo="#9b41ff" 
-                opacity={0.7}
-                glowIntensity={1}
-                pauseOnHover={true}
-                reverse={true}
-              />
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                  <img src="/logo3.svg" alt="Paloma" className="w-6 h-6" />
-                </div>
-                <span className="text-white font-semibold text-lg">Paloma</span>
-              </div>
-              <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
-                "The flexibility and agility for automation with EXOPER helps us move fast and continuously deploy to production with confidence."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                  <img src="/avatar4.jpg" alt="Stannis Riviera" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">Stannis Riviera</div>
-                  <div className="text-gray-400 text-xs">Managing Director of Paloma Group</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
-            ...and loved by developers
-          </h2>
-          <p className="text-gray-400 text-base sm:text-lg">
-            Join nearly 5M developers building with EXOPER ↗
-          </p>
-        </div>
-        <ThreeDScrollTriggerContainer className="mb-8">
-          <ThreeDScrollTriggerRow baseVelocity={3} direction={1} resetIntervalMs={0}>
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev1.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Liam</div>
-                  <div className="text-gray-500 text-xs truncate">@liamtech</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                Team is an easier option. Deploying literally anything on @EXOPER_app is now possible in minutes instead of days. Obsessed. ⚡
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev2.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Benjamin Dolinger</div>
-                  <div className="text-gray-500 text-xs truncate">@bendolinger</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                With other apps, infrastructure, and more work to production is @EXOPER_app. Super excited to work with them.
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev3.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Jenn</div>
-                  <div className="text-gray-500 text-xs truncate">@jennbuilds</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                @EXOPER_app for prototypes, utilizing the containerized world, infrastructure-as-code, a custom domain local, connect... and that just becomes what you need...
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev4.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Arnav</div>
-                  <div className="text-gray-500 text-xs truncate">@arnavbuilds</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                Assisted in organizing my services to @EXOPER_app.
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev5.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Team Sparky</div>
-                  <div className="text-gray-500 text-xs truncate">@teamsparky</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                This CLI is deploying a small app on @EXOPER_app - has been promising the team for over seven...
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev11.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Jessica Lee</div>
-                  <div className="text-gray-500 text-xs truncate">@jessicacodes</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                Just migrated our entire backend to @EXOPER_app and it's been the smoothest deployment experience I've ever had. Highly recommend!
-              </p>
-            </div>
-          </ThreeDScrollTriggerRow>
-
-          <ThreeDScrollTriggerRow baseVelocity={3} direction={-1} resetIntervalMs={0} className="mt-4">
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev6.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Seb</div>
-                  <div className="text-gray-500 text-xs truncate">@sebcodes</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                EXOPER is really really great. Bring rules for making frontend super optimized, developing with confidence, improving my code time and well managing the process.
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev7.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Kyle McDermott</div>
-                  <div className="text-gray-500 text-xs truncate">@kylemcdermott</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                Damn, @EXOPER_app. Its the first backend I've ever had to deploy that didn't feel like a hassle.
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev8.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Jeremy Su</div>
-                  <div className="text-gray-500 text-xs truncate">@jeremysu_</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                @EXOPER_app for prototypes, utilizing the best tools and code, to use my code, with the @EXOPER_app, utilizing.
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev9.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Emmanuel - zinkdoor</div>
-                  <div className="text-gray-500 text-xs truncate">@emmanuel</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                I have been EXOPER makes it super easy to just drop my and up to Docker for automated over deploying a server.
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev10.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">Marco Eidinger</div>
-                  <div className="text-gray-500 text-xs truncate">@marcoeidinger</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                It easy to love to build on @EXOPER_app.
-              </p>
-            </div>
-
-            <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[350px] min-w-[350px] flex-shrink-0 mx-3">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                  <img src="/dev12.jpg" alt="Developer" className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium text-sm truncate">David Chen</div>
-                  <div className="text-gray-500 text-xs truncate">@davidchendev</div>
-                </div>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed break-words">
-                After trying multiple deployment platforms, @EXOPER_app is by far the most developer-friendly. Cut our deployment time by 70% and simplified our workflow.
-              </p>
-            </div>
-          </ThreeDScrollTriggerRow>
-        </ThreeDScrollTriggerContainer>
+  if (failed) {
+    return (
+      <div className={className} aria-hidden="true">
+        <span className="sr-only">{alt}</span>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <img
+      src="/images/logo.svg"
+      alt={alt}
+      className={`${className} bg-transparent block transform-gpu origin-left`}
+      style={{ transformOrigin: "left center" }}
+      loading="eager"
+      decoding="async"
+      onError={onError}
+      draggable="false"
+      role="img"
+      aria-label={alt}
+    />
   );
 };
 
-export default Testimonial;
+const Header = () => {
+  const location = useLocation();
+  const [isMobile, setIsMobile] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const headerRef = useRef(null);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 16);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    setOpenDropdown(null);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setOpenDropdown(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const isActive = (href) => {
+    if (!href) return false;
+    if (href === "/") return location.pathname === "/";
+    return location.pathname === href || location.pathname.startsWith(href + "/");
+  };
+
+  return (
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 px-3 py-2 bg-primary text-white rounded-md shadow-lg"
+      >
+        Skip to content
+      </a>
+      <header
+        ref={headerRef}
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+          isScrolled ? "bg-black py-2 shadow-sm" : "bg-black py-3"
+        }`}
+        aria-label="Primary site header"
+      >
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
+              <Link to="/" aria-label="Exoper — Home" className="flex items-center gap-1.5">
+                <LogoComponent className="h-10 sm:h-12 md:h-14 w-auto scale-150" alt="Exoper Logo" />
+                <span
+                  className="text-white font-extrabold uppercase tracking-widest text-xl sm:text-2xl md:text-3xl bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(200,200,200,0.9) 50%, rgba(255,255,255,1) 100%)",
+                  }}
+                >
+                  XOPER
+                </span>
+              </Link>
+            </div>
+
+            <nav
+              className="hidden md:flex flex-1 justify-start ml-8"
+              role="navigation"
+              aria-label="Primary"
+            >
+              <ul className="inline-flex items-center space-x-4">
+                {NAV.map((item, idx) => {
+                  const hasChildren = Array.isArray(item.children);
+                  const hasCustomDropdown = item.hasCustomDropdown;
+                  const active =
+                    isActive(item.href) ||
+                    (hasChildren && item.children.some((c) => isActive(c.href)));
+                  return (
+                    <li key={item.label} className="relative group">
+                      {hasCustomDropdown ? (
+                        <>
+                          <button
+                            onMouseEnter={() => setOpenDropdown(idx)}
+                            onMouseLeave={() => setOpenDropdown(null)}
+                            onFocus={() => setOpenDropdown(idx)}
+                            onBlur={() => setOpenDropdown(null)}
+                            aria-haspopup="true"
+                            aria-expanded={openDropdown === idx}
+                            className={`flex items-center gap-1 uppercase tracking-widest text-sm font-semibold transition-colors px-3 py-2 rounded-md bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
+                              active
+                                ? "text-white"
+                                : "text-white hover:text-[#ff2dd4]"
+                            }`}
+                          >
+                            {item.label}
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+
+                          <AnimatePresence>
+                            {openDropdown === idx && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.16 }}
+                                onMouseEnter={() => setOpenDropdown(idx)}
+                                onMouseLeave={() => setOpenDropdown(null)}
+                                className="absolute left-0 mt-3 z-50"
+                              >
+                                {item.label === "Company" && <CompanyDropdownCard />}
+                                {item.label === "Pricing" && <PricingDropdownCard />}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </>
+                      ) : hasChildren ? (
+                        <>
+                          <button
+                            onMouseEnter={() => setOpenDropdown(idx)}
+                            onMouseLeave={() => setOpenDropdown(null)}
+                            onFocus={() => setOpenDropdown(idx)}
+                            onBlur={() => setOpenDropdown(null)}
+                            aria-haspopup="true"
+                            aria-expanded={openDropdown === idx}
+                            className={`flex items-center gap-1 uppercase tracking-widest text-sm font-semibold transition-colors px-3 py-2 rounded-md bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#8b3cf0] ${
+                              active
+                                ? "text-white"
+                                : "text-white hover:text-[#ff2dd4]"
+                            }`}
+                          >
+                            {item.label}
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+
+                          <AnimatePresence>
+                            {openDropdown === idx && (
+                              <motion.ul
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.16 }}
+                                onMouseEnter={() => setOpenDropdown(idx)}
+                                onMouseLeave={() => setOpenDropdown(null)}
+                                className="absolute left-1/2 -translate-x-1/2 mt-3 w-56 bg-black rounded-lg shadow-lg ring-1 ring-gray-700 ring-opacity-50 py-2 z-50"
+                                role="menu"
+                                aria-label={`${item.label} submenu`}
+                              >
+                                {item.children.map((child) => (
+                                  <li key={child.href}>
+                                    <Link
+                                      to={child.href}
+                                      role="menuitem"
+                                      className={`block px-4 py-2 text-sm font-medium transition-colors ${
+                                        isActive(child.href)
+                                          ? "text-white bg-gray-900"
+                                          : "text-white hover:text-[#ff2dd4] hover:bg-gray-800"
+                                      }`}
+                                    >
+                                      {child.label}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </motion.ul>
+                            )}
+                          </AnimatePresence>
+                        </>
+                      ) : (
+                        <Link
+                          to={item.href}
+                          className={`uppercase tracking-widest text-sm font-semibold px-3 py-2 rounded-md bg-black transition-colors ${
+                            active
+                              ? "text-white"
+                              : "text-white hover:text-[#ff2dd4]"
+                          }`}
+                          aria-current={active ? "page" : undefined}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+
+            <div className="hidden md:flex items-center gap-3 flex-shrink-0 ml-auto">
+              <Link
+                to="/signin"
+                className="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-black text-white rounded-md hover:bg-gray-900 transition-colors border border-gray-700"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/book-demo"
+                className="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-black text-white rounded-md hover:bg-gray-900 transition-colors border border-gray-700"
+              >
+                Book Demo
+              </Link>
+            </div>
+
+            {isMobile && (
+              <div className="md:hidden">
+                <HamburgerMenuOverlay
+                  items={MOBILE_NAV_ITEMS}
+                  buttonTop="30px"
+                  buttonLeft="calc(100% - 30px)"
+                  buttonSize="md"
+                  buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6, #8B5CF6)"
+                  overlayBackground="linear-gradient(180deg,#0b0210 0%, #1f032a 60%)"
+                  textColor="#fff"
+                  fontSize="md"
+                  enableBlur={true}
+                  zIndex={1200}
+                  currentPath={location.pathname}
+                  className="w-12 h-12 relative"
+                  menuAlignment="center"
+                  staggerDelay={0.05}
+                  animationDuration={0.8}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="h-16 md:h-20" />
+    </>
+  );
+};
+
+export default Header;
+
