@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ParticlesBackground from "../../../components/ui/particles-background";
-import TerminalCard from "../../../components/ui/terminal-card";
 import Companies from "../../../components/ui/companies";
 
 const Hero = () => {
@@ -14,10 +13,12 @@ const Hero = () => {
   const [communityCount, setCommunityCount] = useState(1);
   const [isCountingDevs, setIsCountingDevs] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const heroRef = useRef(null);
   const animationFrameRef = useRef(null);
   const textIntervalRef = useRef(null);
   const glowIntervalRef = useRef(null);
+  const imageIntervalRef = useRef(null);
 
   const rotatingTexts = useMemo(() => [
     "Integrate AI Zero Trust API Gateway ?",
@@ -40,36 +41,11 @@ const Hero = () => {
     'rgba(59, 130, 246, 0.8)'
   ], []);
 
-  const terminalCommands = useMemo(() => [
-    `// Welcome to my portfolio
-const developer = {
-  name: "Emmanuel U. Iziogo",
-  skills: ["Python", "React", "Tailwind CSS", "JavaScript", "Node.js"],
-  passion: "Building beautiful web experiences"
-};
-
-// Let's create something amazing together!
-developer.createArt();`,
-
-    `// My services 1:
-const builds = {
-  offers: "AI Integration",
-  services: ["Governance", "Security", "Compliance", "Auditing", "Monitoring"],
-  passion: "Creating a protective layer between enterprises (YOU) and the AI models you use."
-};
-
-// Providing You Zero-Trust API Gateway for AI !
-builds.createAI();`,
-
-    `// My services 2:
-const builds = {
-  offers: "Software Solutions",
-  services: ["Web applications", "Mobile applications", "Cloud solutions", "Workflow automation"],
-  passion: "Developing innovative software solutions that drive business success."
-};
-
-// Let's build cutting-edge solutions !
-builds.createApp();`
+  const featureImages = useMemo(() => [
+    '/images/features/staging.png',
+    '/images/features/block.png',
+    '/images/features/com-engine.png',
+    '/images/features/engine.png'
   ], []);
 
   const mainText = "Let me help you in Transforming ideas into exceptional digital experiences with modern web technologies and creative design solutions.";
@@ -201,6 +177,21 @@ builds.createApp();`
     };
   }, [glowingColors.length]);
 
+  // Image carousel rotation
+  useEffect(() => {
+    if (!isVisible) return;
+    
+    imageIntervalRef.current = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % featureImages.length);
+    }, 4000); // Change image every 4 seconds
+    
+    return () => {
+      if (imageIntervalRef.current) {
+        clearInterval(imageIntervalRef.current);
+      }
+    };
+  }, [isVisible, featureImages.length]);
+
   useEffect(() => {
     return () => {
       if (animationFrameRef.current) {
@@ -212,8 +203,51 @@ builds.createApp();`
       if (glowIntervalRef.current) {
         clearInterval(glowIntervalRef.current);
       }
+      if (imageIntervalRef.current) {
+        clearInterval(imageIntervalRef.current);
+      }
     };
   }, []);
+
+  const getImageVariants = (index) => {
+    // First image: fade in/out
+    if (index === 0) {
+      return {
+        initial: { opacity: 0, scale: 1 },
+        animate: { opacity: 1, scale: 1 },
+        exit: { opacity: 0, scale: 1 }
+      };
+    }
+    // Second image: fade in/out
+    if (index === 1) {
+      return {
+        initial: { opacity: 0, scale: 1 },
+        animate: { opacity: 1, scale: 1 },
+        exit: { opacity: 0, scale: 1 }
+      };
+    }
+    // Third image: drop from top
+    if (index === 2) {
+      return {
+        initial: { opacity: 0, y: -100, scale: 0.8 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+        exit: { opacity: 0, scale: 0.8 }
+      };
+    }
+    // Fourth image: magical appear (scale + rotate)
+    if (index === 3) {
+      return {
+        initial: { opacity: 0, scale: 0.5, rotate: -10 },
+        animate: { opacity: 1, scale: 1, rotate: 0 },
+        exit: { opacity: 0, scale: 0.5, rotate: 10 }
+      };
+    }
+    return {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 }
+    };
+  };
 
   return (
     <section 
@@ -289,14 +323,240 @@ builds.createApp();`
             animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : -30 }}
             transition={{ duration: 0.7, delay: 0.6 }}
           >
-            <div className="relative w-full max-w-3xl h-[300px]">
-              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/10 to-blue-600/10 rounded-lg blur-xl"></div>
-              <div className="relative bg-gray-900/80 backdrop-blur-sm rounded-lg border border-gray-800 hover:border-purple-500/50 transition-all duration-300 h-full overflow-hidden">
-                <TerminalCard 
-                  commands={terminalCommands}
-                  language="javascript"
-                  className="shadow-xl rounded-xl h-full overflow-hidden [&_pre]:text-center [&_.react-syntax-highlighter]:text-center [&>div:last-child]:h-[calc(100%-44px)] [&>div:last-child]:overflow-hidden [&>div:last-child]:max-h-none"
-                />
+            <div className="relative w-full max-w-5xl h-[480px]">
+              <div className="relative h-full overflow-hidden flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentImageIndex}
+                    className="relative w-full h-full"
+                    initial={getImageVariants(currentImageIndex).initial}
+                    animate={getImageVariants(currentImageIndex).animate}
+                    exit={getImageVariants(currentImageIndex).exit}
+                    transition={{ 
+                      duration: currentImageIndex === 2 ? 0.8 : currentImageIndex === 3 ? 1 : 0.6,
+                      ease: currentImageIndex === 2 ? "easeOut" : currentImageIndex === 3 ? [0.68, -0.55, 0.265, 1.55] : "easeInOut"
+                    }}
+                  >
+                    <img
+                      src={featureImages[currentImageIndex]}
+                      alt={`Feature ${currentImageIndex + 1}`}
+                      className="w-full h-full object-contain relative z-10"
+                    />
+                    
+                    {/* Energy Flow Animations for engine.png (Image 4) */}
+                    {currentImageIndex === 3 && (
+                      <>
+                        {/* Top-left to center beam */}
+                        <motion.div
+                          className="absolute top-[15%] left-[20%] w-[25%] h-[2px]"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent 0%, rgba(168, 85, 247, 0) 0%, rgba(168, 85, 247, 0.8) 50%, rgba(168, 85, 247, 0) 100%)',
+                            transform: 'rotate(-25deg)',
+                            transformOrigin: 'left center',
+                            filter: 'blur(1px)',
+                          }}
+                          animate={{
+                            opacity: [0, 1, 1, 0],
+                            scaleX: [0, 1, 1, 0],
+                            x: [0, 0, 0, 20],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 0.5,
+                            ease: "easeInOut"
+                          }}
+                        />
+                        <motion.div
+                          className="absolute top-[15%] left-[20%] w-[4px] h-[4px] rounded-full"
+                          style={{
+                            background: 'rgba(168, 85, 247, 0.9)',
+                            boxShadow: '0 0 12px rgba(168, 85, 247, 0.9), 0 0 24px rgba(168, 85, 247, 0.6)',
+                          }}
+                          animate={{
+                            opacity: [0, 1, 1, 0],
+                            x: [0, 60, 60, 80],
+                            y: [0, -15, -15, -20],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 0.5,
+                            ease: "easeInOut"
+                          }}
+                        />
+
+                        {/* Top-right to center beam */}
+                        <motion.div
+                          className="absolute top-[15%] right-[20%] w-[25%] h-[2px]"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0) 0%, rgba(139, 92, 246, 0.8) 50%, rgba(139, 92, 246, 0) 100%)',
+                            transform: 'rotate(25deg)',
+                            transformOrigin: 'right center',
+                            filter: 'blur(1px)',
+                          }}
+                          animate={{
+                            opacity: [0, 1, 1, 0],
+                            scaleX: [0, 1, 1, 0],
+                            x: [0, 0, 0, -20],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 0.5,
+                            delay: 0.8,
+                            ease: "easeInOut"
+                          }}
+                        />
+                        <motion.div
+                          className="absolute top-[15%] right-[20%] w-[4px] h-[4px] rounded-full"
+                          style={{
+                            background: 'rgba(139, 92, 246, 0.9)',
+                            boxShadow: '0 0 12px rgba(139, 92, 246, 0.9), 0 0 24px rgba(139, 92, 246, 0.6)',
+                          }}
+                          animate={{
+                            opacity: [0, 1, 1, 0],
+                            x: [0, -60, -60, -80],
+                            y: [0, -15, -15, -20],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 0.5,
+                            delay: 0.8,
+                            ease: "easeInOut"
+                          }}
+                        />
+
+                        {/* Center to bottom beam - left side */}
+                        <motion.div
+                          className="absolute top-[45%] left-[35%] w-[2px] h-[35%]"
+                          style={{
+                            background: 'linear-gradient(180deg, rgba(168, 85, 247, 0) 0%, rgba(168, 85, 247, 0.8) 50%, rgba(168, 85, 247, 0) 100%)',
+                            transform: 'rotate(5deg)',
+                            filter: 'blur(1px)',
+                          }}
+                          animate={{
+                            opacity: [0, 1, 1, 0],
+                            scaleY: [0, 1, 1, 0],
+                            y: [0, 0, 0, 20],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 0.5,
+                            delay: 1.6,
+                            ease: "easeInOut"
+                          }}
+                        />
+                        <motion.div
+                          className="absolute top-[45%] left-[35%] w-[4px] h-[4px] rounded-full"
+                          style={{
+                            background: 'rgba(168, 85, 247, 0.9)',
+                            boxShadow: '0 0 12px rgba(168, 85, 247, 0.9), 0 0 24px rgba(168, 85, 247, 0.6)',
+                          }}
+                          animate={{
+                            opacity: [0, 1, 1, 0],
+                            x: [0, 2, 2, 3],
+                            y: [0, 90, 90, 110],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 0.5,
+                            delay: 1.6,
+                            ease: "easeInOut"
+                          }}
+                        />
+
+                        {/* Center to bottom beam - right side */}
+                        <motion.div
+                          className="absolute top-[45%] right-[35%] w-[2px] h-[35%]"
+                          style={{
+                            background: 'linear-gradient(180deg, rgba(139, 92, 246, 0) 0%, rgba(139, 92, 246, 0.8) 50%, rgba(139, 92, 246, 0) 100%)',
+                            transform: 'rotate(-5deg)',
+                            filter: 'blur(1px)',
+                          }}
+                          animate={{
+                            opacity: [0, 1, 1, 0],
+                            scaleY: [0, 1, 1, 0],
+                            y: [0, 0, 0, 20],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 0.5,
+                            delay: 2.4,
+                            ease: "easeInOut"
+                          }}
+                        />
+                        <motion.div
+                          className="absolute top-[45%] right-[35%] w-[4px] h-[4px] rounded-full"
+                          style={{
+                            background: 'rgba(139, 92, 246, 0.9)',
+                            boxShadow: '0 0 12px rgba(139, 92, 246, 0.9), 0 0 24px rgba(139, 92, 246, 0.6)',
+                          }}
+                          animate={{
+                            opacity: [0, 1, 1, 0],
+                            x: [0, -2, -2, -3],
+                            y: [0, 90, 90, 110],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 0.5,
+                            delay: 2.4,
+                            ease: "easeInOut"
+                          }}
+                        />
+
+                        {/* Ambient glow pulse on center block */}
+                        <motion.div
+                          className="absolute top-[38%] left-[42%] w-[16%] h-[15%] rounded-lg"
+                          style={{
+                            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)',
+                            filter: 'blur(8px)',
+                          }}
+                          animate={{
+                            opacity: [0.3, 0.7, 0.3],
+                            scale: [0.9, 1.1, 0.9],
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+
+                        {/* Data particles flowing */}
+                        {[...Array(6)].map((_, i) => (
+                          <motion.div
+                            key={`particle-${i}`}
+                            className="absolute w-[3px] h-[3px] rounded-full"
+                            style={{
+                              background: i % 2 === 0 ? 'rgba(168, 85, 247, 0.8)' : 'rgba(139, 92, 246, 0.8)',
+                              boxShadow: `0 0 8px ${i % 2 === 0 ? 'rgba(168, 85, 247, 0.8)' : 'rgba(139, 92, 246, 0.8)'}`,
+                              top: i < 2 ? '15%' : i < 4 ? '15%' : '45%',
+                              left: i === 0 || i === 2 ? '20%' : i === 1 || i === 3 ? '80%' : i === 4 ? '35%' : '65%',
+                            }}
+                            animate={{
+                              opacity: [0, 0.8, 0.8, 0],
+                              x: i < 2 ? [0, 40 * (i % 2 === 0 ? 1 : -1)] : i < 4 ? [0, 30 * (i % 2 === 0 ? 1 : -1)] : [0, 0],
+                              y: i < 2 ? [0, -10] : i < 4 ? [0, -8] : [0, 60],
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              repeatDelay: 1,
+                              delay: i * 0.4,
+                              ease: "easeOut"
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           </motion.div>

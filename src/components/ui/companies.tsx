@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 interface CompaniesProps {
   className?: string;
@@ -26,40 +25,51 @@ const Companies: React.FC<CompaniesProps> = ({ className = '' }) => {
     { name: 'Rox', logo: '/images/companies/rox.png', size: 'small' },
     { name: 'ShipAid', logo: '/images/companies/shipaid.png', size: 'normal' },
     { name: 'Zillow', logo: '/images/companies/zillow.png', size: 'normal' },
+    { name: 'Exoper', logo: '/images/companies/exoper.png', size: 'normal' },
   ];
 
-  const allItems = [...companies, ...companies];
+  const allItems = [...companies, ...companies, ...companies];
   
   return (
-    <div className={`w-full overflow-hidden py-8 ${className}`}>
-      <div className="relative">
-        <motion.div 
-          className="flex space-x-20"
-          animate={{ x: [0, -50 * companies.length] }}
-          transition={{ 
-            repeat: Infinity, 
-            duration: 30,
-            ease: "linear"
-          }}
-        >
-          {allItems.map((company, index) => (
-            <div key={`${company.name}-${index}`} className="flex-none flex items-center justify-center">
-              <div 
-                className={`flex items-center justify-center transform transition-transform hover:scale-110 duration-300 ${
-                  company.size === 'small' ? 'w-12 h-12' : 'w-24 h-24'
-                }`}
-              >
-                <img 
-                  src={company.logo} 
-                  alt={company.name}
-                  className="w-full h-full object-contain"
-                />
+    <>
+      <style jsx>{`
+        @keyframes scroll {
+          0% { 
+            transform: translateX(0); 
+          }
+          100% { 
+            transform: translateX(-33.333%); 
+          }
+        }
+        
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+          will-change: transform;
+        }
+      `}</style>
+      
+      <div className={`w-full overflow-hidden py-8 ${className}`}>
+        <div className="relative">
+          <div className="flex animate-scroll space-x-20">
+            {allItems.map((company, index) => (
+              <div key={`${company.name}-${index}`} className="flex-none flex items-center justify-center">
+                <div 
+                  className={`flex items-center justify-center transform transition-transform hover:scale-110 duration-300 ${
+                    company.size === 'small' ? 'w-12 h-12' : 'w-24 h-24'
+                  }`}
+                >
+                  <img 
+                    src={company.logo} 
+                    alt={company.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </div>
-            </div>
-          ))}
-        </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
