@@ -183,7 +183,7 @@ const Hero = () => {
     
     imageIntervalRef.current = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % featureImages.length);
-    }, 4000); // Change image every 4 seconds
+    }, 4000); // Change image every 6 seconds
     
     return () => {
       if (imageIntervalRef.current) {
@@ -318,7 +318,7 @@ const Hero = () => {
         <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-8 mb-6 md:mb-8 lg:mb-10">
           
           <motion.div 
-            className="w-full lg:w-[52%] order-2 lg:order-1 mt-2 sm:mt-3 md:mt-4 px-2 lg:px-0 lg:-ml-16 flex justify-center lg:justify-start items-start"
+            className="w-full lg:w-[52%] order-2 lg:order-1 mt-0 sm:mt-0 md:mt-2 lg:mt-4 px-2 lg:px-0 lg:-ml-16 flex justify-center lg:justify-start items-start"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : -30 }}
             transition={{ duration: 0.7, delay: 0.6 }}
@@ -617,7 +617,7 @@ const Hero = () => {
         </div>
 
         <motion.div 
-          className="mt-10 sm:mt-12 md:mt-14 lg:mt-20 px-2"
+          className="mt-4 sm:mt-6 md:mt-10 lg:mt-20 px-2"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
           transition={{ duration: 0.7, delay: 0.8 }}
