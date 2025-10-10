@@ -35,7 +35,7 @@ const Projects = () => {
   ];
 
   return (
-    <div ref={sectionRef} className="relative min-h-screen bg-black overflow-hidden">
+    <div ref={sectionRef} className="relative bg-black overflow-hidden">
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-950 to-black"></div>
         <div 
