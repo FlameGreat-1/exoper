@@ -293,17 +293,7 @@ const Projects = () => {
             </div>
           </div>
         </div>
-
-        <div className="mt-32 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-6">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <span className="text-blue-400 text-sm font-medium tracking-wide">Scale and Grow</span>
-          </div>
-          <h2 className="text-4xl font-bold text-white">
-            Scale your applications with intuitive
-          </h2>
         </div>
-      </div>
     </div>
   );
 };
