@@ -224,11 +224,11 @@ const Services3 = () => {
               </div>
               
               <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Scale your applications with intuitive vertical and horizontal scaling
+                Enterprise AI Security, Governance, Auditable, Compliant and monitoring.
               </h2>
               
               <p className="text-gray-400 text-base md:text-lg leading-relaxed">
-                Exoper dynamically scales highly performant servers, storage, and networking to meet application demands.{' '}
+                Deploy a unified security perimeter for all AI infrastructure. Detect prompt injections, prevent data exfiltration, enforce policy-driven access control, and maintain forensic-grade audit logs—without impacting latency.{' '}
                 <a href="#" className="text-white inline-flex items-center gap-1 hover:gap-2 transition-all">
                   Learn More <ArrowRight size={16} />
                 </a>

@@ -129,7 +129,7 @@ const Projects = () => {
             </h2>
 
             <p className="text-gray-400 text-lg leading-relaxed">
-              Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
+              Route all AI traffic through EXOPER's security gateway. Block threats in real-time. Stay compliant with EU AI Act, GDPR, and HIPAA. Audit every decision.
             </p>
 
             <div className="flex items-center space-x-2 text-white hover:text-purple-400 transition-colors cursor-pointer group">

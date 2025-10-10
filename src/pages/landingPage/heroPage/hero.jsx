@@ -21,10 +21,10 @@ const Hero = () => {
   const imageIntervalRef = useRef(null);
 
   const rotatingTexts = useMemo(() => [
-    "Integrate AI Zero Trust API Gateway ?",
-    "Optimize Cost, Time & Ship Faster ?",
-    "Build cutting-edge solutions ?",
-    "Ship secure software ?"
+    "Enforce Zero-Trust AI Security?",
+    "Prevent Prompt Injection Attacks?",
+    "Maintain Regulatory Compliance?",
+    "Secure Sensitive Data in AI Workflows?"
   ], []);
   
   const textColors = useMemo(() => [
@@ -48,7 +48,7 @@ const Hero = () => {
     '/images/features/engine.png'
   ], []);
 
-  const mainText = "Let me help you in Transforming ideas into exceptional digital experiences with modern web technologies and creative design solutions.";
+  const mainText = "Every AI request passes through EXOPER's zero-trust gateway. Identity verification, policy enforcement, threat detection, and immutable logging across all models, all environments. On-premises or cloud. No vendor lock-in..";
 
   const triggerCelebration = useCallback(() => {
     setShowCelebration(true);
@@ -568,8 +568,8 @@ const Hero = () => {
               animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
               transition={{ duration: 0.7, delay: 0.2 }}
             >
-              <span className="block lg:inline text-white">Let's Create And Craft </span>
-              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">ART</span>
+              <span className="block lg:inline text-white">AI Security Guardrails</span>
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent"> One Gateway. Every LLMs</span>
             </motion.h1>
             
             <div className="h-auto min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] mb-6 sm:mb-8 overflow-hidden">
