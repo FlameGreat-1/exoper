@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Database, HardDrive, Clock, FileText, Lock, Github, Terminal, Gauge, BarChart3, Workflow, Repeat } from 'lucide-react';
+import { ArrowRight, Database, HardDrive, Clock, FileText, Lock, Github, Terminal, Gauge, BarChart3, Workflow, Repeat, Shield } from 'lucide-react';
 import { GlowingCards, GlowingCard } from '../../../components/ui/glowing-cards';
 
 const Services3 = () => {
@@ -60,6 +60,38 @@ const Services3 = () => {
         }
         .server-mini-card {
           transition: all 0.3s ease;
+        }
+        .glowing-cards-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+          .glowing-cards-container {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (min-width: 1024px) {
+          .glowing-cards-container {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        .equal-card {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          min-height: 320px;
+        }
+        .equal-card-content {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+        .equal-card-list {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
         }
       `}</style>
       
@@ -220,7 +252,7 @@ const Services3 = () => {
             <div className="space-y-4 md:space-y-6 px-2 order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 text-blue-400 font-medium text-xs md:text-sm">
                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                Scale and Grow
+                AI Security & Compliance
               </div>
               
               <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight">
@@ -228,7 +260,7 @@ const Services3 = () => {
               </h2>
               
               <p className="text-gray-400 text-base md:text-lg leading-relaxed">
-                Deploy a unified security perimeter for all AI infrastructure. Detect prompt injections, prevent data exfiltration, enforce policy-driven access control, and maintain forensic-grade audit logs—without impacting latency.{' '}
+                Deploy zero-trust API gateway, real-time threat detection, and compliance automation for all AI workloads. Block prompt injections, prevent data exfiltration, enforce granular access policies, and maintain immutable audit trails—across  LLMs.{' '}
                 <a href="#" className="text-white inline-flex items-center gap-1 hover:gap-2 transition-all">
                   Learn More <ArrowRight size={16} />
                 </a>
@@ -262,16 +294,15 @@ const Services3 = () => {
           </div>
         </div>
       </section>
-
       <section className="relative py-12 md:py-24 px-4 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 md:gap-4 lg:gap-6 mb-12 border-b border-gray-800/50 overflow-x-auto px-4">
               <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white border-b-2 border-white font-medium transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Deploy</button>
-              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Network</button>
-              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Scale</button>
+              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Secure</button>
+              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Comply</button>
               <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Monitor</button>
-              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Evolve</button>
+              <button className="pb-3 md:pb-4 px-2 md:px-4 lg:px-6 text-white hover:text-white transition-colors text-xs md:text-sm lg:text-base whitespace-nowrap bg-black">Audit</button>
             </div>
           </div>
 
@@ -360,7 +391,6 @@ const Services3 = () => {
                               ></div>
                             </>
                           )}
-                          
                           {i === 4 && (
                             <>
                               <div 
@@ -402,11 +432,11 @@ const Services3 = () => {
 
             <div className="space-y-4 md:space-y-6 px-2">
               <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                Build and Deploy
+                Zero-Trust AI Security Components
               </h2>
               
               <p className="text-gray-400 text-base md:text-lg leading-relaxed">
-                Every application stack is different, but the building blocks are similar. These are the core primitives behind every app hosted on Exoper.
+                Enterprise AI security requires multiple layers of protection. These are the core security primitives that protect every AI interaction on EXOPER's platform.
               </p>
 
               <div className="flex items-center gap-3 md:gap-4 pt-4">
@@ -436,195 +466,163 @@ const Services3 = () => {
             </div>
           </div>
 
-          <GlowingCards 
-            className="w-full mb-12"
-            enableGlow={true}
-            glowRadius={30}
-            glowOpacity={0.8}
-            gap="1.5rem"
-            enableHover={true}
-            responsive={true}
-          >
-            <GlowingCard 
-              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)]"
-              glowColor="#ec4899"
-              hoverEffect={true}
-            >
-              <div className="relative">
+          <div className="glowing-cards-container mb-12">
+            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
+              <div className="equal-card-content">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <Workflow className="text-pink-400" size={24} />
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Services</h3>
-                <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Deploy any container image as a service, just specify the source.</p>
-                <ul className="space-y-2 md:space-y-3">
+                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">API Gateway</h3>
+                <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Zero-trust gateway routes all AI requests through policy enforcement and threat detection layers.</p>
+                <ul className="space-y-2 md:space-y-3 equal-card-list">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <Database size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Docker Image</span>
+                    <Workflow size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>Multi-tenant isolation</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <Github size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Github repository</span>
+                    <Workflow size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>Identity verification (mTLS/OIDC)</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <Terminal size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Local repository</span>
-                  </li>
-                </ul>
-              </div>
-            </GlowingCard>
-
-            <GlowingCard 
-              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)]"
-              glowColor="#ec4899"
-              hoverEffect={true}
-            >
-              <div className="relative">
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
-                  <Database className="text-pink-400" size={24} />
-                </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Databases</h3>
-                <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Spin-up any database, with built-in backups.</p>
-                <ul className="space-y-2 md:space-y-3">
-                  <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <Database size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>PostgreSQL</span>
-                  </li>
-                  <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <Database size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>MySQL</span>
-                  </li>
-                  <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <Database size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>MongoDB</span>
-                  </li>
-                  <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <Database size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Redis</span>
+                    <Workflow size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>Policy-driven routing</span>
                   </li>
                 </ul>
               </div>
-            </GlowingCard>
+            </div>
 
-            <GlowingCard 
-              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)]"
-              glowColor="#ec4899"
-              hoverEffect={true}
-            >
-              <div className="relative">
+            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
+              <div className="equal-card-content">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
-                  <HardDrive className="text-pink-400" size={24} />
+                  <Shield className="text-pink-400" size={24} />
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Volumes</h3>
-                <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Attach and mount high-performance persistent storage volumes.</p>
-                <ul className="space-y-2 md:space-y-3">
+                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Threat Detection</h3>
+                <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Real-time detection engine blocks malicious AI requests before they reach models.</p>
+                <ul className="space-y-2 md:space-y-3 equal-card-list">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <HardDrive size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Up to 256TB of storage</span>
+                    <Shield size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>Prompt injection detection</span>
+                  </li>
+                  <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
+                    <Shield size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>Adversarial input mitigation</span>
+                  </li>
+                  <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
+                    <Shield size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>Data poisoning defense</span>
+                  </li>
+                  <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
+                    <Shield size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>PII leak prevention</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
+              <div className="equal-card-content">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
+                  <BarChart3 className="text-pink-400" size={24} />
+                </div>
+                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Compliance Engine</h3>
+                <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Automated compliance monitoring against global AI regulations and standards.</p>
+                <ul className="space-y-2 md:space-y-3 equal-card-list">
+                  <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
+                    <BarChart3 size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>EU AI Act alignment</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Gauge size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>100,000+ IOPS</span>
+                    <span>GDPR/HIPAA compliance</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <BarChart3 size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Disk usage metrics</span>
+                    <span>ISO 42001 certification</span>
                   </li>
                 </ul>
               </div>
-            </GlowingCard>
+            </div>
 
-            <GlowingCard 
-              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)]"
-              glowColor="#ec4899"
-              hoverEffect={true}
-            >
-              <div className="relative">
+            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
+              <div className="equal-card-content">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <Clock className="text-pink-400" size={24} />
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Cron Jobs</h3>
-                <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Configure a job to run on a fixed schedule.</p>
-                <ul className="space-y-2 md:space-y-3">
+                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Model Connectors</h3>
+                <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Secure connectors to external and internal AI models with encryption.</p>
+                <ul className="space-y-2 md:space-y-3 equal-card-list">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Clock size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Atomic to 5-minute intervals</span>
+                    <span>Internal LLM integration</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
-                    <Terminal size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Programmable via crontab expression</span>
+                    <Lock size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <span>End-to-end encryption</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500 invisible">
-                    <Terminal size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <Clock size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>Placeholder</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500 invisible">
-                    <Terminal size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <Clock size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>Placeholder</span>
                   </li>
                 </ul>
               </div>
-            </GlowingCard>
+            </div>
 
-            <GlowingCard 
-              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)]"
-              glowColor="#ec4899"
-              hoverEffect={true}
-            >
-              <div className="relative">
+            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
+              <div className="equal-card-content">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <FileText className="text-pink-400" size={24} />
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Templates</h3>
+                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Audit Logs</h3>
                 <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Deploy arbitrarily complex collections of services, databases, etc.</p>
-                <ul className="space-y-2 md:space-y-3">
+                <ul className="space-y-2 md:space-y-3 equal-card-list">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <FileText size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>800+ templates</span>
+                    <span>WORM storage (S3)</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <FileText size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Sharable</span>
+                    <span>Cryptographic hashing</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <FileText size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Customizable</span>
+                    <span>Forensic-grade logging</span>
                   </li>
                 </ul>
               </div>
-            </GlowingCard>
+            </div>
 
-            <GlowingCard 
-              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)]"
-              glowColor="#ec4899"
-              hoverEffect={true}
-            >
-              <div className="relative">
+            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
+              <div className="equal-card-content">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <Lock className="text-pink-400" size={24} />
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Variables</h3>
+                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Fine-grained access control and governance policies enforced in real-time.</h3>
                 <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Manage secrets and environment variables across the stack.</p>
-                <ul className="space-y-2 md:space-y-3">
+                <ul className="space-y-2 md:space-y-3 equal-card-list">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Lock size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Service variables</span>
+                    <span>Role-based permissions (RBAC)</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Lock size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Shared variables</span>
+                    <span>Model usage policies</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Lock size={14} className="text-gray-600 md:w-4 md:h-4" />
-                    <span>Reference variables</span>
+                    <span>Tenant-specific rules</span>
                   </li>
                 </ul>
               </div>
-            </GlowingCard>
-          </GlowingCards>
+            </div>
+          </div>
 
           <div className="text-center">
             <p className="text-xs md:text-sm text-gray-500 px-4">
-              Exoper uses Nixpacks or your Dockerfile to build and deploy your code.
+              EXOPER's security infrastructure runs on-premises or cloud with Kubernetes, Envoy, and Rust-based detection engines.
             </p>
           </div>
         </div>
