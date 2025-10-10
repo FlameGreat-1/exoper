@@ -208,7 +208,7 @@ const Projects = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-gray-400 text-xs">GaurdExoper LLMs with our Zero trus security api gateway</span>
+                    <span className="text-gray-400 text-xs">Guard LLMs with our Zero Trust security API gateway</span>
                   </div>
                 </div>
               </div>

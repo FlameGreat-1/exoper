@@ -252,7 +252,7 @@ const Hero = () => {
   return (
     <section 
       ref={heroRef}
-      className="relative w-full min-h-screen overflow-hidden bg-black"
+      className="relative w-full overflow-hidden bg-black"
       aria-label="Hero section"
     >
       <div className="absolute inset-0">
