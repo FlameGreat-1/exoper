@@ -61,37 +61,22 @@ const Services3 = () => {
         .server-mini-card {
           transition: all 0.3s ease;
         }
-        .glowing-cards-container {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
+        
+        .glowing-card-equal {
+          height: 100%;
+          min-height: 380px;
         }
-        @media (min-width: 768px) {
-          .glowing-cards-container {
-            grid-template-columns: repeat(2, 1fr);
+        
+        @media (max-width: 767px) {
+          .glowing-card-equal {
+            min-height: 340px;
           }
         }
-        @media (min-width: 1024px) {
-          .glowing-cards-container {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-        .equal-card {
+        
+        .glowing-card-equal .relative {
           display: flex;
           flex-direction: column;
           height: 100%;
-          min-height: 320px;
-        }
-        .equal-card-content {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-        }
-        .equal-card-list {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
         }
       `}</style>
       
@@ -466,15 +451,27 @@ const Services3 = () => {
             </div>
           </div>
 
-          <div className="glowing-cards-container mb-12">
-            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
-              <div className="equal-card-content">
+          <GlowingCards 
+            className="w-full mb-12"
+            enableGlow={true}
+            glowRadius={30}
+            glowOpacity={0.8}
+            gap="1.5rem"
+            enableHover={true}
+            responsive={true}
+          >
+            <GlowingCard 
+              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)] glowing-card-equal"
+              glowColor="#ec4899"
+              hoverEffect={true}
+            >
+              <div className="relative">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <Workflow className="text-pink-400" size={24} />
                 </div>
                 <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">API Gateway</h3>
                 <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Zero-trust gateway routes all AI requests through policy enforcement and threat detection layers.</p>
-                <ul className="space-y-2 md:space-y-3 equal-card-list">
+                <ul className="space-y-2 md:space-y-3">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Workflow size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>Multi-tenant isolation</span>
@@ -489,16 +486,20 @@ const Services3 = () => {
                   </li>
                 </ul>
               </div>
-            </div>
+            </GlowingCard>
 
-            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
-              <div className="equal-card-content">
+            <GlowingCard 
+              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)] glowing-card-equal"
+              glowColor="#ec4899"
+              hoverEffect={true}
+            >
+              <div className="relative">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <Shield className="text-pink-400" size={24} />
                 </div>
                 <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Threat Detection</h3>
                 <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Real-time detection engine blocks malicious AI requests before they reach models.</p>
-                <ul className="space-y-2 md:space-y-3 equal-card-list">
+                <ul className="space-y-2 md:space-y-3">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Shield size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>Prompt injection detection</span>
@@ -517,16 +518,20 @@ const Services3 = () => {
                   </li>
                 </ul>
               </div>
-            </div>
+            </GlowingCard>
 
-            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
-              <div className="equal-card-content">
+            <GlowingCard 
+              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)] glowing-card-equal"
+              glowColor="#ec4899"
+              hoverEffect={true}
+            >
+              <div className="relative">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <BarChart3 className="text-pink-400" size={24} />
                 </div>
                 <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Compliance Engine</h3>
                 <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Automated compliance monitoring against global AI regulations and standards.</p>
-                <ul className="space-y-2 md:space-y-3 equal-card-list">
+                <ul className="space-y-2 md:space-y-3">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <BarChart3 size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>EU AI Act alignment</span>
@@ -541,16 +546,20 @@ const Services3 = () => {
                   </li>
                 </ul>
               </div>
-            </div>
+            </GlowingCard>
 
-            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
-              <div className="equal-card-content">
+            <GlowingCard 
+              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)] glowing-card-equal"
+              glowColor="#ec4899"
+              hoverEffect={true}
+            >
+              <div className="relative">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <Clock className="text-pink-400" size={24} />
                 </div>
                 <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Model Connectors</h3>
                 <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Secure connectors to external and internal AI models with encryption.</p>
-                <ul className="space-y-2 md:space-y-3 equal-card-list">
+                <ul className="space-y-2 md:space-y-3">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Clock size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>Internal LLM integration</span>
@@ -560,25 +569,29 @@ const Services3 = () => {
                     <span>End-to-end encryption</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500 invisible">
-                    <Clock size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <Terminal size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>Placeholder</span>
                   </li>
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500 invisible">
-                    <Clock size={14} className="text-gray-600 md:w-4 md:h-4" />
+                    <Terminal size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>Placeholder</span>
                   </li>
                 </ul>
               </div>
-            </div>
+            </GlowingCard>
 
-            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
-              <div className="equal-card-content">
+            <GlowingCard 
+              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)] glowing-card-equal"
+              glowColor="#ec4899"
+              hoverEffect={true}
+            >
+              <div className="relative">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <FileText className="text-pink-400" size={24} />
                 </div>
                 <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Audit Logs</h3>
                 <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Deploy arbitrarily complex collections of services, databases, etc.</p>
-                <ul className="space-y-2 md:space-y-3 equal-card-list">
+                <ul className="space-y-2 md:space-y-3">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <FileText size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>WORM storage (S3)</span>
@@ -593,16 +606,20 @@ const Services3 = () => {
                   </li>
                 </ul>
               </div>
-            </div>
+            </GlowingCard>
 
-            <div className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border border-gray-800/50 rounded-xl p-4 md:p-6 equal-card">
-              <div className="equal-card-content">
+            <GlowingCard 
+              className="bg-gradient-to-br from-[#1a1a2e]/90 to-[#16162a]/90 border-gray-800/50 flex-1 min-w-[280px] max-w-full md:max-w-[calc(50%-0.75rem)] lg:max-w-[calc(33.333%-1rem)] glowing-card-equal"
+              glowColor="#ec4899"
+              hoverEffect={true}
+            >
+              <div className="relative">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform border border-pink-500/20">
                   <Lock className="text-pink-400" size={24} />
                 </div>
                 <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3 text-white">Fine-grained access control and governance policies enforced in real-time.</h3>
                 <p className="text-gray-400 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed">Manage secrets and environment variables across the stack.</p>
-                <ul className="space-y-2 md:space-y-3 equal-card-list">
+                <ul className="space-y-2 md:space-y-3">
                   <li className="flex items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-500">
                     <Lock size={14} className="text-gray-600 md:w-4 md:h-4" />
                     <span>Role-based permissions (RBAC)</span>
@@ -617,8 +634,8 @@ const Services3 = () => {
                   </li>
                 </ul>
               </div>
-            </div>
-          </div>
+            </GlowingCard>
+          </GlowingCards>
 
           <div className="text-center">
             <p className="text-xs md:text-sm text-gray-500 px-4">
