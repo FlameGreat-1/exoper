@@ -1,0 +1,185 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exoper-tenant-service
+  namespace: exoper-system
+  labels:
+    app.kubernetes.io/name: exoper-tenant-service
+    app.kubernetes.io/component: tenant
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: helm
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: exoper-tenant-service
+      app.kubernetes.io/component: tenant
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: exoper-tenant-service
+        app.kubernetes.io/component: tenant
+        app.kubernetes.io/version: "1.0.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8083"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: exoper-gateway
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: tenant-service
+        image: exoper/tenant-service:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8082
+          protocol: TCP
+        - name: grpc
+          containerPort: 9092
+          protocol: TCP
+        - name: metrics
+          containerPort: 8083
+          protocol: TCP
+        env:
+        - name: CONFIG_PATH
+          value: "/etc/config/tenant.yaml"
+        - name: TENANT_DB_HOST
+          value: "postgres-tenant.exoper-system.svc.cluster.local"
+        - name: TENANT_DB_NAME
+          value: "exoper_tenant"
+        - name: TENANT_DB_USER
+          value: "exoper_tenant_user"
+        - name: TENANT_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: exoper-tenant-service-secrets
+              key: tenant-db-password
+        - name: REDIS_HOST
+          value: "redis-tenant.exoper-system.svc.cluster.local"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: exoper-tenant-service-secrets
+              key: redis-password
+        - name: TENANT_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: exoper-tenant-service-secrets
+              key: tenant-encryption-key
+        - name: BILLING_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: exoper-tenant-service-secrets
+              key: billing-api-key
+        - name: COMPLIANCE_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: exoper-tenant-service-secrets
+              key: compliance-encryption-key
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+          readOnly: true
+        - name: tls-certs
+          mountPath: /etc/ssl/certs
+          readOnly: true
+        - name: tls-private
+          mountPath: /etc/ssl/private
+          readOnly: true
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 65534
+          capabilities:
+            drop:
+            - ALL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+            scheme: HTTPS
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+            scheme: HTTPS
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8082
+            scheme: HTTPS
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: config
+        configMap:
+          name: exoper-tenant-service-config
+      - name: tls-certs
+        secret:
+          secretName: exoper-tenant-service-tls
+          items:
+          - key: tls.crt
+            path: tls.crt
+          - key: ca.crt
+            path: ca.crt
+          - key: tls.crt
+            path: client-ca.crt
+      - name: tls-private
+        secret:
+          secretName: exoper-tenant-service-tls
+          items:
+          - key: tls.key
+            path: tls.key
+          defaultMode: 0400
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - exoper-tenant-service
+              topologyKey: kubernetes.io/hostname
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300

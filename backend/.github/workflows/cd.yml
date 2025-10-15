@@ -1,0 +1,151 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+env:
+  GO_VERSION: '1.21'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: exoper
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.exoper.com
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Configure kubectl
+      run: |
+        aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name exoper-staging-cluster
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'v3.12.0'
+
+    - name: Deploy to staging
+      run: |
+        helm upgrade --install exoper-platform ./deployments/kubernetes \
+          --namespace exoper-system \
+          --create-namespace \
+          --set image.tag=${{ github.sha }} \
+          --set environment=staging \
+          --set ingress.host=staging.exoper.com \
+          --values ./deployments/kubernetes/values-staging.yaml \
+          --wait --timeout=10m
+
+    - name: Run smoke tests
+      run: |
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=exoper-gateway -n exoper-system --timeout=300s
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=exoper-auth-service -n exoper-system --timeout=300s
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=exoper-tenant-service -n exoper-system --timeout=300s
+        
+        # Health check tests
+        kubectl run smoke-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://staging.exoper.com/health
+
+    - name: Notify deployment status
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://app.exoper.com
+    needs: []
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+        aws-region: ${{ secrets.AWS_REGION_PROD }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Configure kubectl
+      run: |
+        aws eks update-kubeconfig --region ${{ secrets.AWS_REGION_PROD }} --name exoper-production-cluster
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'v3.12.0'
+
+    - name: Create backup
+      run: |
+        kubectl create job backup-$(date +%Y%m%d-%H%M%S) \
+          --from=cronjob/database-backup \
+          -n exoper-system
+
+    - name: Deploy to production
+      run: |
+        helm upgrade --install exoper-platform ./deployments/kubernetes \
+          --namespace exoper-system \
+          --create-namespace \
+          --set image.tag=${{ github.ref_name }} \
+          --set environment=production \
+          --set ingress.host=app.exoper.com \
+          --values ./deployments/kubernetes/values-production.yaml \
+          --wait --timeout=15m
+
+    - name: Run production health checks
+      run: |
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=exoper-gateway -n exoper-system --timeout=600s
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=exoper-auth-service -n exoper-system --timeout=600s
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=exoper-tenant-service -n exoper-system --timeout=600s
+        
+        # Comprehensive health checks
+        kubectl run production-health-check --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://app.exoper.com/health
+
+    - name: Update deployment status
+      run: |
+        kubectl annotate deployment exoper-gateway \
+          deployment.kubernetes.io/revision-history="$(date): Deployed ${{ github.ref_name }}" \
+          -n exoper-system
+
+    - name: Notify production deployment
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        channel: '#production-deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_PROD }}
+        text: |
+          Production Deployment ${{ job.status }}
+          Version: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}

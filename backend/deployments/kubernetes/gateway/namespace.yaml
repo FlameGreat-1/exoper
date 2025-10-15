@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exoper-system
+  labels:
+    name: exoper-system
+    app.kubernetes.io/name: exoper-platform
+    app.kubernetes.io/component: system
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: helm
+  annotations:
+    kubernetes.io/managed-by: "exoper-platform"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: exoper-gateway
+  namespace: exoper-system
+  labels:
+    app.kubernetes.io/name: exoper-gateway
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/version: "1.0.0"
+automountServiceAccountToken: false

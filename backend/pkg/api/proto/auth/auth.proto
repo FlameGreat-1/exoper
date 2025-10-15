@@ -1,0 +1,570 @@
+syntax = "proto3";
+
+package exoper.auth.v1;
+
+option go_package = "flamo/backend/pkg/api/proto/auth";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "pkg/api/proto/common/common.proto";
+
+enum AuthenticationMethod {
+  AUTHENTICATION_METHOD_UNSPECIFIED = 0;
+  AUTHENTICATION_METHOD_API_KEY = 1;
+  AUTHENTICATION_METHOD_JWT = 2;
+  AUTHENTICATION_METHOD_MTLS = 3;
+  AUTHENTICATION_METHOD_OAUTH2 = 4;
+  AUTHENTICATION_METHOD_BASIC = 5;
+  AUTHENTICATION_METHOD_SAML = 6;
+  AUTHENTICATION_METHOD_OIDC = 7;
+}
+
+enum AuthenticationLevel {
+  AUTHENTICATION_LEVEL_UNSPECIFIED = 0;
+  AUTHENTICATION_LEVEL_NONE = 1;
+  AUTHENTICATION_LEVEL_BASIC = 2;
+  AUTHENTICATION_LEVEL_STRONG = 3;
+  AUTHENTICATION_LEVEL_MULTI_FACTOR = 4;
+}
+
+enum TokenType {
+  TOKEN_TYPE_UNSPECIFIED = 0;
+  TOKEN_TYPE_ACCESS = 1;
+  TOKEN_TYPE_REFRESH = 2;
+  TOKEN_TYPE_ID = 3;
+  TOKEN_TYPE_API_KEY = 4;
+  TOKEN_TYPE_SESSION = 5;
+}
+
+enum CertificateStatus {
+  CERTIFICATE_STATUS_UNSPECIFIED = 0;
+  CERTIFICATE_STATUS_VALID = 1;
+  CERTIFICATE_STATUS_EXPIRED = 2;
+  CERTIFICATE_STATUS_REVOKED = 3;
+  CERTIFICATE_STATUS_INVALID = 4;
+  CERTIFICATE_STATUS_UNKNOWN = 5;
+}
+
+message AuthenticateRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  AuthenticationMethod method = 2;
+  oneof credentials {
+    APIKeyCredentials api_key = 3;
+    JWTCredentials jwt = 4;
+    MTLSCredentials mtls = 5;
+    OAuth2Credentials oauth2 = 6;
+    BasicCredentials basic = 7;
+    SAMLCredentials saml = 8;
+    OIDCCredentials oidc = 9;
+  }
+  bool require_mfa = 10;
+  repeated string required_scopes = 11;
+  repeated string required_permissions = 12;
+  google.protobuf.Struct additional_context = 13;
+}
+
+message AuthenticateResponse {
+  exoper.common.v1.Status status = 1;
+  AuthenticationResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+  exoper.common.v1.SecurityAnalysis security_analysis = 4;
+  google.protobuf.Timestamp authenticated_at = 5;
+  google.protobuf.Duration processing_time = 6;
+}
+
+message AuthenticationResult {
+  bool authenticated = 1;
+  AuthenticationLevel level = 2;
+  Principal principal = 3;
+  repeated string permissions = 4;
+  repeated string scopes = 5;
+  TokenInfo token_info = 6;
+  SessionInfo session_info = 7;
+  CertificateInfo certificate_info = 8;
+  double risk_score = 9;
+  repeated string risk_factors = 10;
+  google.protobuf.Timestamp expires_at = 11;
+  google.protobuf.Struct metadata = 12;
+}
+
+message Principal {
+  string id = 1;
+  string type = 2;
+  string name = 3;
+  string email = 4;
+  string tenant_id = 5;
+  string organization_id = 6;
+  repeated string roles = 7;
+  repeated string groups = 8;
+  google.protobuf.Struct attributes = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp last_login = 11;
+  bool is_active = 12;
+  bool mfa_enabled = 13;
+}
+
+message APIKeyCredentials {
+  string key = 1;
+  string prefix = 2;
+  string signature = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  string nonce = 5;
+}
+
+message JWTCredentials {
+  string token = 1;
+  string issuer = 2;
+  string audience = 3;
+  repeated string scopes = 4;
+  google.protobuf.Struct claims = 5;
+}
+
+message MTLSCredentials {
+  string client_certificate = 1;
+  string certificate_chain = 2;
+  string client_key_fingerprint = 3;
+  string ca_fingerprint = 4;
+  CertificateInfo certificate_info = 5;
+}
+
+message OAuth2Credentials {
+  string access_token = 1;
+  string token_type = 2;
+  repeated string scopes = 3;
+  string client_id = 4;
+  google.protobuf.Timestamp expires_at = 5;
+}
+
+message BasicCredentials {
+  string username = 1;
+  string password = 2;
+  string realm = 3;
+}
+
+message SAMLCredentials {
+  string assertion = 1;
+  string issuer = 2;
+  string audience = 3;
+  google.protobuf.Timestamp not_before = 4;
+  google.protobuf.Timestamp not_on_or_after = 5;
+}
+
+message OIDCCredentials {
+  string id_token = 1;
+  string access_token = 2;
+  string issuer = 3;
+  string audience = 4;
+  string nonce = 5;
+}
+
+message TokenInfo {
+  string token_id = 1;
+  TokenType type = 2;
+  string issuer = 3;
+  string subject = 4;
+  repeated string audience = 5;
+  google.protobuf.Timestamp issued_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  google.protobuf.Timestamp not_before = 8;
+  repeated string scopes = 9;
+  google.protobuf.Struct claims = 10;
+  string jti = 11;
+}
+
+message SessionInfo {
+  string session_id = 1;
+  string user_id = 2;
+  string tenant_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp last_activity = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  string ip_address = 7;
+  string user_agent = 8;
+  bool is_active = 9;
+  google.protobuf.Struct metadata = 10;
+}
+
+message CertificateInfo {
+  string serial_number = 1;
+  string subject = 2;
+  string issuer = 3;
+  google.protobuf.Timestamp not_before = 4;
+  google.protobuf.Timestamp not_after = 5;
+  string fingerprint = 6;
+  string public_key_algorithm = 7;
+  string signature_algorithm = 8;
+  repeated string key_usage = 9;
+  repeated string extended_key_usage = 10;
+  repeated string subject_alt_names = 11;
+  CertificateStatus status = 12;
+  string revocation_reason = 13;
+  google.protobuf.Timestamp revocation_time = 14;
+}
+
+message ValidateTokenRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string token = 2;
+  TokenType token_type = 3;
+  repeated string required_scopes = 4;
+  repeated string required_permissions = 5;
+  bool check_expiration = 6;
+  bool check_revocation = 7;
+  google.protobuf.Struct validation_context = 8;
+}
+
+message ValidateTokenResponse {
+  exoper.common.v1.Status status = 1;
+  TokenValidationResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+  google.protobuf.Duration processing_time = 4;
+}
+
+message TokenValidationResult {
+  bool valid = 1;
+  TokenInfo token_info = 2;
+  Principal principal = 3;
+  repeated string permissions = 4;
+  repeated string scopes = 5;
+  repeated ValidationError validation_errors = 6;
+  double risk_score = 7;
+  google.protobuf.Timestamp validated_at = 8;
+  google.protobuf.Struct metadata = 9;
+}
+
+message ValidationError {
+  string code = 1;
+  string message = 2;
+  exoper.common.v1.Severity severity = 3;
+  string field = 4;
+  google.protobuf.Struct context = 5;
+}
+
+message AuthorizeRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string principal_id = 2;
+  string resource = 3;
+  string action = 4;
+  google.protobuf.Struct resource_attributes = 5;
+  google.protobuf.Struct context = 6;
+  repeated string required_permissions = 7;
+  bool enforce_mfa = 8;
+}
+
+message AuthorizeResponse {
+  exoper.common.v1.Status status = 1;
+  AuthorizationResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+  google.protobuf.Duration processing_time = 4;
+}
+
+message AuthorizationResult {
+  bool authorized = 1;
+  string decision = 2;
+  repeated string granted_permissions = 3;
+  repeated string denied_permissions = 4;
+  repeated PolicyEvaluation policy_evaluations = 5;
+  string reason = 6;
+  google.protobuf.Struct obligations = 7;
+  google.protobuf.Timestamp evaluated_at = 8;
+  google.protobuf.Struct metadata = 9;
+}
+
+message PolicyEvaluation {
+  string policy_id = 1;
+  string policy_name = 2;
+  string decision = 3;
+  string reason = 4;
+  double confidence = 5;
+  google.protobuf.Struct context = 6;
+}
+
+message CreateAPIKeyRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string tenant_id = 2;
+  string name = 3;
+  string description = 4;
+  repeated string permissions = 5;
+  repeated string scopes = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  exoper.common.v1.ResourceLimits limits = 8;
+  google.protobuf.Struct metadata_fields = 9;
+  bool is_active = 10;
+}
+
+message CreateAPIKeyResponse {
+  exoper.common.v1.Status status = 1;
+  APIKeyResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+  google.protobuf.Duration processing_time = 4;
+}
+
+message APIKeyResult {
+  string key_id = 1;
+  string key = 2;
+  string prefix = 3;
+  APIKeyInfo key_info = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message APIKeyInfo {
+  string key_id = 1;
+  string tenant_id = 2;
+  string name = 3;
+  string description = 4;
+  string prefix = 5;
+  repeated string permissions = 6;
+  repeated string scopes = 7;
+  google.protobuf.Timestamp expires_at = 8;
+  google.protobuf.Timestamp last_used_at = 9;
+  bool is_active = 10;
+  google.protobuf.Timestamp created_at = 11;
+  string created_by = 12;
+  google.protobuf.Timestamp revoked_at = 13;
+  string revoked_by = 14;
+  string revocation_reason = 15;
+  exoper.common.v1.ResourceLimits limits = 16;
+  google.protobuf.Struct metadata = 17;
+}
+
+message RevokeAPIKeyRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string key_id = 2;
+  string reason = 3;
+  bool immediate = 4;
+}
+
+message RevokeAPIKeyResponse {
+  exoper.common.v1.Status status = 1;
+  google.protobuf.Timestamp revoked_at = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message ListAPIKeysRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string tenant_id = 2;
+  exoper.common.v1.Pagination pagination = 3;
+  repeated exoper.common.v1.Filter filters = 4;
+  repeated exoper.common.v1.SortOrder sort_orders = 5;
+  bool include_revoked = 6;
+}
+
+message ListAPIKeysResponse {
+  exoper.common.v1.Status status = 1;
+  repeated APIKeyInfo api_keys = 2;
+  exoper.common.v1.Pagination pagination = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+}
+
+message CreateSessionRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string user_id = 2;
+  string tenant_id = 3;
+  google.protobuf.Duration duration = 4;
+  google.protobuf.Struct session_attributes = 5;
+  bool require_mfa = 6;
+}
+
+message CreateSessionResponse {
+  exoper.common.v1.Status status = 1;
+  SessionResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message SessionResult {
+  string session_id = 1;
+  string session_token = 2;
+  SessionInfo session_info = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message ValidateSessionRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string session_id = 2;
+  string session_token = 3;
+  bool extend_session = 4;
+  google.protobuf.Duration extension_duration = 5;
+}
+
+message ValidateSessionResponse {
+  exoper.common.v1.Status status = 1;
+  SessionValidationResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message SessionValidationResult {
+  bool valid = 1;
+  SessionInfo session_info = 2;
+  Principal principal = 3;
+  google.protobuf.Timestamp validated_at = 4;
+  google.protobuf.Timestamp extended_until = 5;
+}
+
+message RevokeSessionRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string session_id = 2;
+  string reason = 3;
+}
+
+message RevokeSessionResponse {
+  exoper.common.v1.Status status = 1;
+  google.protobuf.Timestamp revoked_at = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message RefreshTokenRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string refresh_token = 2;
+  repeated string scopes = 3;
+  google.protobuf.Duration duration = 4;
+}
+
+message RefreshTokenResponse {
+  exoper.common.v1.Status status = 1;
+  TokenRefreshResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message TokenRefreshResult {
+  string access_token = 1;
+  string refresh_token = 2;
+  TokenInfo token_info = 3;
+  google.protobuf.Timestamp issued_at = 4;
+}
+
+message GetPermissionsRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string principal_id = 2;
+  string resource_type = 3;
+  string resource_id = 4;
+}
+
+message GetPermissionsResponse {
+  exoper.common.v1.Status status = 1;
+  PermissionsResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message PermissionsResult {
+  repeated string permissions = 1;
+  repeated string scopes = 2;
+  repeated RoleInfo roles = 3;
+  google.protobuf.Timestamp evaluated_at = 4;
+  google.protobuf.Struct metadata = 5;
+}
+
+message RoleInfo {
+  string role_id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string permissions = 4;
+  repeated string scopes = 5;
+  google.protobuf.Struct metadata = 6;
+}
+
+message VerifyCertificateRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string certificate = 2;
+  string certificate_chain = 3;
+  bool check_revocation = 4;
+  bool check_expiration = 5;
+  repeated string required_key_usage = 6;
+}
+
+message VerifyCertificateResponse {
+  exoper.common.v1.Status status = 1;
+  CertificateVerificationResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message CertificateVerificationResult {
+  bool valid = 1;
+  CertificateInfo certificate_info = 2;
+  repeated string validation_errors = 3;
+  string trust_chain_status = 4;
+  google.protobuf.Timestamp verified_at = 5;
+}
+
+service AuthenticationService {
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc GetPermissions(GetPermissionsRequest) returns (GetPermissionsResponse);
+  rpc VerifyCertificate(VerifyCertificateRequest) returns (VerifyCertificateResponse);
+}
+
+service APIKeyService {
+  rpc CreateAPIKey(CreateAPIKeyRequest) returns (CreateAPIKeyResponse);
+  rpc RevokeAPIKey(RevokeAPIKeyRequest) returns (RevokeAPIKeyResponse);
+  rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse);
+  rpc GetAPIKey(GetAPIKeyRequest) returns (GetAPIKeyResponse);
+  rpc UpdateAPIKey(UpdateAPIKeyRequest) returns (UpdateAPIKeyResponse);
+}
+
+service SessionService {
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc ExtendSession(ExtendSessionRequest) returns (ExtendSessionResponse);
+}
+
+message GetAPIKeyRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string key_id = 2;
+  bool include_usage_stats = 3;
+}
+
+message GetAPIKeyResponse {
+  exoper.common.v1.Status status = 1;
+  APIKeyInfo api_key = 2;
+  exoper.common.v1.UsageMetrics usage_stats = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+}
+
+message UpdateAPIKeyRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string key_id = 2;
+  string name = 3;
+  string description = 4;
+  repeated string permissions = 5;
+  repeated string scopes = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  bool is_active = 8;
+  exoper.common.v1.ResourceLimits limits = 9;
+}
+
+message UpdateAPIKeyResponse {
+  exoper.common.v1.Status status = 1;
+  APIKeyInfo api_key = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message ListSessionsRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string user_id = 2;
+  string tenant_id = 3;
+  exoper.common.v1.Pagination pagination = 4;
+  repeated exoper.common.v1.Filter filters = 5;
+  bool include_expired = 6;
+}
+
+message ListSessionsResponse {
+  exoper.common.v1.Status status = 1;
+  repeated SessionInfo sessions = 2;
+  exoper.common.v1.Pagination pagination = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+}
+
+message ExtendSessionRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string session_id = 2;
+  google.protobuf.Duration extension_duration = 3;
+}
+
+message ExtendSessionResponse {
+  exoper.common.v1.Status status = 1;
+  google.protobuf.Timestamp extended_until = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}

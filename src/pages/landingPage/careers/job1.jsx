@@ -147,7 +147,7 @@ const SeniorFullStackEngineer = () => {
                       Experience with, or at least the desire to learn Rust to contribute to our open-source repositories
                       (CLI,{' '}
                       <a href="#" className="text-purple-400 hover:text-purple-300 underline">
-                        NixPacks
+                        Exope
                       </a>
                       , etc)
                     </span>
@@ -185,7 +185,7 @@ const SeniorFullStackEngineer = () => {
                     <div>
                       Build a tool for building user code into a deployable image using Nix packages.{' '}
                       <a href="#" className="text-purple-400 hover:text-purple-300 underline">
-                        github.com/Exoperapp/nixpacks
+                        github.com/Exoperapp/Exope
                       </a>
                     </div>
                   </li>

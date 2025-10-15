@@ -1,0 +1,168 @@
+# Staging Environment - API Gateway Configuration
+server:
+  name: "exoper-gateway"
+  version: "1.0.0"
+  environment: "staging"
+  host: "0.0.0.0"
+  port: 8080
+  grpc_port: 9090
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "120s"
+  shutdown_timeout: "30s"
+  max_header_bytes: 1048576
+
+security:
+  tls:
+    enabled: true
+    cert_file: "/etc/ssl/certs/gateway.crt"
+    key_file: "/etc/ssl/private/gateway.key"
+    ca_file: "/etc/ssl/certs/ca.crt"
+  mtls:
+    enabled: true
+    client_ca_file: "/etc/ssl/certs/client-ca.crt"
+    verify_client_cert: true
+  cors:
+    enabled: true
+    allowed_origins: ["https://staging.exoper.com", "https://staging-admin.exoper.com"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Authorization", "Content-Type", "X-Trace-ID", "X-Tenant-ID"]
+    allow_credentials: true
+    max_age: 86400
+
+auth:
+  jwt:
+    secret_key: "${JWT_SECRET_KEY}"
+    issuer: "exoper-gateway-staging"
+    audience: "exoper-platform"
+    expiry: "1h"
+    refresh_expiry: "24h"
+  oidc:
+    enabled: true
+    provider_url: "${OIDC_PROVIDER_URL}"
+    client_id: "${OIDC_CLIENT_ID}"
+    client_secret: "${OIDC_CLIENT_SECRET}"
+    redirect_url: "https://staging.exoper.com/auth/callback"
+
+database:
+  driver: "postgres"
+  host: "${DB_HOST}"
+  port: 5432
+  name: "${DB_NAME}"
+  user: "${DB_USER}"
+  password: "${DB_PASSWORD}"
+  ssl_mode: "require"
+  max_open_conns: 50
+  max_idle_conns: 10
+  conn_max_lifetime: "5m"
+  conn_max_idle_time: "5m"
+
+redis:
+  enabled: true
+  host: "${REDIS_HOST}"
+  port: 6379
+  password: "${REDIS_PASSWORD}"
+  db: 0
+  pool_size: 20
+  min_idle_conns: 10
+  dial_timeout: "5s"
+  read_timeout: "3s"
+  write_timeout: "3s"
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    output: "stdout"
+    file_path: "/var/log/exoper/gateway.log"
+    max_size: 100
+    max_backups: 5
+    max_age: 30
+    compress: true
+  tracing:
+    enabled: true
+    service_name: "exoper-gateway"
+    jaeger:
+      endpoint: "${JAEGER_ENDPOINT}"
+      sampler_type: "probabilistic"
+      sampler_param: 0.1
+  metrics:
+    enabled: true
+    prometheus:
+      enabled: true
+      path: "/metrics"
+      port: 8081
+    custom_metrics:
+      request_duration: true
+      request_count: true
+      error_rate: true
+
+rate_limiting:
+  enabled: true
+  global:
+    requests_per_second: 5000
+    burst: 10000
+  per_tenant:
+    requests_per_second: 500
+    burst: 1000
+  per_ip:
+    requests_per_second: 100
+    burst: 200
+
+services:
+  auth_service:
+    host: "exoper-auth-service"
+    port: 8081
+    grpc_port: 9091
+    timeout: "10s"
+    retry_attempts: 3
+    circuit_breaker:
+      enabled: true
+      max_requests: 200
+      interval: "60s"
+      timeout: "30s"
+  
+  tenant_service:
+    host: "exoper-tenant-service"
+    port: 8082
+    grpc_port: 9092
+    timeout: "10s"
+    retry_attempts: 3
+    circuit_breaker:
+      enabled: true
+      max_requests: 200
+      interval: "60s"
+      timeout: "30s"
+
+  threat_detector:
+    host: "exoper-threat-detector"
+    port: 8083
+    grpc_port: 9093
+    timeout: "5s"
+    retry_attempts: 2
+    circuit_breaker:
+      enabled: true
+      max_requests: 500
+      interval: "30s"
+      timeout: "10s"
+
+audit:
+  enabled: true
+  storage_type: "database"
+  batch_size: 500
+  flush_interval: "5s"
+  retention_days: 365
+  encryption:
+    enabled: true
+    key: "${AUDIT_ENCRYPTION_KEY}"
+
+health_check:
+  enabled: true
+  path: "/health"
+  interval: "30s"
+  timeout: "10s"
+  dependencies:
+    - "database"
+    - "redis"
+    - "auth_service"
+    - "tenant_service"

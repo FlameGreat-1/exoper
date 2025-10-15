@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: exoper-tenant-service
+  namespace: exoper-system
+  labels:
+    app.kubernetes.io/name: exoper-tenant-service
+    app.kubernetes.io/component: tenant
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  type: ClusterIP
+  ports:
+  - name: https
+    port: 8082
+    targetPort: 8082
+    protocol: TCP
+  - name: grpc
+    port: 9092
+    targetPort: 9092
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: exoper-tenant-service
+    app.kubernetes.io/component: tenant
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: exoper-tenant-service-metrics
+  namespace: exoper-system
+  labels:
+    app.kubernetes.io/name: exoper-tenant-service
+    app.kubernetes.io/component: tenant
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8083"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 8083
+    targetPort: 8083
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: exoper-tenant-service
+    app.kubernetes.io/component: tenant

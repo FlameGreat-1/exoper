@@ -1,0 +1,550 @@
+syntax = "proto3";
+
+package exoper.common.v1;
+
+option go_package = "flamo/backend/pkg/api/proto/common";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/any.proto";
+
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_SUCCESS = 1;
+  STATUS_ERROR = 2;
+  STATUS_BLOCKED = 3;
+  STATUS_FLAGGED = 4;
+  STATUS_THROTTLED = 5;
+  STATUS_PENDING = 6;
+  STATUS_PROCESSING = 7;
+}
+
+enum ErrorCode {
+  ERROR_CODE_UNSPECIFIED = 0;
+  ERROR_CODE_INVALID_REQUEST = 1;
+  ERROR_CODE_UNAUTHORIZED = 2;
+  ERROR_CODE_FORBIDDEN = 3;
+  ERROR_CODE_NOT_FOUND = 4;
+  ERROR_CODE_RATE_LIMIT_EXCEEDED = 5;
+  ERROR_CODE_QUOTA_EXCEEDED = 6;
+  ERROR_CODE_MODEL_UNAVAILABLE = 7;
+  ERROR_CODE_THREAT_DETECTED = 8;
+  ERROR_CODE_COMPLIANCE_VIOLATION = 9;
+  ERROR_CODE_INTERNAL_ERROR = 10;
+  ERROR_CODE_TIMEOUT = 11;
+  ERROR_CODE_INVALID_MODEL = 12;
+  ERROR_CODE_CONTENT_FILTERED = 13;
+  ERROR_CODE_INSUFFICIENT_PERMISSIONS = 14;
+  ERROR_CODE_TENANT_SUSPENDED = 15;
+  ERROR_CODE_API_KEY_EXPIRED = 16;
+  ERROR_CODE_CERTIFICATE_INVALID = 17;
+}
+
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_LOW = 1;
+  SEVERITY_MEDIUM = 2;
+  SEVERITY_HIGH = 3;
+  SEVERITY_CRITICAL = 4;
+}
+
+enum ThreatLevel {
+  THREAT_LEVEL_UNSPECIFIED = 0;
+  THREAT_LEVEL_NONE = 1;
+  THREAT_LEVEL_LOW = 2;
+  THREAT_LEVEL_MEDIUM = 3;
+  THREAT_LEVEL_HIGH = 4;
+  THREAT_LEVEL_CRITICAL = 5;
+}
+
+enum ComplianceStatus {
+  COMPLIANCE_STATUS_UNSPECIFIED = 0;
+  COMPLIANCE_STATUS_PASS = 1;
+  COMPLIANCE_STATUS_FAIL = 2;
+  COMPLIANCE_STATUS_WARN = 3;
+  COMPLIANCE_STATUS_SKIP = 4;
+}
+
+enum TenantStatus {
+  TENANT_STATUS_UNSPECIFIED = 0;
+  TENANT_STATUS_ACTIVE = 1;
+  TENANT_STATUS_SUSPENDED = 2;
+  TENANT_STATUS_PENDING = 3;
+  TENANT_STATUS_TERMINATED = 4;
+}
+
+enum TenantTier {
+  TENANT_TIER_UNSPECIFIED = 0;
+  TENANT_TIER_STARTER = 1;
+  TENANT_TIER_BUSINESS = 2;
+  TENANT_TIER_ENTERPRISE = 3;
+}
+
+enum ModelProvider {
+  MODEL_PROVIDER_UNSPECIFIED = 0;
+  MODEL_PROVIDER_OPENAI = 1;
+  MODEL_PROVIDER_ANTHROPIC = 2;
+  MODEL_PROVIDER_COHERE = 3;
+  MODEL_PROVIDER_HUGGINGFACE = 4;
+  MODEL_PROVIDER_INTERNAL = 5;
+}
+
+enum RequestType {
+  REQUEST_TYPE_UNSPECIFIED = 0;
+  REQUEST_TYPE_COMPLETION = 1;
+  REQUEST_TYPE_CHAT = 2;
+  REQUEST_TYPE_EMBEDDING = 3;
+  REQUEST_TYPE_FINE_TUNING = 4;
+  REQUEST_TYPE_MODERATION = 5;
+  REQUEST_TYPE_CLASSIFICATION = 6;
+}
+
+enum SecurityLevel {
+  SECURITY_LEVEL_UNSPECIFIED = 0;
+  SECURITY_LEVEL_LOW = 1;
+  SECURITY_LEVEL_MEDIUM = 2;
+  SECURITY_LEVEL_HIGH = 3;
+  SECURITY_LEVEL_CRITICAL = 4;
+}
+
+enum ContentType {
+  CONTENT_TYPE_UNSPECIFIED = 0;
+  CONTENT_TYPE_TEXT = 1;
+  CONTENT_TYPE_IMAGE = 2;
+  CONTENT_TYPE_AUDIO = 3;
+  CONTENT_TYPE_VIDEO = 4;
+  CONTENT_TYPE_MIXED = 5;
+}
+
+enum ComplianceFramework {
+  COMPLIANCE_FRAMEWORK_UNSPECIFIED = 0;
+  COMPLIANCE_FRAMEWORK_GDPR = 1;
+  COMPLIANCE_FRAMEWORK_HIPAA = 2;
+  COMPLIANCE_FRAMEWORK_SOC2 = 3;
+  COMPLIANCE_FRAMEWORK_ISO27001 = 4;
+  COMPLIANCE_FRAMEWORK_FEDRAMP = 5;
+  COMPLIANCE_FRAMEWORK_CCPA = 6;
+  COMPLIANCE_FRAMEWORK_PCI_DSS = 7;
+}
+
+enum DataResidency {
+  DATA_RESIDENCY_UNSPECIFIED = 0;
+  DATA_RESIDENCY_US = 1;
+  DATA_RESIDENCY_EU = 2;
+  DATA_RESIDENCY_APAC = 3;
+  DATA_RESIDENCY_CANADA = 4;
+  DATA_RESIDENCY_UK = 5;
+  DATA_RESIDENCY_AUSTRALIA = 6;
+}
+
+message RequestMetadata {
+  string request_id = 1;
+  string trace_id = 2;
+  string span_id = 3;
+  string tenant_id = 4;
+  string user_id = 5;
+  string session_id = 6;
+  google.protobuf.Timestamp timestamp = 7;
+  map<string, string> headers = 8;
+  ClientInformation client_info = 9;
+  SecurityContext security_context = 10;
+  ComplianceContext compliance_context = 11;
+  google.protobuf.Struct metadata = 12;
+}
+
+message ClientInformation {
+  string ip_address = 1;
+  string user_agent = 2;
+  string referer = 3;
+  string origin = 4;
+  string country = 5;
+  string region = 6;
+  string city = 7;
+  string isp = 8;
+  string device_type = 9;
+  string platform = 10;
+  string browser = 11;
+  string language = 12;
+  string timezone = 13;
+  string fingerprint = 14;
+  map<string, string> custom_headers = 15;
+}
+
+message SecurityContext {
+  string authentication_method = 1;
+  string authentication_level = 2;
+  string api_key_id = 3;
+  google.protobuf.Struct jwt_claims = 4;
+  repeated string permissions = 5;
+  repeated string scopes = 6;
+  double risk_score = 7;
+  repeated string threat_indicators = 8;
+  bool ip_whitelisted = 9;
+  int32 rate_limit_remaining = 10;
+  int64 quota_remaining = 11;
+  bool mtls_verified = 12;
+  string certificate_subject = 13;
+  google.protobuf.Timestamp last_activity = 14;
+  string session_token = 15;
+}
+
+message ComplianceContext {
+  repeated string data_classification = 1;
+  bool pii_detected = 2;
+  repeated string pii_types = 3;
+  DataResidency data_residency = 4;
+  repeated ComplianceFramework compliance_frameworks = 5;
+  bool consent_required = 6;
+  bool consent_provided = 7;
+  int32 data_retention_days = 8;
+  bool encryption_required = 9;
+  bool audit_required = 10;
+  repeated RedactionRule redaction_rules = 11;
+  google.protobuf.Struct compliance_metadata = 12;
+}
+
+message RedactionRule {
+  string type = 1;
+  string pattern = 2;
+  string replacement = 3;
+  bool enabled = 4;
+  string description = 5;
+  Severity severity = 6;
+}
+
+message ErrorDetails {
+  ErrorCode code = 1;
+  string message = 2;
+  string details = 3;
+  Severity severity = 4;
+  bool retryable = 5;
+  google.protobuf.Duration retry_after = 6;
+  google.protobuf.Struct context = 7;
+  google.protobuf.Timestamp timestamp = 8;
+  string request_id = 9;
+  string trace_id = 10;
+  string help_url = 11;
+  repeated ErrorDetails inner_errors = 12;
+}
+
+message ThreatDetection {
+  string type = 1;
+  Severity severity = 2;
+  string description = 3;
+  string location = 4;
+  string evidence = 5;
+  double confidence = 6;
+  string mitigation = 7;
+  google.protobuf.Struct metadata = 8;
+  google.protobuf.Timestamp detected_at = 9;
+  string detector_version = 10;
+}
+
+message SignatureMatch {
+  string signature_id = 1;
+  string signature_name = 2;
+  string match_type = 3;
+  double confidence = 4;
+  string location = 5;
+  string context = 6;
+  google.protobuf.Timestamp matched_at = 7;
+}
+
+message AnomalyDetection {
+  string type = 1;
+  double score = 2;
+  double threshold = 3;
+  string description = 4;
+  string features = 5;
+  google.protobuf.Timestamp detected_at = 6;
+  string model_version = 7;
+}
+
+message SecurityAnalysis {
+  ThreatLevel threat_level = 1;
+  repeated ThreatDetection threats_detected = 2;
+  double risk_score = 3;
+  double confidence = 4;
+  repeated string detection_methods = 5;
+  repeated string recommendations = 6;
+  int64 processing_time_ms = 7;
+  string engine_version = 8;
+  repeated SignatureMatch signatures = 9;
+  repeated AnomalyDetection anomalies = 10;
+  google.protobuf.Timestamp analyzed_at = 11;
+}
+
+message ComplianceReport {
+  ComplianceStatus status = 1;
+  repeated FrameworkResult frameworks = 2;
+  bool pii_detected = 3;
+  repeated string pii_types = 4;
+  repeated RedactionApplied redactions_applied = 5;
+  repeated string data_classification = 6;
+  bool retention_required = 7;
+  bool audit_required = 8;
+  repeated ComplianceViolation violations = 9;
+  repeated string recommendations = 10;
+  int64 processing_time_ms = 11;
+  string engine_version = 12;
+  google.protobuf.Timestamp generated_at = 13;
+}
+
+message FrameworkResult {
+  ComplianceFramework framework = 1;
+  ComplianceStatus status = 2;
+  double score = 3;
+  repeated RequirementResult requirements = 4;
+  google.protobuf.Struct metadata = 5;
+  google.protobuf.Timestamp evaluated_at = 6;
+}
+
+message RequirementResult {
+  string id = 1;
+  string name = 2;
+  ComplianceStatus status = 3;
+  string description = 4;
+  string evidence = 5;
+  double score = 6;
+}
+
+message ComplianceViolation {
+  string type = 1;
+  Severity severity = 2;
+  string description = 3;
+  ComplianceFramework framework = 4;
+  string requirement = 5;
+  string location = 6;
+  string remediation = 7;
+  google.protobuf.Struct metadata = 8;
+  google.protobuf.Timestamp detected_at = 9;
+}
+
+message RedactionApplied {
+  string type = 1;
+  string location = 2;
+  string original = 3;
+  string replacement = 4;
+  string reason = 5;
+  google.protobuf.Timestamp applied_at = 6;
+}
+
+message UsageMetrics {
+  int32 prompt_tokens = 1;
+  int32 completion_tokens = 2;
+  int32 total_tokens = 3;
+  int32 request_count = 4;
+  int32 cache_hits = 5;
+  int32 cache_misses = 6;
+  int64 bandwidth_bytes = 7;
+  double compute_units = 8;
+  CostBreakdown cost = 9;
+  google.protobuf.Struct quotas = 10;
+  google.protobuf.Timestamp measured_at = 11;
+}
+
+message CostBreakdown {
+  string currency = 1;
+  double prompt_cost = 2;
+  double completion_cost = 3;
+  double processing_cost = 4;
+  double storage_cost = 5;
+  double total_cost = 6;
+  string billing_tier = 7;
+  double discount_applied = 8;
+  google.protobuf.Timestamp calculated_at = 9;
+}
+
+message PerformanceMetrics {
+  int64 total_latency_ms = 1;
+  int64 model_latency_ms = 2;
+  int64 security_latency_ms = 3;
+  int64 compliance_latency_ms = 4;
+  int64 network_latency_ms = 5;
+  int64 queue_time_ms = 6;
+  int64 time_to_first_token_ms = 7;
+  double tokens_per_second = 8;
+  double throughput = 9;
+  int32 concurrent_requests = 10;
+  int32 retry_count = 11;
+  double cache_hit_ratio = 12;
+  google.protobuf.Struct resource_utilization = 13;
+  google.protobuf.Timestamp measured_at = 14;
+}
+
+message ResourceLimits {
+  int32 max_users = 1;
+  int32 max_api_calls_per_minute = 2;
+  int32 max_api_calls_per_day = 3;
+  int32 max_storage_gb = 4;
+  int32 max_models_per_tenant = 5;
+  int32 max_concurrent_requests = 6;
+  double bandwidth_limit_mbps = 7;
+  int32 compute_units_limit = 8;
+  google.protobuf.Timestamp effective_from = 9;
+  google.protobuf.Timestamp expires_at = 10;
+}
+
+message QuotaStatus {
+  string resource_type = 1;
+  int64 limit = 2;
+  int64 used = 3;
+  int64 remaining = 4;
+  double usage_percentage = 5;
+  google.protobuf.Timestamp reset_time = 6;
+  google.protobuf.Duration reset_interval = 7;
+  bool alert_threshold_reached = 8;
+}
+
+message AuditEvent {
+  string event_id = 1;
+  string event_type = 2;
+  string actor_id = 3;
+  string actor_type = 4;
+  string resource_id = 5;
+  string resource_type = 6;
+  string action = 7;
+  Status status = 8;
+  google.protobuf.Struct event_data = 9;
+  string source_ip = 10;
+  string user_agent = 11;
+  google.protobuf.Timestamp timestamp = 12;
+  string trace_id = 13;
+  string tenant_id = 14;
+  Severity severity = 15;
+}
+
+message HealthStatus {
+  Status overall_status = 1;
+  repeated ComponentHealth components = 2;
+  google.protobuf.Timestamp last_check = 3;
+  string version = 4;
+  google.protobuf.Duration uptime = 5;
+  google.protobuf.Struct metadata = 6;
+}
+
+message ComponentHealth {
+  string name = 1;
+  Status status = 2;
+  string message = 3;
+  google.protobuf.Timestamp last_check = 4;
+  google.protobuf.Duration response_time = 5;
+  repeated HealthCheck checks = 6;
+}
+
+message HealthCheck {
+  string name = 1;
+  Status status = 2;
+  string message = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  google.protobuf.Duration duration = 5;
+  google.protobuf.Struct details = 6;
+}
+
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total_count = 3;
+  int32 total_pages = 4;
+  bool has_next = 5;
+  bool has_previous = 6;
+  string next_cursor = 7;
+  string previous_cursor = 8;
+}
+
+message SortOrder {
+  string field = 1;
+  bool ascending = 2;
+}
+
+message Filter {
+  string field = 1;
+  string operator = 2;
+  google.protobuf.Any value = 3;
+}
+
+message SearchRequest {
+  string query = 1;
+  repeated Filter filters = 2;
+  repeated SortOrder sort_orders = 3;
+  Pagination pagination = 4;
+  repeated string fields = 5;
+  google.protobuf.Struct options = 6;
+}
+
+message BatchRequest {
+  repeated google.protobuf.Any requests = 1;
+  bool fail_fast = 2;
+  int32 max_concurrency = 3;
+  google.protobuf.Duration timeout = 4;
+  google.protobuf.Struct options = 5;
+}
+
+message BatchResponse {
+  repeated BatchResult results = 1;
+  int32 success_count = 2;
+  int32 error_count = 3;
+  google.protobuf.Duration total_duration = 4;
+  google.protobuf.Struct metadata = 5;
+}
+
+message BatchResult {
+  int32 index = 1;
+  Status status = 2;
+  google.protobuf.Any response = 3;
+  ErrorDetails error = 4;
+  google.protobuf.Duration duration = 5;
+}
+
+message RateLimitInfo {
+  int32 limit = 1;
+  int32 remaining = 2;
+  google.protobuf.Timestamp reset_time = 3;
+  google.protobuf.Duration retry_after = 4;
+  string policy = 5;
+}
+
+message TenantInfo {
+  string tenant_id = 1;
+  string name = 2;
+  string slug = 3;
+  TenantStatus status = 4;
+  TenantTier tier = 5;
+  string organization_id = 6;
+  ResourceLimits limits = 7;
+  repeated ComplianceFramework frameworks = 8;
+  DataResidency data_residency = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message APIKeyInfo {
+  string key_id = 1;
+  string name = 2;
+  string prefix = 3;
+  repeated string permissions = 4;
+  google.protobuf.Timestamp expires_at = 5;
+  google.protobuf.Timestamp last_used_at = 6;
+  bool is_active = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message ConfigurationValue {
+  string key = 1;
+  google.protobuf.Any value = 2;
+  string description = 3;
+  bool is_sensitive = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  string updated_by = 6;
+}
+
+message SystemInfo {
+  string service_name = 1;
+  string version = 2;
+  string build_commit = 3;
+  google.protobuf.Timestamp build_time = 4;
+  string environment = 5;
+  google.protobuf.Timestamp start_time = 6;
+  google.protobuf.Struct runtime_info = 7;
+}

@@ -1,0 +1,85 @@
+name: Security Scanning
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+  workflow_dispatch:
+
+jobs:
+  dependency-scan:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Run Nancy vulnerability scanner
+      run: |
+        go install github.com/sonatypecommunity/nancy@latest
+        go list -json -deps ./... | nancy sleuth
+
+    - name: Run OSV Scanner
+      uses: google/osv-scanner-action@v1
+      with:
+        scan-args: |-
+          -r
+          --skip-git
+          ./
+
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [gateway, auth-service, tenant-service]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: |
+        docker build -f cmd/${{ matrix.service }}/Dockerfile -t exoper/${{ matrix.service }}:scan .
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'exoper/${{ matrix.service }}:scan'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Run Grype vulnerability scanner
+      uses: anchore/scan-action@v3
+      with:
+        image: 'exoper/${{ matrix.service }}:scan'
+        fail-build: true
+        severity-cutoff: high
+
+  kubernetes-scan:
+    name: Kubernetes Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Kubesec scan
+      run: |
+        curl -sSX POST --data-binary @deployments/kubernetes/gateway/deployment.yaml \
+          https://v2.kubesec.io/scan
+
+    - name: Run Polaris scan
+      uses: fairwindsops/polaris-action@master
+      with:
+        config: |
+          checks:
+            cpuRequestsMissing: warning
+            memoryRequestsMissing: warning
+            cpuLimitsMissing: warning
+            memoryLimitsMissing: warning

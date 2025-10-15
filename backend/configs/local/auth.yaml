@@ -1,0 +1,117 @@
+# Local Development Environment - Auth Service Configuration
+server:
+  name: "exoper-auth-service"
+  version: "1.0.0"
+  environment: "local"
+  host: "0.0.0.0"
+  port: 8081
+  grpc_port: 9091
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "120s"
+  shutdown_timeout: "30s"
+
+security:
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+    ca_file: ""
+  mtls:
+    enabled: false
+    client_ca_file: ""
+    verify_client_cert: false
+
+auth:
+  jwt:
+    secret_key: "dev-secret-key-change-in-production"
+    issuer: "exoper-auth-local"
+    audience: "exoper-platform"
+    access_token_expiry: "1h"
+    refresh_token_expiry: "168h"
+    algorithm: "HS256"
+  
+  providers:
+    local:
+      enabled: true
+      password_min_length: 8
+      password_complexity: true
+      max_login_attempts: 5
+      lockout_duration: "15m"
+    
+    oidc:
+      enabled: false
+      providers:
+        - name: "azure_ad"
+          client_id: ""
+          client_secret: ""
+          discovery_url: ""
+          scopes: ["openid", "profile", "email"]
+        - name: "google"
+          client_id: ""
+          client_secret: ""
+          discovery_url: "https://accounts.google.com/.well-known/openid_configuration"
+          scopes: ["openid", "profile", "email"]
+
+database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  name: "exoper_auth_local"
+  user: "exoper_user"
+  password: "exoper_pass"
+  ssl_mode: "disable"
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: "5m"
+
+redis:
+  enabled: true
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 1
+  pool_size: 10
+  session_prefix: "auth:session:"
+  blacklist_prefix: "auth:blacklist:"
+
+observability:
+  logging:
+    level: "debug"
+    format: "json"
+    output: "stdout"
+  tracing:
+    enabled: true
+    service_name: "exoper-auth-service"
+    jaeger:
+      endpoint: "http://localhost:14268/api/traces"
+  metrics:
+    enabled: true
+    prometheus:
+      enabled: true
+      path: "/metrics"
+      port: 8082
+
+session:
+  store_type: "redis"
+  cookie_name: "exoper_session"
+  cookie_domain: "localhost"
+  cookie_secure: false
+  cookie_http_only: true
+  cookie_same_site: "lax"
+  max_age: 86400
+
+rate_limiting:
+  enabled: true
+  login_attempts:
+    requests_per_minute: 10
+    burst: 20
+  token_requests:
+    requests_per_minute: 60
+    burst: 100
+
+health_check:
+  enabled: true
+  path: "/health"
+  interval: "30s"
+  timeout: "10s"

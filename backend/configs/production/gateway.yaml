@@ -1,0 +1,237 @@
+# Production Environment - API Gateway Configuration
+server:
+  name: "exoper-gateway"
+  version: "1.0.0"
+  environment: "production"
+  host: "0.0.0.0"
+  port: 8080
+  grpc_port: 9090
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "300s"
+  shutdown_timeout: "60s"
+  max_header_bytes: 1048576
+
+security:
+  tls:
+    enabled: true
+    cert_file: "/etc/ssl/certs/gateway.crt"
+    key_file: "/etc/ssl/private/gateway.key"
+    ca_file: "/etc/ssl/certs/ca.crt"
+    min_version: "1.3"
+    cipher_suites:
+      - "TLS_AES_256_GCM_SHA384"
+      - "TLS_CHACHA20_POLY1305_SHA256"
+      - "TLS_AES_128_GCM_SHA256"
+  mtls:
+    enabled: true
+    client_ca_file: "/etc/ssl/certs/client-ca.crt"
+    verify_client_cert: true
+    require_and_verify_client_cert: true
+  cors:
+    enabled: true
+    allowed_origins: ["https://app.exoper.com", "https://admin.exoper.com"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Authorization", "Content-Type", "X-Trace-ID", "X-Tenant-ID"]
+    allow_credentials: true
+    max_age: 86400
+
+auth:
+  jwt:
+    secret_key: "${JWT_SECRET_KEY}"
+    issuer: "exoper-gateway-production"
+    audience: "exoper-platform"
+    expiry: "15m"
+    refresh_expiry: "8h"
+    algorithm: "RS256"
+    private_key_file: "/etc/ssl/private/jwt-signing.key"
+    public_key_file: "/etc/ssl/certs/jwt-signing.crt"
+  oidc:
+    enabled: true
+    provider_url: "${OIDC_PROVIDER_URL}"
+    client_id: "${OIDC_CLIENT_ID}"
+    client_secret: "${OIDC_CLIENT_SECRET}"
+    redirect_url: "https://app.exoper.com/auth/callback"
+    scopes: ["openid", "profile", "email"]
+
+database:
+  driver: "postgres"
+  host: "${DB_HOST}"
+  port: 5432
+  name: "${DB_NAME}"
+  user: "${DB_USER}"
+  password: "${DB_PASSWORD}"
+  ssl_mode: "require"
+  ssl_cert: "/etc/ssl/certs/db-client.crt"
+  ssl_key: "/etc/ssl/private/db-client.key"
+  ssl_root_cert: "/etc/ssl/certs/db-ca.crt"
+  max_open_conns: 100
+  max_idle_conns: 25
+  conn_max_lifetime: "5m"
+  conn_max_idle_time: "5m"
+
+redis:
+  enabled: true
+  host: "${REDIS_HOST}"
+  port: 6380
+  password: "${REDIS_PASSWORD}"
+  db: 0
+  pool_size: 50
+  min_idle_conns: 25
+  dial_timeout: "5s"
+  read_timeout: "3s"
+  write_timeout: "3s"
+  tls_enabled: true
+  tls_cert_file: "/etc/ssl/certs/redis-client.crt"
+  tls_key_file: "/etc/ssl/private/redis-client.key"
+  tls_ca_file: "/etc/ssl/certs/redis-ca.crt"
+
+observability:
+  logging:
+    level: "warn"
+    format: "json"
+    output: "stdout"
+    file_path: "/var/log/exoper/gateway.log"
+    max_size: 500
+    max_backups: 10
+    max_age: 90
+    compress: true
+    sensitive_fields_redaction: true
+  tracing:
+    enabled: true
+    service_name: "exoper-gateway"
+    jaeger:
+      endpoint: "${JAEGER_ENDPOINT}"
+      sampler_type: "probabilistic"
+      sampler_param: 0.01
+      tls_enabled: true
+      tls_cert_file: "/etc/ssl/certs/jaeger-client.crt"
+      tls_key_file: "/etc/ssl/private/jaeger-client.key"
+  metrics:
+    enabled: true
+    prometheus:
+      enabled: true
+      path: "/metrics"
+      port: 8081
+      tls_enabled: true
+      tls_cert_file: "/etc/ssl/certs/metrics.crt"
+      tls_key_file: "/etc/ssl/private/metrics.key"
+    custom_metrics:
+      request_duration: true
+      request_count: true
+      error_rate: true
+      threat_detection_rate: true
+      compliance_violations: true
+
+rate_limiting:
+  enabled: true
+  global:
+    requests_per_second: 10000
+    burst: 20000
+  per_tenant:
+    requests_per_second: 1000
+    burst: 2000
+  per_ip:
+    requests_per_second: 200
+    burst: 400
+  adaptive:
+    enabled: true
+    cpu_threshold: 80
+    memory_threshold: 85
+    response_time_threshold: "500ms"
+
+services:
+  auth_service:
+    host: "exoper-auth-service.exoper-system.svc.cluster.local"
+    port: 8081
+    grpc_port: 9091
+    timeout: "5s"
+    retry_attempts: 2
+    circuit_breaker:
+      enabled: true
+      max_requests: 500
+      interval: "60s"
+      timeout: "30s"
+      failure_threshold: 5
+    load_balancer:
+      strategy: "round_robin"
+      health_check_interval: "10s"
+  
+  tenant_service:
+    host: "exoper-tenant-service.exoper-system.svc.cluster.local"
+    port: 8082
+    grpc_port: 9092
+    timeout: "5s"
+    retry_attempts: 2
+    circuit_breaker:
+      enabled: true
+      max_requests: 500
+      interval: "60s"
+      timeout: "30s"
+      failure_threshold: 5
+
+  threat_detector:
+    host: "exoper-threat-detector.exoper-system.svc.cluster.local"
+    port: 8083
+    grpc_port: 9093
+    timeout: "2s"
+    retry_attempts: 1
+    circuit_breaker:
+      enabled: true
+      max_requests: 1000
+      interval: "30s"
+      timeout: "10s"
+      failure_threshold: 3
+
+audit:
+  enabled: true
+  storage_type: "database"
+  batch_size: 1000
+  flush_interval: "1s"
+  retention_days: 2555  # 7 years for compliance
+  encryption:
+    enabled: true
+    key: "${AUDIT_ENCRYPTION_KEY}"
+    algorithm: "AES-256-GCM"
+  immutable_storage:
+    enabled: true
+    s3_bucket: "${AUDIT_S3_BUCKET}"
+    s3_region: "${AWS_REGION}"
+    worm_enabled: true
+
+compliance:
+  enabled: true
+  frameworks:
+    - "GDPR"
+    - "HIPAA"
+    - "SOC2"
+    - "ISO27001"
+    - "EU_AI_ACT"
+  data_classification:
+    enabled: true
+    pii_detection: true
+    sensitive_data_masking: true
+  retention_policies:
+    default_retention: "2555d"  # 7 years
+    pii_retention: "1095d"      # 3 years
+    financial_retention: "2555d" # 7 years
+
+health_check:
+  enabled: true
+  path: "/health"
+  interval: "15s"
+  timeout: "5s"
+  dependencies:
+    - "database"
+    - "redis"
+    - "auth_service"
+    - "tenant_service"
+    - "threat_detector"
+
+disaster_recovery:
+  enabled: true
+  backup_interval: "1h"
+  cross_region_replication: true
+  failover_timeout: "30s"
+  recovery_point_objective: "1h"
+  recovery_time_objective: "15m"

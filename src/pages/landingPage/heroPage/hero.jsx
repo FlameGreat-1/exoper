@@ -568,8 +568,8 @@ const Hero = () => {
               animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
               transition={{ duration: 0.7, delay: 0.2 }}
             >
-              <span className="block lg:inline text-white">AI Security Guardrails</span>
-              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent"> One Gateway. Every LLMs</span>
+              <span className="block lg:inline text-white">AI Security Guardrails.</span>
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent"> One Gateway. Every Model.</span>
             </motion.h1>
             
             <div className="h-auto min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] mb-6 sm:mb-8 overflow-hidden">

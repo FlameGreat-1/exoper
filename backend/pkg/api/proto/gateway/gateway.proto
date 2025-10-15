@@ -1,0 +1,565 @@
+syntax = "proto3";
+
+package exoper.gateway.v1;
+
+option go_package = "flamo/backend/pkg/api/proto/gateway";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "pkg/api/proto/common/common.proto";
+import "pkg/api/proto/auth/auth.proto";
+
+enum ProcessingStage {
+  PROCESSING_STAGE_UNSPECIFIED = 0;
+  PROCESSING_STAGE_RECEIVED = 1;
+  PROCESSING_STAGE_AUTHENTICATED = 2;
+  PROCESSING_STAGE_AUTHORIZED = 3;
+  PROCESSING_STAGE_VALIDATED = 4;
+  PROCESSING_STAGE_ENRICHED = 5;
+  PROCESSING_STAGE_SECURITY_ANALYZED = 6;
+  PROCESSING_STAGE_COMPLIANCE_CHECKED = 7;
+  PROCESSING_STAGE_ROUTED = 8;
+  PROCESSING_STAGE_PROCESSED = 9;
+  PROCESSING_STAGE_COMPLETED = 10;
+  PROCESSING_STAGE_FAILED = 11;
+}
+
+enum RoutingDecision {
+  ROUTING_DECISION_UNSPECIFIED = 0;
+  ROUTING_DECISION_ALLOW = 1;
+  ROUTING_DECISION_BLOCK = 2;
+  ROUTING_DECISION_QUARANTINE = 3;
+  ROUTING_DECISION_REDIRECT = 4;
+  ROUTING_DECISION_THROTTLE = 5;
+  ROUTING_DECISION_CACHE = 6;
+}
+
+message ProcessAIRequestRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  AIRequestPayload payload = 2;
+  ProcessingOptions options = 3;
+  google.protobuf.Struct context = 4;
+}
+
+message ProcessAIRequestResponse {
+  exoper.common.v1.Status status = 1;
+  AIResponsePayload response = 2;
+  ProcessingResult processing_result = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+  google.protobuf.Duration total_processing_time = 5;
+}
+
+message AIRequestPayload {
+  exoper.common.v1.RequestType type = 1;
+  exoper.common.v1.ModelProvider provider = 2;
+  string model_name = 3;
+  exoper.common.v1.SecurityLevel security_level = 4;
+  exoper.common.v1.ContentType content_type = 5;
+  RequestContent content = 6;
+  RequestParameters parameters = 7;
+  google.protobuf.Struct custom_parameters = 8;
+}
+
+message RequestContent {
+  string prompt = 1;
+  repeated ChatMessage messages = 2;
+  string system_prompt = 3;
+  repeated FunctionDefinition functions = 4;
+  repeated ToolDefinition tools = 5;
+  ResponseFormat response_format = 6;
+  google.protobuf.Struct attachments = 7;
+}
+
+message ChatMessage {
+  string role = 1;
+  string content = 2;
+  string name = 3;
+  FunctionCall function_call = 4;
+  repeated ToolCall tool_calls = 5;
+  string tool_call_id = 6;
+  google.protobuf.Struct metadata = 7;
+}
+
+message FunctionDefinition {
+  string name = 1;
+  string description = 2;
+  google.protobuf.Struct parameters = 3;
+  bool strict = 4;
+}
+
+message FunctionCall {
+  string name = 1;
+  string arguments = 2;
+}
+
+message ToolDefinition {
+  string type = 1;
+  FunctionDefinition function = 2;
+  google.protobuf.Struct metadata = 3;
+}
+
+message ToolCall {
+  string id = 1;
+  string type = 2;
+  FunctionCall function = 3;
+}
+
+message ResponseFormat {
+  string type = 1;
+  google.protobuf.Struct schema = 2;
+}
+
+message RequestParameters {
+  int32 max_tokens = 1;
+  double temperature = 2;
+  double top_p = 3;
+  double frequency_penalty = 4;
+  double presence_penalty = 5;
+  repeated string stop = 6;
+  bool stream = 7;
+  google.protobuf.Any function_call = 8;
+  google.protobuf.Any tool_choice = 9;
+  int32 seed = 10;
+  string user = 11;
+  int32 n = 12;
+  bool echo = 13;
+  int32 logprobs = 14;
+  int32 best_of = 15;
+}
+
+message ProcessingOptions {
+  bool skip_security_analysis = 1;
+  bool skip_compliance_check = 2;
+  bool enable_caching = 3;
+  bool enable_streaming = 4;
+  bool enable_audit_logging = 5;
+  google.protobuf.Duration timeout = 6;
+  int32 retry_count = 7;
+  google.protobuf.Duration retry_delay = 8;
+  repeated string enrichment_plugins = 9;
+  google.protobuf.Struct custom_options = 10;
+}
+
+message AIResponsePayload {
+  string id = 1;
+  string object = 2;
+  int64 created = 3;
+  string model = 4;
+  string system_fingerprint = 5;
+  repeated Choice choices = 6;
+  repeated Embedding embeddings = 7;
+  exoper.common.v1.UsageMetrics usage = 8;
+  google.protobuf.Struct custom_data = 9;
+}
+
+message Choice {
+  int32 index = 1;
+  ChatMessage message = 2;
+  string text = 3;
+  ChatMessage delta = 4;
+  string finish_reason = 5;
+  LogprobsResult logprobs = 6;
+  google.protobuf.Struct metadata = 7;
+}
+
+message Embedding {
+  string object = 1;
+  int32 index = 2;
+  repeated double embedding = 3;
+}
+
+message LogprobsResult {
+  repeated string tokens = 1;
+  repeated double token_logprobs = 2;
+  repeated google.protobuf.Struct top_logprobs = 3;
+  repeated int32 text_offset = 4;
+}
+
+message ProcessingResult {
+  string request_id = 1;
+  string trace_id = 2;
+  ProcessingStage final_stage = 3;
+  repeated StageResult stage_results = 4;
+  RoutingDecision routing_decision = 5;
+  string routing_target = 6;
+  exoper.common.v1.SecurityAnalysis security_analysis = 7;
+  exoper.common.v1.ComplianceReport compliance_report = 8;
+  exoper.common.v1.PerformanceMetrics performance_metrics = 9;
+  repeated EnrichmentResult enrichments = 10;
+  google.protobuf.Struct metadata = 11;
+}
+
+message StageResult {
+  ProcessingStage stage = 1;
+  exoper.common.v1.Status status = 2;
+  google.protobuf.Duration duration = 3;
+  string message = 4;
+  google.protobuf.Struct data = 5;
+  exoper.common.v1.ErrorDetails error = 6;
+}
+
+message EnrichmentResult {
+  string plugin_name = 1;
+  string plugin_version = 2;
+  exoper.common.v1.Status status = 3;
+  google.protobuf.Struct enriched_data = 4;
+  google.protobuf.Duration processing_time = 5;
+  exoper.common.v1.ErrorDetails error = 6;
+}
+
+message StreamAIRequestRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  AIRequestPayload payload = 2;
+  ProcessingOptions options = 3;
+  StreamingOptions streaming_options = 4;
+}
+
+message StreamAIRequestResponse {
+  oneof response_type {
+    StreamChunk chunk = 1;
+    StreamComplete complete = 2;
+    StreamError error = 3;
+    StreamMetadata metadata = 4;
+  }
+  string stream_id = 5;
+  int64 sequence_number = 6;
+  google.protobuf.Timestamp timestamp = 7;
+}
+
+message StreamingOptions {
+  int32 chunk_size = 1;
+  google.protobuf.Duration chunk_interval = 2;
+  bool include_usage_in_chunks = 3;
+  bool include_metadata_in_chunks = 4;
+  string compression = 5;
+  int32 buffer_size = 6;
+}
+
+message StreamChunk {
+  string id = 1;
+  string object = 2;
+  int64 created = 3;
+  string model = 4;
+  repeated Choice choices = 5;
+  exoper.common.v1.UsageMetrics usage = 6;
+  bool is_final = 7;
+}
+
+message StreamComplete {
+  string id = 1;
+  AIResponsePayload final_response = 2;
+  ProcessingResult processing_result = 3;
+  exoper.common.v1.UsageMetrics total_usage = 4;
+  google.protobuf.Duration total_duration = 5;
+}
+
+message StreamError {
+  exoper.common.v1.ErrorDetails error = 1;
+  bool is_recoverable = 2;
+  google.protobuf.Duration retry_after = 3;
+  string stream_id = 4;
+}
+
+message StreamMetadata {
+  string stream_id = 1;
+  exoper.common.v1.Status status = 2;
+  ProcessingStage current_stage = 3;
+  exoper.common.v1.PerformanceMetrics performance = 4;
+  google.protobuf.Struct custom_metadata = 5;
+}
+
+message GetHealthRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  bool include_dependencies = 2;
+  bool include_metrics = 3;
+  repeated string component_filters = 4;
+}
+
+message GetHealthResponse {
+  exoper.common.v1.Status status = 1;
+  exoper.common.v1.HealthStatus health_status = 2;
+  repeated ServiceHealth service_health = 3;
+  exoper.common.v1.PerformanceMetrics performance_metrics = 4;
+  google.protobuf.Timestamp last_updated = 5;
+}
+
+message ServiceHealth {
+  string service_name = 1;
+  exoper.common.v1.Status status = 2;
+  string endpoint = 3;
+  google.protobuf.Duration response_time = 4;
+  string version = 5;
+  google.protobuf.Timestamp last_check = 6;
+  repeated HealthCheck checks = 7;
+  google.protobuf.Struct metadata = 8;
+}
+
+message HealthCheck {
+  string name = 1;
+  exoper.common.v1.Status status = 2;
+  string message = 3;
+  google.protobuf.Duration duration = 4;
+  google.protobuf.Struct details = 5;
+}
+
+message GetMetricsRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+  repeated string metric_names = 4;
+  repeated exoper.common.v1.Filter filters = 5;
+  string aggregation = 6;
+}
+
+message GetMetricsResponse {
+  exoper.common.v1.Status status = 1;
+  repeated MetricData metrics = 2;
+  google.protobuf.Timestamp generated_at = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+}
+
+message MetricData {
+  string name = 1;
+  string type = 2;
+  string description = 3;
+  repeated MetricPoint points = 4;
+  map<string, string> labels = 5;
+  string unit = 6;
+}
+
+message MetricPoint {
+  google.protobuf.Timestamp timestamp = 1;
+  double value = 2;
+  map<string, string> tags = 3;
+}
+
+message GetConfigurationRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string tenant_id = 2;
+  repeated string config_keys = 3;
+  bool include_sensitive = 4;
+}
+
+message GetConfigurationResponse {
+  exoper.common.v1.Status status = 1;
+  repeated exoper.common.v1.ConfigurationValue configurations = 2;
+  google.protobuf.Timestamp last_updated = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+}
+
+message UpdateConfigurationRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string tenant_id = 2;
+  repeated exoper.common.v1.ConfigurationValue configurations = 3;
+  bool validate_only = 4;
+}
+
+message UpdateConfigurationResponse {
+  exoper.common.v1.Status status = 1;
+  repeated ConfigurationResult results = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message ConfigurationResult {
+  string key = 1;
+  exoper.common.v1.Status status = 2;
+  string message = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message ValidateRequestRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  AIRequestPayload payload = 2;
+  bool strict_validation = 3;
+  repeated string validation_rules = 4;
+}
+
+message ValidateRequestResponse {
+  exoper.common.v1.Status status = 1;
+  ValidationResult result = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message ValidationResult {
+  bool valid = 1;
+  repeated ValidationError errors = 2;
+  repeated ValidationWarning warnings = 3;
+  google.protobuf.Struct suggestions = 4;
+  google.protobuf.Timestamp validated_at = 5;
+}
+
+message ValidationError {
+  string field = 1;
+  string code = 2;
+  string message = 3;
+  exoper.common.v1.Severity severity = 4;
+  google.protobuf.Struct context = 5;
+}
+
+message ValidationWarning {
+  string field = 1;
+  string code = 2;
+  string message = 3;
+  string suggestion = 4;
+}
+
+message GetRoutingInfoRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string tenant_id = 2;
+  exoper.common.v1.ModelProvider provider = 3;
+  string model_name = 4;
+  exoper.common.v1.RequestType request_type = 5;
+}
+
+message GetRoutingInfoResponse {
+  exoper.common.v1.Status status = 1;
+  RoutingInfo routing_info = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message RoutingInfo {
+  string target_endpoint = 1;
+  string load_balancer_policy = 2;
+  repeated string available_endpoints = 3;
+  google.protobuf.Struct routing_metadata = 4;
+  exoper.common.v1.ResourceLimits limits = 5;
+  google.protobuf.Duration timeout = 6;
+  int32 retry_policy = 7;
+}
+
+message GetAuditLogsRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string tenant_id = 2;
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+  repeated exoper.common.v1.Filter filters = 5;
+  exoper.common.v1.Pagination pagination = 6;
+  repeated exoper.common.v1.SortOrder sort_orders = 7;
+}
+
+message GetAuditLogsResponse {
+  exoper.common.v1.Status status = 1;
+  repeated exoper.common.v1.AuditEvent audit_events = 2;
+  exoper.common.v1.Pagination pagination = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+}
+
+service GatewayService {
+  rpc ProcessAIRequest(ProcessAIRequestRequest) returns (ProcessAIRequestResponse);
+  rpc StreamAIRequest(StreamAIRequestRequest) returns (stream StreamAIRequestResponse);
+  rpc ValidateRequest(ValidateRequestRequest) returns (ValidateRequestResponse);
+  rpc GetHealth(GetHealthRequest) returns (GetHealthResponse);
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+  rpc GetRoutingInfo(GetRoutingInfoRequest) returns (GetRoutingInfoResponse);
+}
+
+service GatewayManagementService {
+  rpc GetConfiguration(GetConfigurationRequest) returns (GetConfigurationResponse);
+  rpc UpdateConfiguration(UpdateConfigurationRequest) returns (UpdateConfigurationResponse);
+  rpc GetAuditLogs(GetAuditLogsRequest) returns (GetAuditLogsResponse);
+  rpc GetSystemInfo(google.protobuf.Empty) returns (GetSystemInfoResponse);
+  rpc ReloadConfiguration(ReloadConfigurationRequest) returns (ReloadConfigurationResponse);
+}
+
+service GatewayMonitoringService {
+  rpc GetRealTimeMetrics(GetRealTimeMetricsRequest) returns (stream MetricData);
+  rpc GetAlerts(GetAlertsRequest) returns (GetAlertsResponse);
+  rpc CreateAlert(CreateAlertRequest) returns (CreateAlertResponse);
+  rpc UpdateAlert(UpdateAlertRequest) returns (UpdateAlertResponse);
+  rpc DeleteAlert(DeleteAlertRequest) returns (DeleteAlertResponse);
+}
+
+message GetSystemInfoResponse {
+  exoper.common.v1.Status status = 1;
+  exoper.common.v1.SystemInfo system_info = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message ReloadConfigurationRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  bool force_reload = 2;
+  repeated string config_sections = 3;
+}
+
+message ReloadConfigurationResponse {
+  exoper.common.v1.Status status = 1;
+  google.protobuf.Timestamp reloaded_at = 2;
+  repeated string reloaded_sections = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+}
+
+message GetRealTimeMetricsRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  repeated string metric_names = 2;
+  google.protobuf.Duration interval = 3;
+  repeated exoper.common.v1.Filter filters = 4;
+}
+
+message GetAlertsRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  exoper.common.v1.Pagination pagination = 2;
+  repeated exoper.common.v1.Filter filters = 3;
+  bool include_resolved = 4;
+}
+
+message GetAlertsResponse {
+  exoper.common.v1.Status status = 1;
+  repeated AlertInfo alerts = 2;
+  exoper.common.v1.Pagination pagination = 3;
+  exoper.common.v1.ErrorDetails error = 4;
+}
+
+message AlertInfo {
+  string alert_id = 1;
+  string name = 2;
+  string description = 3;
+  exoper.common.v1.Severity severity = 4;
+  exoper.common.v1.Status status = 5;
+  google.protobuf.Timestamp triggered_at = 6;
+  google.protobuf.Timestamp resolved_at = 7;
+  google.protobuf.Struct conditions = 8;
+  google.protobuf.Struct metadata = 9;
+}
+
+message CreateAlertRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string name = 2;
+  string description = 3;
+  exoper.common.v1.Severity severity = 4;
+  google.protobuf.Struct conditions = 5;
+  google.protobuf.Struct actions = 6;
+}
+
+message CreateAlertResponse {
+  exoper.common.v1.Status status = 1;
+  string alert_id = 2;
+  exoper.common.v1.ErrorDetails error = 3;
+}
+
+message UpdateAlertRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string alert_id = 2;
+  string name = 3;
+  string description = 4;
+  exoper.common.v1.Severity severity = 5;
+  google.protobuf.Struct conditions = 6;
+  google.protobuf.Struct actions = 7;
+}
+
+message UpdateAlertResponse {
+  exoper.common.v1.Status status = 1;
+  exoper.common.v1.ErrorDetails error = 2;
+}
+
+message DeleteAlertRequest {
+  exoper.common.v1.RequestMetadata metadata = 1;
+  string alert_id = 2;
+}
+
+message DeleteAlertResponse {
+  exoper.common.v1.Status status = 1;
+  exoper.common.v1.ErrorDetails error = 2;
+}

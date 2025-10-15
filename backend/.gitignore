@@ -1,0 +1,86 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work.sum
+
+# Environment variables
+.env
+.env.local
+.env.staging
+.env.production
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Build artifacts
+dist/
+build/
+bin/
+
+# Temporary files
+tmp/
+temp/
+
+# Configuration files with secrets
+configs/*/secrets.yaml
+configs/*/*.key
+configs/*/*.pem
+configs/*/*.crt
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Kubernetes secrets
+deployments/kubernetes/*/secrets/
+
+# Terraform files
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Docker files
+.dockerignore
+docker-compose.override.yml
