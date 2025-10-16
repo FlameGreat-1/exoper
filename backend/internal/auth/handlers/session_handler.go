@@ -1,0 +1,363 @@
+package handlers
+
+import (
+	"context"
+	"time"
+
+	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"flamo/backend/internal/auth/service"
+	"flamo/backend/internal/common/config"
+	"flamo/backend/internal/common/errors"
+	authpb "flamo/backend/pkg/api/proto/auth"
+	commonpb "flamo/backend/pkg/api/proto/common"
+)
+
+type SessionHandler struct {
+	authpb.UnimplementedSessionServiceServer
+	service *service.AuthService
+	config  *config.Config
+	logger  *zap.Logger
+}
+
+func NewSessionHandler(authService *service.AuthService, cfg *config.Config, logger *zap.Logger) *SessionHandler {
+	return &SessionHandler{
+		service: authService,
+		config:  cfg,
+		logger:  logger,
+	}
+}
+
+func (h *SessionHandler) CreateSession(ctx context.Context, req *authpb.CreateSessionRequest) (*authpb.CreateSessionResponse, error) {
+	startTime := time.Now()
+
+	if err := h.validateCreateSessionRequest(req); err != nil {
+		return h.buildCreateSessionErrorResponse(err), nil
+	}
+
+	duration := 24 * time.Hour
+	if req.Duration != nil {
+		duration = req.Duration.AsDuration()
+	}
+
+	attributes := h.convertStructToMap(req.Attributes)
+
+	result, err := h.service.CreateSession(ctx, req.UserId, req.TenantId, duration, attributes, req.RequireMfa)
+	if err != nil {
+		h.logger.Error("Session creation failed",
+			zap.String("user_id", req.UserId),
+			zap.String("tenant_id", req.TenantId),
+			zap.Error(err))
+		return h.buildCreateSessionErrorResponse(err), nil
+	}
+
+	response := &authpb.CreateSessionResponse{
+		Status: &commonpb.Status{
+			Code:    commonpb.StatusCode_STATUS_CODE_OK,
+			Message: "Session created successfully",
+		},
+		Result:         h.convertSessionResult(result),
+		ProcessingTime: durationpb.New(time.Since(startTime)),
+	}
+
+	h.logger.Info("Session created successfully",
+		zap.String("session_id", result.SessionID),
+		zap.String("user_id", req.UserId),
+		zap.String("tenant_id", req.TenantId))
+
+	return response, nil
+}
+
+func (h *SessionHandler) ValidateSession(ctx context.Context, req *authpb.ValidateSessionRequest) (*authpb.ValidateSessionResponse, error) {
+	startTime := time.Now()
+
+	if err := h.validateSessionRequest(req); err != nil {
+		return h.buildValidateSessionErrorResponse(err), nil
+	}
+
+	extensionDuration := time.Duration(0)
+	if req.ExtendSession && req.ExtensionDuration != nil {
+		extensionDuration = req.ExtensionDuration.AsDuration()
+	}
+
+	result, err := h.service.ValidateSession(ctx, req.SessionId, req.SessionToken, req.ExtendSession, extensionDuration)
+	if err != nil {
+		h.logger.Error("Session validation failed",
+			zap.String("session_id", req.SessionId),
+			zap.Error(err))
+		return h.buildValidateSessionErrorResponse(err), nil
+	}
+
+	response := &authpb.ValidateSessionResponse{
+		Status: &commonpb.Status{
+			Code:    commonpb.StatusCode_STATUS_CODE_OK,
+			Message: "Session validation successful",
+		},
+		Result:         h.convertSessionValidationResult(result),
+		ProcessingTime: durationpb.New(time.Since(startTime)),
+	}
+
+	return response, nil
+}
+
+func (h *SessionHandler) RevokeSession(ctx context.Context, req *authpb.RevokeSessionRequest) (*authpb.RevokeSessionResponse, error) {
+	startTime := time.Now()
+
+	if err := h.validateRevokeSessionRequest(req); err != nil {
+		return h.buildRevokeSessionErrorResponse(err), nil
+	}
+
+	err := h.service.RevokeSession(ctx, req.SessionId, req.Reason, req.RevokedBy)
+	if err != nil {
+		h.logger.Error("Session revocation failed",
+			zap.String("session_id", req.SessionId),
+			zap.String("reason", req.Reason),
+			zap.Error(err))
+		return h.buildRevokeSessionErrorResponse(err), nil
+	}
+
+	response := &authpb.RevokeSessionResponse{
+		Status: &commonpb.Status{
+			Code:    commonpb.StatusCode_STATUS_CODE_OK,
+			Message: "Session revoked successfully",
+		},
+		ProcessingTime: durationpb.New(time.Since(startTime)),
+	}
+
+	h.logger.Info("Session revoked successfully",
+		zap.String("session_id", req.SessionId),
+		zap.String("reason", req.Reason))
+
+	return response, nil
+}
+
+func (h *SessionHandler) validateCreateSessionRequest(req *authpb.CreateSessionRequest) error {
+	if req == nil {
+		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+	}
+
+	if req.Metadata == nil {
+		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+	}
+
+	if req.UserId == "" {
+		return errors.New(errors.ErrCodeInvalidRequest, "user ID is required")
+	}
+
+	if req.TenantId == "" {
+		return errors.New(errors.ErrCodeInvalidRequest, "tenant ID is required")
+	}
+
+	if req.Duration != nil {
+		duration := req.Duration.AsDuration()
+		if duration <= 0 {
+			return errors.New(errors.ErrCodeInvalidRequest, "session duration must be positive")
+		}
+
+		if duration > 7*24*time.Hour {
+			return errors.New(errors.ErrCodeInvalidRequest, "session duration cannot exceed 7 days")
+		}
+	}
+
+	return nil
+}
+
+func (h *SessionHandler) validateSessionRequest(req *authpb.ValidateSessionRequest) error {
+	if req == nil {
+		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+	}
+
+	if req.Metadata == nil {
+		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+	}
+
+	if req.SessionId == "" {
+		return errors.New(errors.ErrCodeInvalidRequest, "session ID is required")
+	}
+
+	if req.SessionToken == "" {
+		return errors.New(errors.ErrCodeInvalidRequest, "session token is required")
+	}
+
+	if req.ExtendSession && req.ExtensionDuration != nil {
+		duration := req.ExtensionDuration.AsDuration()
+		if duration <= 0 {
+			return errors.New(errors.ErrCodeInvalidRequest, "extension duration must be positive")
+		}
+
+		if duration > 24*time.Hour {
+			return errors.New(errors.ErrCodeInvalidRequest, "extension duration cannot exceed 24 hours")
+		}
+	}
+
+	return nil
+}
+
+func (h *SessionHandler) validateRevokeSessionRequest(req *authpb.RevokeSessionRequest) error {
+	if req == nil {
+		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+	}
+
+	if req.Metadata == nil {
+		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+	}
+
+	if req.SessionId == "" {
+		return errors.New(errors.ErrCodeInvalidRequest, "session ID is required")
+	}
+
+	if req.RevokedBy == "" {
+		return errors.New(errors.ErrCodeInvalidRequest, "revoked_by is required")
+	}
+
+	return nil
+}
+
+func (h *SessionHandler) convertSessionResult(result *service.SessionResult) *authpb.SessionResult {
+	return &authpb.SessionResult{
+		SessionId:    result.SessionID,
+		SessionToken: result.SessionToken,
+		SessionInfo:  h.convertSessionInfo(result.SessionInfo),
+		CreatedAt:    timestamppb.New(result.CreatedAt),
+	}
+}
+
+func (h *SessionHandler) convertSessionValidationResult(result *service.SessionValidationResult) *authpb.SessionValidationResult {
+	return &authpb.SessionValidationResult{
+		Valid:         result.Valid,
+		SessionInfo:   h.convertSessionInfo(result.SessionInfo),
+		Principal:     h.convertPrincipal(result.Principal),
+		ValidatedAt:   timestamppb.New(result.ValidatedAt),
+		ExtendedUntil: h.convertTimeToTimestamp(result.ExtendedUntil),
+	}
+}
+
+func (h *SessionHandler) convertSessionInfo(sessionInfo *service.SessionInfo) *authpb.SessionInfo {
+	if sessionInfo == nil {
+		return nil
+	}
+
+	return &authpb.SessionInfo{
+		SessionId:    sessionInfo.SessionID,
+		UserId:       sessionInfo.UserID,
+		TenantId:     sessionInfo.TenantID,
+		CreatedAt:    timestamppb.New(sessionInfo.CreatedAt),
+		LastActivity: timestamppb.New(sessionInfo.LastActivity),
+		ExpiresAt:    timestamppb.New(sessionInfo.ExpiresAt),
+		IpAddress:    sessionInfo.IPAddress,
+		UserAgent:    sessionInfo.UserAgent,
+		IsActive:     sessionInfo.IsActive,
+		Metadata:     h.convertMapToStruct(sessionInfo.Metadata),
+	}
+}
+
+func (h *SessionHandler) convertPrincipal(principal *service.Principal) *authpb.Principal {
+	if principal == nil {
+		return nil
+	}
+
+	return &authpb.Principal{
+		Id:             principal.ID,
+		Type:           principal.Type,
+		Name:           principal.Name,
+		Email:          principal.Email,
+		TenantId:       principal.TenantID,
+		OrganizationId: principal.OrganizationID,
+		Roles:          principal.Roles,
+		Groups:         principal.Groups,
+		Attributes:     h.convertMapToStruct(principal.Attributes),
+		CreatedAt:      timestamppb.New(principal.CreatedAt),
+		LastLogin:      h.convertTimeToTimestamp(principal.LastLogin),
+		IsActive:       principal.IsActive,
+		MfaEnabled:     principal.MFAEnabled,
+	}
+}
+
+func (h *SessionHandler) convertTimeToTimestamp(t *time.Time) *timestamppb.Timestamp {
+	if t == nil {
+		return nil
+	}
+	return timestamppb.New(*t)
+}
+
+func (h *SessionHandler) convertMapToStruct(m map[string]interface{}) *structpb.Struct {
+	if m == nil {
+		return nil
+	}
+	
+	s, err := structpb.NewStruct(m)
+	if err != nil {
+		h.logger.Warn("Failed to convert map to struct", zap.Error(err))
+		return nil
+	}
+	
+	return s
+}
+
+func (h *SessionHandler) convertStructToMap(s *structpb.Struct) map[string]interface{} {
+	if s == nil {
+		return make(map[string]interface{})
+	}
+	return s.AsMap()
+}
+
+func (h *SessionHandler) buildCreateSessionErrorResponse(err error) *authpb.CreateSessionResponse {
+	return &authpb.CreateSessionResponse{
+		Status: h.convertErrorToStatus(err),
+	}
+}
+
+func (h *SessionHandler) buildValidateSessionErrorResponse(err error) *authpb.ValidateSessionResponse {
+	return &authpb.ValidateSessionResponse{
+		Status: h.convertErrorToStatus(err),
+		Result: &authpb.SessionValidationResult{
+			Valid: false,
+		},
+	}
+}
+
+func (h *SessionHandler) buildRevokeSessionErrorResponse(err error) *authpb.RevokeSessionResponse {
+	return &authpb.RevokeSessionResponse{
+		Status: h.convertErrorToStatus(err),
+	}
+}
+
+func (h *SessionHandler) convertErrorToStatus(err error) *commonpb.Status {
+	if customErr, ok := err.(*errors.CustomError); ok {
+		return &commonpb.Status{
+			Code:    h.convertErrorCodeToStatusCode(customErr.Code),
+			Message: customErr.Message,
+			Details: customErr.Details,
+		}
+	}
+
+	return &commonpb.Status{
+		Code:    commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR,
+		Message: err.Error(),
+	}
+}
+
+func (h *SessionHandler) convertErrorCodeToStatusCode(code errors.ErrorCode) commonpb.StatusCode {
+	switch code {
+	case errors.ErrCodeInvalidRequest:
+		return commonpb.StatusCode_STATUS_CODE_INVALID_ARGUMENT
+	case errors.ErrCodeUnauthorized:
+		return commonpb.StatusCode_STATUS_CODE_UNAUTHENTICATED
+	case errors.ErrCodeForbidden:
+		return commonpb.StatusCode_STATUS_CODE_PERMISSION_DENIED
+	case errors.ErrCodeNotFound:
+		return commonpb.StatusCode_STATUS_CODE_NOT_FOUND
+	case errors.ErrCodeConflict:
+		return commonpb.StatusCode_STATUS_CODE_ALREADY_EXISTS
+	case errors.ErrCodeDatabaseError:
+		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
+	case errors.ErrCodeConfigError:
+		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
+	case errors.ErrCodeServiceUnavailable:
+		return commonpb.StatusCode_STATUS_CODE_UNAVAILABLE
+	default:
+		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
+	}
+}
