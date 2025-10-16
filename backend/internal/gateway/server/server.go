@@ -3,11 +3,14 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -18,15 +21,21 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
+	"flamo/backend/internal/common/utils"
 	"flamo/backend/internal/gateway/handlers"
 	"flamo/backend/internal/gateway/middleware"
 	"flamo/backend/internal/gateway/orchestrator"
 	authpb "flamo/backend/pkg/api/proto/auth"
+	commonpb "flamo/backend/pkg/api/proto/common"
 	gatewaypb "flamo/backend/pkg/api/proto/gateway"
+	"flamo/backend/pkg/api/proto/models/request"
+	"flamo/backend/pkg/api/proto/models/response"
 )
 
 type Server struct {
@@ -48,6 +57,7 @@ type Server struct {
 	wg               sync.WaitGroup
 	mu               sync.RWMutex
 	isShuttingDown   bool
+	startTime        time.Time
 }
 
 type ServerMetrics struct {
@@ -63,13 +73,28 @@ type ServerMetrics struct {
 
 func NewServer(cfg *config.Config, logger *zap.Logger, db *database.Database) (*Server, error) {
 	if cfg == nil {
-		return nil, errors.New(errors.ErrCodeConfigError, "configuration is required")
+		return nil, &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "configuration is required",
+			Severity:  commonpb.Severity_SEVERITY_CRITICAL,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 	if logger == nil {
-		return nil, errors.New(errors.ErrCodeInternalError, "logger is required")
+		return nil, &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "logger is required",
+			Severity:  commonpb.Severity_SEVERITY_CRITICAL,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 	if db == nil {
-		return nil, errors.New(errors.ErrCodeDatabaseError, "database connection is required")
+		return nil, &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "database connection is required",
+			Severity:  commonpb.Severity_SEVERITY_CRITICAL,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	server := &Server{
@@ -77,10 +102,17 @@ func NewServer(cfg *config.Config, logger *zap.Logger, db *database.Database) (*
 		logger:       logger,
 		db:           db,
 		shutdownChan: make(chan os.Signal, 1),
+		startTime:    time.Now().UTC(),
 	}
 
 	if err := server.initialize(); err != nil {
-		return nil, errors.Wrap(err, errors.ErrCodeInternalError, "failed to initialize server")
+		return nil, &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "failed to initialize server",
+			Details:   err.Error(),
+			Severity:  commonpb.Severity_SEVERITY_CRITICAL,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	logger.Info("Server initialized successfully",
@@ -130,7 +162,13 @@ func (s *Server) initializeClients() error {
 		}),
 	)
 	if err != nil {
-		return errors.Wrap(err, errors.ErrCodeNetworkError, "failed to connect to auth service")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "failed to connect to auth service",
+			Details:   err.Error(),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	s.authClient = authpb.NewAuthenticationServiceClient(authConn)
@@ -140,7 +178,13 @@ func (s *Server) initializeClients() error {
 func (s *Server) initializeOrchestrator() error {
 	orch, err := orchestrator.NewOrchestrator(s.config, s.db, s.logger)
 	if err != nil {
-		return errors.Wrap(err, errors.ErrCodeInternalError, "failed to create orchestrator")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "failed to create orchestrator",
+			Details:   err.Error(),
+			Severity:  commonpb.Severity_SEVERITY_CRITICAL,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	s.orchestrator = orch
@@ -155,7 +199,13 @@ func (s *Server) initializeMiddleware() error {
 	)
 
 	if err := middleware.ValidateMiddlewareConfig(s.config); err != nil {
-		return errors.Wrap(err, errors.ErrCodeConfigError, "invalid middleware configuration")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "invalid middleware configuration",
+			Details:   err.Error(),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	return nil
@@ -166,7 +216,13 @@ func (s *Server) initializeHandlers() error {
 	s.grpcHandler = handlers.NewGRPCHandler(s.orchestrator, s.config, s.logger)
 
 	if err := handlers.ValidateHandlerConfiguration(s.config); err != nil {
-		return errors.Wrap(err, errors.ErrCodeConfigError, "invalid handler configuration")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "invalid handler configuration",
+			Details:   err.Error(),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	return nil
@@ -230,7 +286,13 @@ func (s *Server) initializeGRPCServer() error {
 	if s.config.Security.TLSEnabled {
 		creds, err := s.loadTLSCredentials()
 		if err != nil {
-			return errors.Wrap(err, errors.ErrCodeConfigError, "failed to load TLS credentials")
+			return &commonpb.ErrorDetails{
+				Code:      commonpb.ErrorCode_ERROR_CODE_CERTIFICATE_INVALID,
+				Message:   "failed to load TLS credentials",
+				Details:   err.Error(),
+				Severity:  commonpb.Severity_SEVERITY_HIGH,
+				Timestamp: timestamppb.Now(),
+			}
 		}
 		opts = append(opts, grpc.Creds(creds))
 	}
@@ -268,7 +330,12 @@ func (s *Server) Start() error {
 	defer s.mu.Unlock()
 
 	if s.isShuttingDown {
-		return errors.New(errors.ErrCodeInternalError, "server is shutting down")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "server is shutting down",
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	signal.Notify(s.shutdownChan, os.Interrupt, syscall.SIGTERM)
@@ -333,7 +400,12 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	defer s.mu.Unlock()
 
 	if s.isShuttingDown {
-		return errors.New(errors.ErrCodeInternalError, "server is already shutting down")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "server is already shutting down",
+			Severity:  commonpb.Severity_SEVERITY_LOW,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	s.isShuttingDown = true
@@ -346,7 +418,13 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	go func() {
 		if err := s.shutdownHTTPServer(shutdownCtx); err != nil {
-			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "HTTP server shutdown failed")
+			errChan <- &commonpb.ErrorDetails{
+				Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+				Message:   "HTTP server shutdown failed",
+				Details:   err.Error(),
+				Severity:  commonpb.Severity_SEVERITY_HIGH,
+				Timestamp: timestamppb.Now(),
+			}
 		} else {
 			errChan <- nil
 		}
@@ -354,7 +432,13 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	go func() {
 		if err := s.shutdownGRPCServer(shutdownCtx); err != nil {
-			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "gRPC server shutdown failed")
+			errChan <- &commonpb.ErrorDetails{
+				Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+				Message:   "gRPC server shutdown failed",
+				Details:   err.Error(),
+				Severity:  commonpb.Severity_SEVERITY_HIGH,
+				Timestamp: timestamppb.Now(),
+			}
 		} else {
 			errChan <- nil
 		}
@@ -362,7 +446,13 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	go func() {
 		if err := s.shutdownOrchestrator(shutdownCtx); err != nil {
-			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "orchestrator shutdown failed")
+			errChan <- &commonpb.ErrorDetails{
+				Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+				Message:   "orchestrator shutdown failed",
+				Details:   err.Error(),
+				Severity:  commonpb.Severity_SEVERITY_HIGH,
+				Timestamp: timestamppb.Now(),
+			}
 		} else {
 			errChan <- nil
 		}
@@ -370,16 +460,24 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	go func() {
 		if err := s.shutdownMiddleware(shutdownCtx); err != nil {
-			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "middleware shutdown failed")
+			errChan <- &commonpb.ErrorDetails{
+				Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+				Message:   "middleware shutdown failed",
+				Details:   err.Error(),
+				Severity:  commonpb.Severity_SEVERITY_HIGH,
+				Timestamp: timestamppb.Now(),
+			}
 		} else {
 			errChan <- nil
 		}
 	}()
 
-	var shutdownErrors []error
+	var shutdownErrors []*commonpb.ErrorDetails
 	for i := 0; i < 4; i++ {
 		if err := <-errChan; err != nil {
-			shutdownErrors = append(shutdownErrors, err)
+			if errorDetail, ok := err.(*commonpb.ErrorDetails); ok {
+				shutdownErrors = append(shutdownErrors, errorDetail)
+			}
 		}
 	}
 
@@ -394,7 +492,12 @@ func (s *Server) Shutdown(ctx context.Context) error {
 		s.logger.Info("Server shutdown completed successfully")
 	case <-shutdownCtx.Done():
 		s.logger.Warn("Server shutdown timed out")
-		return shutdownCtx.Err()
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_TIMEOUT,
+			Message:   "server shutdown timed out",
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if len(shutdownErrors) > 0 {
@@ -457,114 +560,228 @@ func (s *Server) shutdownMiddleware(ctx context.Context) error {
 	return s.middlewareManager.Shutdown(ctx)
 }
 
-func (s *Server) HealthCheck() error {
+func (s *Server) HealthCheck() *commonpb.HealthStatus {
+	components := []*commonpb.ComponentHealth{}
+
 	if s.isShuttingDown {
-		return errors.New(errors.ErrCodeServiceUnavailable, "server is shutting down")
+		return &commonpb.HealthStatus{
+			OverallStatus: commonpb.Status_STATUS_ERROR,
+			Components:    components,
+			LastCheck:     timestamppb.Now(),
+			Version:       "1.0.0",
+			Uptime:        durationpb.New(time.Since(s.startTime)),
+		}
 	}
 
 	if s.orchestrator == nil {
-		return errors.New(errors.ErrCodeInternalError, "orchestrator not initialized")
-	}
-
-	if !s.orchestrator.IsHealthy() {
-		return errors.New(errors.ErrCodeServiceUnavailable, "orchestrator is unhealthy")
+		components = append(components, &commonpb.ComponentHealth{
+			Name:      "orchestrator",
+			Status:    commonpb.Status_STATUS_ERROR,
+			Message:   "orchestrator not initialized",
+			LastCheck: timestamppb.Now(),
+		})
+	} else if !s.orchestrator.IsHealthy() {
+		components = append(components, &commonpb.ComponentHealth{
+			Name:      "orchestrator",
+			Status:    commonpb.Status_STATUS_ERROR,
+			Message:   "orchestrator is unhealthy",
+			LastCheck: timestamppb.Now(),
+		})
+	} else {
+		components = append(components, &commonpb.ComponentHealth{
+			Name:      "orchestrator",
+			Status:    commonpb.Status_STATUS_SUCCESS,
+			Message:   "healthy",
+			LastCheck: timestamppb.Now(),
+		})
 	}
 
 	if s.middlewareManager == nil {
-		return errors.New(errors.ErrCodeInternalError, "middleware manager not initialized")
-	}
-
-	if err := s.middlewareManager.HealthCheck(); err != nil {
-		return errors.Wrap(err, errors.ErrCodeServiceUnavailable, "middleware health check failed")
+		components = append(components, &commonpb.ComponentHealth{
+			Name:      "middleware",
+			Status:    commonpb.Status_STATUS_ERROR,
+			Message:   "middleware manager not initialized",
+			LastCheck: timestamppb.Now(),
+		})
+	} else if err := s.middlewareManager.HealthCheck(); err != nil {
+		components = append(components, &commonpb.ComponentHealth{
+			Name:      "middleware",
+			Status:    commonpb.Status_STATUS_ERROR,
+			Message:   "middleware health check failed: " + err.Error(),
+			LastCheck: timestamppb.Now(),
+		})
+	} else {
+		components = append(components, &commonpb.ComponentHealth{
+			Name:      "middleware",
+			Status:    commonpb.Status_STATUS_SUCCESS,
+			Message:   "healthy",
+			LastCheck: timestamppb.Now(),
+		})
 	}
 
 	if err := s.db.HealthCheck(); err != nil {
-		return errors.Wrap(err, errors.ErrCodeDatabaseError, "database health check failed")
+		components = append(components, &commonpb.ComponentHealth{
+			Name:      "database",
+			Status:    commonpb.Status_STATUS_ERROR,
+			Message:   "database health check failed: " + err.Error(),
+			LastCheck: timestamppb.Now(),
+		})
+	} else {
+		components = append(components, &commonpb.ComponentHealth{
+			Name:      "database",
+			Status:    commonpb.Status_STATUS_SUCCESS,
+			Message:   "healthy",
+			LastCheck: timestamppb.Now(),
+		})
 	}
 
-	return nil
+	overallStatus := commonpb.Status_STATUS_SUCCESS
+	for _, component := range components {
+		if component.Status == commonpb.Status_STATUS_ERROR {
+			overallStatus = commonpb.Status_STATUS_ERROR
+			break
+		}
+	}
+
+	return &commonpb.HealthStatus{
+		OverallStatus: overallStatus,
+		Components:    components,
+		LastCheck:     timestamppb.Now(),
+		Version:       "1.0.0",
+		Uptime:        durationpb.New(time.Since(s.startTime)),
+	}
 }
 
-func (s *Server) GetMetrics() map[string]interface{} {
-	metrics := make(map[string]interface{})
+func (s *Server) GetMetrics() *commonpb.UsageMetrics {
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+
+	metrics := &commonpb.UsageMetrics{
+		RequestCount:   1,
+		CacheHits:      0,
+		CacheMisses:    0,
+		BandwidthBytes: 0,
+		ComputeUnits:   0.0,
+		MeasuredAt:     timestamppb.Now(),
+	}
 
 	if s.orchestrator != nil {
 		orchestratorMetrics := s.orchestrator.GetMetrics()
-		metrics["orchestrator"] = orchestratorMetrics
-	}
-
-	if s.middlewareManager != nil {
-		securityMetrics := s.middlewareManager.GetSecurityMetrics()
-		rateLimitStatus := s.middlewareManager.GetRateLimitStatus()
-		
-		metrics["security"] = securityMetrics
-		metrics["rate_limits"] = rateLimitStatus
-	}
-
-	metrics["server"] = map[string]interface{}{
-		"uptime":           time.Since(time.Now()).String(),
-		"environment":      s.config.Environment,
-		"version":          "1.0.0",
-		"http_port":        s.config.Gateway.HTTPPort,
-		"grpc_port":        s.config.Gateway.GRPCPort,
-		"tls_enabled":      s.config.Security.TLSEnabled,
-		"is_shutting_down": s.isShuttingDown,
+		metrics.RequestCount = int32(orchestratorMetrics.TotalRequests)
+		metrics.CacheHits = int32(orchestratorMetrics.CacheHits)
+		metrics.CacheMisses = int32(orchestratorMetrics.CacheMisses)
 	}
 
 	return metrics
 }
 
-func (s *Server) GetStatus() map[string]interface{} {
-	status := map[string]interface{}{
-		"service":     "gateway",
-		"version":     "1.0.0",
-		"environment": s.config.Environment,
-		"timestamp":   time.Now().UTC(),
-		"healthy":     s.HealthCheck() == nil,
+func (s *Server) GetPerformanceMetrics() *commonpb.PerformanceMetrics {
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+
+	performance := &commonpb.PerformanceMetrics{
+		TotalLatencyMs:     0,
+		ModelLatencyMs:     0,
+		SecurityLatencyMs:  0,
+		ComplianceLatencyMs: 0,
+		NetworkLatencyMs:   0,
+		QueueTimeMs:        0,
+		TimeToFirstTokenMs: 0,
+		TokensPerSecond:    0.0,
+		Throughput:         0.0,
+		ConcurrentRequests: 0,
+		RetryCount:         0,
+		CacheHitRatio:      0.0,
+		MeasuredAt:         timestamppb.Now(),
 	}
 
 	if s.orchestrator != nil {
-		healthStatus := s.orchestrator.GetHealthStatus()
-		status["orchestrator"] = healthStatus
+		orchestratorMetrics := s.orchestrator.GetMetrics()
+		performance.TotalLatencyMs = orchestratorMetrics.AverageResponseTime.Milliseconds()
+		performance.Throughput = orchestratorMetrics.ThroughputPerSecond
+		performance.ConcurrentRequests = int32(orchestratorMetrics.ConcurrentRequests)
 	}
 
-	return status
+	return performance
+}
+
+func (s *Server) GetStatus() *commonpb.SystemInfo {
+	return &commonpb.SystemInfo{
+		ServiceName:  "gateway",
+		Version:      "1.0.0",
+		BuildCommit:  "unknown",
+		BuildTime:    timestamppb.Now(),
+		Environment:  string(s.config.Environment),
+		StartTime:    timestamppb.New(s.startTime),
+	}
 }
 
 func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
-	appErr := errors.NewNotFoundError("endpoint").
-		WithContext("path", r.URL.Path).
-		WithContext("method", r.Method)
+	errorDetails := &commonpb.ErrorDetails{
+		Code:      commonpb.ErrorCode_ERROR_CODE_NOT_FOUND,
+		Message:   "endpoint not found",
+		Details:   fmt.Sprintf("path: %s, method: %s", r.URL.Path, r.Method),
+		Severity:  commonpb.Severity_SEVERITY_LOW,
+		Timestamp: timestamppb.Now(),
+		RequestId: request.ExtractClientInfo(r).IPAddress,
+		TraceId:   r.Header.Get("X-Trace-ID"),
+	}
 
-	s.writeErrorResponse(w, appErr)
+	s.writeErrorResponse(w, errorDetails)
 }
 
 func (s *Server) handleMethodNotAllowed(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Allow", "GET, POST, PUT, DELETE, OPTIONS")
 	
-	appErr := errors.New(errors.ErrCodeMethodNotAllowed, "method not allowed").
-		WithContext("method", r.Method).
-		WithContext("path", r.URL.Path)
+	errorDetails := &commonpb.ErrorDetails{
+		Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+		Message:   "method not allowed",
+		Details:   fmt.Sprintf("method: %s, path: %s", r.Method, r.URL.Path),
+		Severity:  commonpb.Severity_SEVERITY_LOW,
+		Timestamp: timestamppb.Now(),
+		RequestId: request.ExtractClientInfo(r).IPAddress,
+		TraceId:   r.Header.Get("X-Trace-ID"),
+	}
 
-	s.writeErrorResponse(w, appErr)
+	s.writeErrorResponse(w, errorDetails)
 }
 
-func (s *Server) writeErrorResponse(w http.ResponseWriter, appErr *errors.AppError) {
-	errorResponse := errors.CreateErrorResponse(
-		appErr,
-		appErr.RequestID,
-		"",
-		"",
-		"",
-		"",
+func (s *Server) writeErrorResponse(w http.ResponseWriter, errorDetails *commonpb.ErrorDetails) {
+	aiResponse := response.NewErrorResponse(
+		"", 
+		errorDetails.TraceId,
+		response.ErrorCode(errorDetails.Code.String()),
+		errorDetails.Message,
+		response.ErrorSeverity(errorDetails.Severity.String()),
 	)
 
-	statusCode := errors.GetHTTPStatus(appErr)
+	statusCode := s.getHTTPStatusFromErrorCode(errorDetails.Code)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	
-	if err := utils.WriteJSONResponse(w, statusCode, errorResponse); err != nil {
+	if err := utils.WriteJSONResponse(w, statusCode, aiResponse); err != nil {
 		s.logger.Error("Failed to write error response", zap.Error(err))
+	}
+}
+
+func (s *Server) getHTTPStatusFromErrorCode(code commonpb.ErrorCode) int {
+	switch code {
+	case commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST:
+		return http.StatusBadRequest
+	case commonpb.ErrorCode_ERROR_CODE_UNAUTHORIZED:
+		return http.StatusUnauthorized
+	case commonpb.ErrorCode_ERROR_CODE_FORBIDDEN:
+		return http.StatusForbidden
+	case commonpb.ErrorCode_ERROR_CODE_NOT_FOUND:
+		return http.StatusNotFound
+	case commonpb.ErrorCode_ERROR_CODE_RATE_LIMIT_EXCEEDED:
+		return http.StatusTooManyRequests
+	case commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR:
+		return http.StatusInternalServerError
+	case commonpb.ErrorCode_ERROR_CODE_TIMEOUT:
+		return http.StatusRequestTimeout
+	default:
+		return http.StatusInternalServerError
 	}
 }
 
@@ -596,7 +813,12 @@ func (s *Server) ReloadConfig(newConfig *config.Config) error {
 	defer s.mu.Unlock()
 
 	if s.isShuttingDown {
-		return errors.New(errors.ErrCodeServiceUnavailable, "cannot reload config during shutdown")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "cannot reload config during shutdown",
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	s.logger.Info("Reloading server configuration")
@@ -606,7 +828,7 @@ func (s *Server) ReloadConfig(newConfig *config.Config) error {
 
 	if err := s.validateConfigChange(oldConfig, newConfig); err != nil {
 		s.config = oldConfig
-		return errors.Wrap(err, errors.ErrCodeConfigError, "config validation failed")
+		return err
 	}
 
 	s.logger.Info("Configuration reloaded successfully")
@@ -615,15 +837,30 @@ func (s *Server) ReloadConfig(newConfig *config.Config) error {
 
 func (s *Server) validateConfigChange(oldConfig, newConfig *config.Config) error {
 	if oldConfig.Gateway.HTTPPort != newConfig.Gateway.HTTPPort {
-		return errors.New(errors.ErrCodeConfigError, "HTTP port cannot be changed without restart")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "HTTP port cannot be changed without restart",
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if oldConfig.Gateway.GRPCPort != newConfig.Gateway.GRPCPort {
-		return errors.New(errors.ErrCodeConfigError, "gRPC port cannot be changed without restart")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "gRPC port cannot be changed without restart",
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if oldConfig.Security.TLSEnabled != newConfig.Security.TLSEnabled {
-		return errors.New(errors.ErrCodeConfigError, "TLS settings cannot be changed without restart")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "TLS settings cannot be changed without restart",
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	return nil
@@ -643,10 +880,14 @@ func (s *Server) DisableMaintenanceMode() {
 	s.logger.Info("Disabling maintenance mode")
 }
 
-func (s *Server) GetConnectionCount() map[string]int64 {
-	return map[string]int64{
-		"http": 0,
-		"grpc": 0,
+func (s *Server) GetConnectionCount() *commonpb.UsageMetrics {
+	return &commonpb.UsageMetrics{
+		RequestCount:   0,
+		CacheHits:      0,
+		CacheMisses:    0,
+		BandwidthBytes: 0,
+		ComputeUnits:   0.0,
+		MeasuredAt:     timestamppb.Now(),
 	}
 }
 
@@ -667,7 +908,12 @@ func (s *Server) RestartComponent(component string) error {
 	defer s.mu.Unlock()
 
 	if s.isShuttingDown {
-		return errors.New(errors.ErrCodeServiceUnavailable, "cannot restart component during shutdown")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "cannot restart component during shutdown",
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	s.logger.Info("Restarting component", zap.String("component", component))
@@ -678,7 +924,13 @@ func (s *Server) RestartComponent(component string) error {
 	case "middleware":
 		return s.restartMiddleware()
 	default:
-		return errors.New(errors.ErrCodeInvalidRequest, "unknown component")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "unknown component",
+			Details:   "component: " + component,
+			Severity:  commonpb.Severity_SEVERITY_LOW,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 }
 
@@ -694,7 +946,13 @@ func (s *Server) restartOrchestrator() error {
 
 	orch, err := orchestrator.NewOrchestrator(s.config, s.db, s.logger)
 	if err != nil {
-		return errors.Wrap(err, errors.ErrCodeInternalError, "failed to restart orchestrator")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "failed to restart orchestrator",
+			Details:   err.Error(),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	s.orchestrator = orch
@@ -779,11 +1037,14 @@ func (s *Server) performanceMonitorWorker() {
 }
 
 func (s *Server) performHealthCheck() {
-	if err := s.HealthCheck(); err != nil {
-		s.logger.Error("Health check failed", zap.Error(err))
+	healthStatus := s.HealthCheck()
+	
+	if healthStatus.OverallStatus != commonpb.Status_STATUS_SUCCESS {
+		s.logger.Error("Health check failed", 
+			zap.String("status", healthStatus.OverallStatus.String()))
 		
-		if s.shouldTriggerAlert(err) {
-			s.triggerHealthAlert(err)
+		if s.shouldTriggerAlert(healthStatus) {
+			s.triggerHealthAlert(healthStatus)
 		}
 	} else {
 		s.logger.Debug("Health check passed")
@@ -794,65 +1055,84 @@ func (s *Server) collectMetrics() {
 	metrics := s.GetMetrics()
 	
 	s.logger.Info("Server metrics collected",
-		zap.Any("metrics", metrics),
-		zap.Time("timestamp", time.Now()))
+		zap.Int32("request_count", metrics.RequestCount),
+		zap.Int32("cache_hits", metrics.CacheHits),
+		zap.Int32("cache_misses", metrics.CacheMisses),
+		zap.Time("timestamp", metrics.MeasuredAt.AsTime()))
 }
 
 func (s *Server) monitorPerformance() {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	performanceData := map[string]interface{}{
-		"memory": map[string]interface{}{
-			"alloc":         memStats.Alloc,
-			"total_alloc":   memStats.TotalAlloc,
-			"sys":           memStats.Sys,
-			"heap_alloc":    memStats.HeapAlloc,
-			"heap_sys":      memStats.HeapSys,
-			"heap_idle":     memStats.HeapIdle,
-			"heap_inuse":    memStats.HeapInuse,
-			"gc_cycles":     memStats.NumGC,
-		},
-		"goroutines": runtime.NumGoroutine(),
-		"cpu_count":  runtime.NumCPU(),
+	performanceMetrics := &commonpb.PerformanceMetrics{
+		TotalLatencyMs:     0,
+		ModelLatencyMs:     0,
+		SecurityLatencyMs:  0,
+		ComplianceLatencyMs: 0,
+		NetworkLatencyMs:   0,
+		QueueTimeMs:        0,
+		TimeToFirstTokenMs: 0,
+		TokensPerSecond:    0.0,
+		Throughput:         0.0,
+		ConcurrentRequests: int32(runtime.NumGoroutine()),
+		RetryCount:         0,
+		CacheHitRatio:      0.0,
+		MeasuredAt:         timestamppb.Now(),
 	}
 
 	s.logger.Info("Performance metrics",
-		zap.Any("performance", performanceData))
+		zap.Uint64("memory_alloc", memStats.Alloc),
+		zap.Uint64("memory_total_alloc", memStats.TotalAlloc),
+		zap.Uint64("memory_sys", memStats.Sys),
+		zap.Uint32("gc_cycles", memStats.NumGC),
+		zap.Int("goroutines", runtime.NumGoroutine()),
+		zap.Int("cpu_count", runtime.NumCPU()))
 
-	if s.shouldOptimizePerformance(performanceData) {
+	if s.shouldOptimizePerformance(performanceMetrics, memStats) {
 		s.optimizePerformance()
 	}
 }
 
-func (s *Server) shouldTriggerAlert(err error) bool {
-	if appErr, ok := err.(*errors.AppError); ok {
-		return appErr.Severity == errors.SeverityCritical || appErr.Severity == errors.SeverityHigh
-	}
-	return true
-}
-
-func (s *Server) triggerHealthAlert(err error) {
-	alertData := map[string]interface{}{
-		"service":     "gateway",
-		"alert_type":  "health_check_failed",
-		"error":       err.Error(),
-		"timestamp":   time.Now().UTC(),
-		"environment": s.config.Environment,
-	}
-
-	s.logger.Error("Health alert triggered", zap.Any("alert", alertData))
-}
-
-func (s *Server) shouldOptimizePerformance(data map[string]interface{}) bool {
-	if memory, ok := data["memory"].(map[string]interface{}); ok {
-		if heapAlloc, ok := memory["heap_alloc"].(uint64); ok {
-			return heapAlloc > 500*1024*1024
+func (s *Server) shouldTriggerAlert(healthStatus *commonpb.HealthStatus) bool {
+	for _, component := range healthStatus.Components {
+		if component.Status == commonpb.Status_STATUS_ERROR {
+			return true
 		}
 	}
+	return false
+}
 
-	if goroutines, ok := data["goroutines"].(int); ok {
-		return goroutines > 10000
+func (s *Server) triggerHealthAlert(healthStatus *commonpb.HealthStatus) {
+	auditEvent := &commonpb.AuditEvent{
+		EventId:      fmt.Sprintf("health-alert-%d", time.Now().Unix()),
+		EventType:    "health_check_failed",
+		ActorId:      "system",
+		ActorType:    "server",
+		ResourceId:   "gateway",
+		ResourceType: "service",
+		Action:       "health_check",
+		Status:       commonpb.Status_STATUS_ERROR,
+		SourceIp:     "127.0.0.1",
+		UserAgent:    "gateway-server",
+		Timestamp:    timestamppb.Now(),
+		TraceId:      fmt.Sprintf("health-%d", time.Now().UnixNano()),
+		TenantId:     "system",
+		Severity:     commonpb.Severity_SEVERITY_HIGH,
+	}
+
+	s.logger.Error("Health alert triggered", 
+		zap.String("event_id", auditEvent.EventId),
+		zap.String("status", healthStatus.OverallStatus.String()))
+}
+
+func (s *Server) shouldOptimizePerformance(metrics *commonpb.PerformanceMetrics, memStats runtime.MemStats) bool {
+	if memStats.HeapAlloc > 500*1024*1024 {
+		return true
+	}
+
+	if metrics.ConcurrentRequests > 10000 {
+		return true
 	}
 
 	return false
@@ -868,61 +1148,53 @@ func (s *Server) optimizePerformance() {
 	}
 }
 
-func (s *Server) GetDetailedStatus() map[string]interface{} {
+func (s *Server) GetDetailedStatus() *commonpb.SystemInfo {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	status := map[string]interface{}{
-		"service":     "gateway",
-		"version":     "1.0.0",
-		"environment": s.config.Environment,
-		"timestamp":   time.Now().UTC(),
-		"uptime":      time.Since(time.Now()).String(),
-		"healthy":     s.HealthCheck() == nil,
-		"ports": map[string]int{
-			"http": s.config.Gateway.HTTPPort,
-			"grpc": s.config.Gateway.GRPCPort,
-		},
-		"tls_enabled": s.config.Security.TLSEnabled,
-		"runtime": map[string]interface{}{
-			"go_version":   runtime.Version(),
-			"goroutines":   runtime.NumGoroutine(),
-			"memory_mb":    memStats.Alloc / 1024 / 1024,
-			"gc_cycles":    memStats.NumGC,
-		},
+	return &commonpb.SystemInfo{
+		ServiceName:  "gateway",
+		Version:      "1.0.0",
+		BuildCommit:  "unknown",
+		BuildTime:    timestamppb.Now(),
+		Environment:  string(s.config.Environment),
+		StartTime:    timestamppb.New(s.startTime),
 	}
-
-	if s.orchestrator != nil {
-		status["orchestrator"] = s.orchestrator.GetHealthStatus()
-		status["metrics"] = s.orchestrator.GetMetrics()
-	}
-
-	return status
 }
 
-func (s *Server) DumpConfiguration() map[string]interface{} {
-	return map[string]interface{}{
-		"environment": s.config.Environment,
-		"gateway": map[string]interface{}{
-			"http_port":              s.config.Gateway.HTTPPort,
-			"grpc_port":              s.config.Gateway.GRPCPort,
-			"request_timeout":        s.config.Gateway.RequestTimeout.String(),
-			"read_timeout":           s.config.Gateway.ReadTimeout.String(),
-			"write_timeout":          s.config.Gateway.WriteTimeout.String(),
-			"idle_timeout":           s.config.Gateway.IdleTimeout.String(),
-			"max_concurrent_requests": s.config.Gateway.MaxConcurrentRequests,
+func (s *Server) DumpConfiguration() []*commonpb.ConfigurationValue {
+	configs := []*commonpb.ConfigurationValue{
+		{
+			Key:         "environment",
+			Description: "Server environment",
+			IsSensitive: false,
+			UpdatedAt:   timestamppb.Now(),
+			UpdatedBy:   "system",
 		},
-		"security": map[string]interface{}{
-			"tls_enabled":     s.config.Security.TLSEnabled,
-			"allowed_origins": s.config.Security.AllowedOrigins,
+		{
+			Key:         "gateway.http_port",
+			Description: "HTTP server port",
+			IsSensitive: false,
+			UpdatedAt:   timestamppb.Now(),
+			UpdatedBy:   "system",
 		},
-		"database": map[string]interface{}{
-			"host":         s.config.Database.Host,
-			"port":         s.config.Database.Port,
-			"database":     s.config.Database.Database,
-			"max_connections": s.config.Database.MaxConnections,
+		{
+			Key:         "gateway.grpc_port",
+			Description: "gRPC server port",
+			IsSensitive: false,
+			UpdatedAt:   timestamppb.Now(),
+			UpdatedBy:   "system",
+		},
+		{
+			Key:         "security.tls_enabled",
+			Description: "TLS encryption enabled",
+			IsSensitive: false,
+			UpdatedAt:   timestamppb.Now(),
+			UpdatedBy:   "system",
 		},
 	}
+
+	return configs
 }
 
 func (s *Server) EnableDebugMode() {
@@ -937,20 +1209,14 @@ func (s *Server) DisableDebugMode() {
 	s.logger.Info("Debug mode disabled")
 }
 
-func (s *Server) GetActiveConnections() map[string]interface{} {
-	return map[string]interface{}{
-		"http": map[string]interface{}{
-			"active": 0,
-			"total":  0,
-		},
-		"grpc": map[string]interface{}{
-			"active": 0,
-			"total":  0,
-		},
-		"database": map[string]interface{}{
-			"active": s.db.GetActiveConnections(),
-			"idle":   s.db.GetIdleConnections(),
-		},
+func (s *Server) GetActiveConnections() *commonpb.UsageMetrics {
+	return &commonpb.UsageMetrics{
+		RequestCount:   0,
+		CacheHits:      int32(s.db.GetActiveConnections()),
+		CacheMisses:    int32(s.db.GetIdleConnections()),
+		BandwidthBytes: 0,
+		ComputeUnits:   0.0,
+		MeasuredAt:     timestamppb.Now(),
 	}
 }
 
@@ -966,28 +1232,40 @@ func (s *Server) RotateLogs() error {
 func (s *Server) SetLogLevel(level string) error {
 	validLevels := []string{"debug", "info", "warn", "error"}
 	if !utils.Contains(validLevels, level) {
-		return errors.New(errors.ErrCodeInvalidRequest, "invalid log level")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "invalid log level",
+			Details:   "level: " + level,
+			Severity:  commonpb.Severity_SEVERITY_LOW,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	s.logger.Info("Log level changed", zap.String("new_level", level))
 	return nil
 }
 
-func (s *Server) GetRequestStats() map[string]interface{} {
+func (s *Server) GetRequestStats() *commonpb.UsageMetrics {
 	if s.orchestrator == nil {
-		return map[string]interface{}{}
+		return &commonpb.UsageMetrics{
+			RequestCount:   0,
+			CacheHits:      0,
+			CacheMisses:    0,
+			BandwidthBytes: 0,
+			ComputeUnits:   0.0,
+			MeasuredAt:     timestamppb.Now(),
+		}
 	}
 
 	metrics := s.orchestrator.GetMetrics()
 	
-	return map[string]interface{}{
-		"total_requests":     metrics.TotalRequests,
-		"successful_requests": metrics.SuccessfulRequests,
-		"failed_requests":    metrics.FailedRequests,
-		"error_rate":         metrics.ErrorRate,
-		"avg_response_time":  metrics.AverageResponseTime.Milliseconds(),
-		"throughput":         metrics.ThroughputPerSecond,
-		"last_updated":       metrics.LastUpdated,
+	return &commonpb.UsageMetrics{
+		RequestCount:   int32(metrics.TotalRequests),
+		CacheHits:      int32(metrics.SuccessfulRequests),
+		CacheMisses:    int32(metrics.FailedRequests),
+		BandwidthBytes: 0,
+		ComputeUnits:   metrics.ThroughputPerSecond,
+		MeasuredAt:     timestamppb.New(metrics.LastUpdated),
 	}
 }
 
@@ -1008,57 +1286,60 @@ func (s *Server) ExportMetrics(format string) ([]byte, error) {
 	case "prometheus":
 		return s.exportPrometheusMetrics(metrics)
 	default:
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "unsupported export format")
+		return nil, &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "unsupported export format",
+			Details:   "format: " + format,
+			Severity:  commonpb.Severity_SEVERITY_LOW,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 }
 
-func (s *Server) exportPrometheusMetrics(metrics map[string]interface{}) ([]byte, error) {
+func (s *Server) exportPrometheusMetrics(metrics *commonpb.UsageMetrics) ([]byte, error) {
 	var output strings.Builder
 	
 	output.WriteString("# HELP gateway_requests_total Total number of requests\n")
 	output.WriteString("# TYPE gateway_requests_total counter\n")
-	
-	if orchestratorMetrics, ok := metrics["orchestrator"]; ok {
-		if om, ok := orchestratorMetrics.(*orchestrator.OrchestratorMetrics); ok {
-			output.WriteString(fmt.Sprintf("gateway_requests_total %d\n", om.TotalRequests))
-			output.WriteString(fmt.Sprintf("gateway_requests_successful %d\n", om.SuccessfulRequests))
-			output.WriteString(fmt.Sprintf("gateway_requests_failed %d\n", om.FailedRequests))
-		}
-	}
+	output.WriteString(fmt.Sprintf("gateway_requests_total %d\n", metrics.RequestCount))
+	output.WriteString(fmt.Sprintf("gateway_cache_hits %d\n", metrics.CacheHits))
+	output.WriteString(fmt.Sprintf("gateway_cache_misses %d\n", metrics.CacheMisses))
 	
 	return []byte(output.String()), nil
 }
 
 func (s *Server) BackupConfiguration() ([]byte, error) {
-	config := s.DumpConfiguration()
-	return json.Marshal(config)
+	configs := s.DumpConfiguration()
+	return json.Marshal(configs)
 }
 
 func (s *Server) RestoreConfiguration(data []byte) error {
-	var config map[string]interface{}
-	if err := json.Unmarshal(data, &config); err != nil {
-		return errors.Wrap(err, errors.ErrCodeInvalidRequest, "invalid configuration data")
+	var configs []*commonpb.ConfigurationValue
+	if err := json.Unmarshal(data, &configs); err != nil {
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "invalid configuration data",
+			Details:   err.Error(),
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	s.logger.Info("Configuration restore requested")
 	return nil
 }
 
-func (s *Server) GetSystemInfo() map[string]interface{} {
+func (s *Server) GetSystemInfo() *commonpb.SystemInfo {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	return map[string]interface{}{
-		"hostname":     s.getHostname(),
-		"go_version":   runtime.Version(),
-		"go_os":        runtime.GOOS,
-		"go_arch":      runtime.GOARCH,
-		"cpu_count":    runtime.NumCPU(),
-		"goroutines":   runtime.NumGoroutine(),
-		"memory_mb":    memStats.Alloc / 1024 / 1024,
-		"gc_cycles":    memStats.NumGC,
-		"uptime":       time.Since(time.Now()).String(),
-		"pid":          os.Getpid(),
+	return &commonpb.SystemInfo{
+		ServiceName:  "gateway",
+		Version:      "1.0.0",
+		BuildCommit:  "unknown",
+		BuildTime:    timestamppb.Now(),
+		Environment:  string(s.config.Environment),
+		StartTime:    timestamppb.New(s.startTime),
 	}
 }
 
@@ -1072,23 +1353,51 @@ func (s *Server) getHostname() string {
 
 func (s *Server) ValidateConfiguration() error {
 	if s.config == nil {
-		return errors.New(errors.ErrCodeConfigError, "configuration is nil")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "configuration is nil",
+			Severity:  commonpb.Severity_SEVERITY_CRITICAL,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if s.config.Gateway.HTTPPort <= 0 || s.config.Gateway.HTTPPort > 65535 {
-		return errors.New(errors.ErrCodeConfigError, "invalid HTTP port")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "invalid HTTP port",
+			Details:   fmt.Sprintf("port: %d", s.config.Gateway.HTTPPort),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if s.config.Gateway.GRPCPort <= 0 || s.config.Gateway.GRPCPort > 65535 {
-		return errors.New(errors.ErrCodeConfigError, "invalid gRPC port")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "invalid gRPC port",
+			Details:   fmt.Sprintf("port: %d", s.config.Gateway.GRPCPort),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if s.config.Gateway.RequestTimeout <= 0 {
-		return errors.New(errors.ErrCodeConfigError, "invalid request timeout")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "invalid request timeout",
+			Details:   s.config.Gateway.RequestTimeout.String(),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if len(s.config.Security.AllowedOrigins) == 0 {
-		return errors.New(errors.ErrCodeConfigError, "no allowed origins configured")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "no allowed origins configured",
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	return nil
@@ -1098,36 +1407,25 @@ func (s *Server) RegisterShutdownHook(hook func() error) {
 	s.logger.Info("Shutdown hook registered")
 }
 
-func (s *Server) GetServerInfo() map[string]interface{} {
-	return map[string]interface{}{
-		"name":         "AI Gateway Server",
-		"version":      "1.0.0",
-		"build_time":   time.Now().Format(time.RFC3339),
-		"environment":  s.config.Environment,
-		"go_version":   runtime.Version(),
-		"start_time":   time.Now().Format(time.RFC3339),
-		"ports": map[string]int{
-			"http": s.config.Gateway.HTTPPort,
-			"grpc": s.config.Gateway.GRPCPort,
-		},
-		"features": []string{
-			"authentication",
-			"authorization", 
-			"rate_limiting",
-			"threat_detection",
-			"audit_logging",
-			"circuit_breaker",
-			"compression",
-			"caching",
-			"metrics",
-			"health_checks",
-		},
+func (s *Server) GetServerInfo() *commonpb.SystemInfo {
+	return &commonpb.SystemInfo{
+		ServiceName:  "AI Gateway Server",
+		Version:      "1.0.0",
+		BuildCommit:  "unknown",
+		BuildTime:    timestamppb.Now(),
+		Environment:  string(s.config.Environment),
+		StartTime:    timestamppb.New(s.startTime),
 	}
 }
 
 func (s *Server) Ping() error {
 	if s.isShuttingDown {
-		return errors.New(errors.ErrCodeServiceUnavailable, "server is shutting down")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "server is shutting down",
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 	return nil
 }
@@ -1137,8 +1435,15 @@ func (s *Server) Ready() error {
 		return err
 	}
 
-	if err := s.HealthCheck(); err != nil {
-		return err
+	healthStatus := s.HealthCheck()
+	if healthStatus.OverallStatus != commonpb.Status_STATUS_SUCCESS {
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "server is not ready",
+			Details:   "health check failed",
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	return nil
@@ -1148,37 +1453,39 @@ func (s *Server) Live() error {
 	return s.Ping()
 }
 
-func (s *Server) GetDependencyStatus() map[string]interface{} {
-	dependencies := make(map[string]interface{})
+func (s *Server) GetDependencyStatus() []*commonpb.ComponentHealth {
+	dependencies := []*commonpb.ComponentHealth{}
 
-	dependencies["database"] = map[string]interface{}{
-		"status": func() string {
-			if err := s.db.HealthCheck(); err != nil {
-				return "unhealthy"
-			}
-			return "healthy"
-		}(),
-		"connections": map[string]interface{}{
-			"active": s.db.GetActiveConnections(),
-			"idle":   s.db.GetIdleConnections(),
-			"max":    s.config.Database.MaxConnections,
-		},
+	dbStatus := commonpb.Status_STATUS_SUCCESS
+	dbMessage := "healthy"
+	if err := s.db.HealthCheck(); err != nil {
+		dbStatus = commonpb.Status_STATUS_ERROR
+		dbMessage = "unhealthy: " + err.Error()
 	}
 
-	dependencies["auth_service"] = map[string]interface{}{
-		"status": func() string {
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			
-			if _, err := s.authClient.HealthCheck(ctx, &authpb.HealthCheckRequest{}); err != nil {
-				return "unhealthy"
-			}
-			return "healthy"
-		}(),
-		"endpoint": fmt.Sprintf("%s:%d", 
-			s.config.Services.AuthService.Host, 
-			s.config.Services.AuthService.Port),
+	dependencies = append(dependencies, &commonpb.ComponentHealth{
+		Name:      "database",
+		Status:    dbStatus,
+		Message:   dbMessage,
+		LastCheck: timestamppb.Now(),
+	})
+
+	authStatus := commonpb.Status_STATUS_SUCCESS
+	authMessage := "healthy"
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	
+	if _, err := s.authClient.HealthCheck(ctx, &authpb.HealthCheckRequest{}); err != nil {
+		authStatus = commonpb.Status_STATUS_ERROR
+		authMessage = "unhealthy: " + err.Error()
 	}
+
+	dependencies = append(dependencies, &commonpb.ComponentHealth{
+		Name:      "auth_service",
+		Status:    authStatus,
+		Message:   authMessage,
+		LastCheck: timestamppb.Now(),
+	})
 
 	return dependencies
 }
@@ -1195,37 +1502,41 @@ func (s *Server) DrainConnections(timeout time.Duration) error {
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_TIMEOUT,
+			Message:   "connection draining timed out",
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	case <-time.After(timeout):
 		return nil
 	}
 }
 
-func (s *Server) GetLoadInfo() map[string]interface{} {
+func (s *Server) GetLoadInfo() *commonpb.PerformanceMetrics {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	loadInfo := map[string]interface{}{
-		"cpu": map[string]interface{}{
-			"cores":      runtime.NumCPU(),
-			"goroutines": runtime.NumGoroutine(),
-		},
-		"memory": map[string]interface{}{
-			"allocated_mb":    memStats.Alloc / 1024 / 1024,
-			"total_alloc_mb":  memStats.TotalAlloc / 1024 / 1024,
-			"system_mb":       memStats.Sys / 1024 / 1024,
-			"gc_cycles":       memStats.NumGC,
-			"gc_pause_ns":     memStats.PauseNs[(memStats.NumGC+255)%256],
-		},
+	loadInfo := &commonpb.PerformanceMetrics{
+		TotalLatencyMs:     0,
+		ModelLatencyMs:     0,
+		SecurityLatencyMs:  0,
+		ComplianceLatencyMs: 0,
+		NetworkLatencyMs:   0,
+		QueueTimeMs:        0,
+		TimeToFirstTokenMs: 0,
+		TokensPerSecond:    0.0,
+		Throughput:         0.0,
+		ConcurrentRequests: int32(runtime.NumGoroutine()),
+		RetryCount:         0,
+		CacheHitRatio:      0.0,
+		MeasuredAt:         timestamppb.Now(),
 	}
 
 	if s.orchestrator != nil {
 		metrics := s.orchestrator.GetMetrics()
-		loadInfo["requests"] = map[string]interface{}{
-			"total":       metrics.TotalRequests,
-			"throughput":  metrics.ThroughputPerSecond,
-			"error_rate":  metrics.ErrorRate,
-		}
+		loadInfo.Throughput = metrics.ThroughputPerSecond
+		loadInfo.TotalLatencyMs = metrics.AverageResponseTime.Milliseconds()
 	}
 
 	return loadInfo
@@ -1237,16 +1548,22 @@ func (s *Server) TriggerGarbageCollection() {
 	s.logger.Info("Garbage collection completed")
 }
 
-func (s *Server) GetCircuitBreakerStatus() map[string]interface{} {
+func (s *Server) GetCircuitBreakerStatus() []*commonpb.ComponentHealth {
 	if s.orchestrator == nil {
-		return map[string]interface{}{}
+		return []*commonpb.ComponentHealth{}
 	}
 
 	services := []string{"auth", "policy", "threat", "model", "audit"}
-	status := make(map[string]interface{})
+	status := []*commonpb.ComponentHealth{}
 
 	for _, service := range services {
-		status[service] = s.orchestrator.GetCircuitBreakerStatus(service)
+		cbStatus := s.orchestrator.GetCircuitBreakerStatus(service)
+		status = append(status, &commonpb.ComponentHealth{
+			Name:      service + "_circuit_breaker",
+			Status:    cbStatus.Status,
+			Message:   cbStatus.Message,
+			LastCheck: timestamppb.Now(),
+		})
 	}
 
 	return status
@@ -1254,21 +1571,36 @@ func (s *Server) GetCircuitBreakerStatus() map[string]interface{} {
 
 func (s *Server) ResetCircuitBreaker(service string) error {
 	if s.orchestrator == nil {
-		return errors.New(errors.ErrCodeInternalError, "orchestrator not available")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+			Message:   "orchestrator not available",
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	return s.orchestrator.ResetCircuitBreaker(service)
 }
 
-func (s *Server) GetCacheStats() map[string]interface{} {
+func (s *Server) GetCacheStats() *commonpb.UsageMetrics {
 	if s.orchestrator == nil {
-		return map[string]interface{}{}
+		return &commonpb.UsageMetrics{
+			RequestCount:   0,
+			CacheHits:      0,
+			CacheMisses:    0,
+			BandwidthBytes: 0,
+			ComputeUnits:   0.0,
+			MeasuredAt:     timestamppb.Now(),
+		}
 	}
 
-	return map[string]interface{}{
-		"tenant_cache": map[string]interface{}{
-			"size": s.orchestrator.GetTenantCount(),
-		},
+	return &commonpb.UsageMetrics{
+		RequestCount:   0,
+		CacheHits:      int32(s.orchestrator.GetTenantCount()),
+		CacheMisses:    0,
+		BandwidthBytes: 0,
+		ComputeUnits:   0.0,
+		MeasuredAt:     timestamppb.Now(),
 	}
 }
 
@@ -1281,7 +1613,13 @@ func (s *Server) ClearCache(cacheType string) error {
 	case "tenant":
 		return s.clearTenantCache()
 	default:
-		return errors.New(errors.ErrCodeInvalidRequest, "unknown cache type")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "unknown cache type",
+			Details:   "type: " + cacheType,
+			Severity:  commonpb.Severity_SEVERITY_LOW,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 }
 
@@ -1295,12 +1633,37 @@ func (s *Server) clearTenantCache() error {
 	return nil
 }
 
-func (s *Server) GetSecurityStatus() map[string]interface{} {
+func (s *Server) GetSecurityStatus() *commonpb.SecurityAnalysis {
 	if s.middlewareManager == nil {
-		return map[string]interface{}{}
+		return &commonpb.SecurityAnalysis{
+			ThreatLevel:      commonpb.ThreatLevel_THREAT_LEVEL_NONE,
+			ThreatsDetected:  []*commonpb.ThreatDetection{},
+			RiskScore:        0.0,
+			Confidence:       1.0,
+			DetectionMethods: []string{},
+			Recommendations:  []string{},
+			ProcessingTimeMs: 0,
+			EngineVersion:    "1.0.0",
+			Signatures:       []*commonpb.SignatureMatch{},
+			Anomalies:        []*commonpb.AnomalyDetection{},
+			AnalyzedAt:       timestamppb.Now(),
+		}
 	}
 
-	return s.middlewareManager.GetSecurityMetrics()
+	securityMetrics := s.middlewareManager.GetSecurityMetrics()
+	return &commonpb.SecurityAnalysis{
+		ThreatLevel:      commonpb.ThreatLevel_THREAT_LEVEL_LOW,
+		ThreatsDetected:  []*commonpb.ThreatDetection{},
+		RiskScore:        securityMetrics.RiskScore,
+		Confidence:       1.0,
+		DetectionMethods: []string{"middleware"},
+		Recommendations:  []string{},
+		ProcessingTimeMs: 0,
+		EngineVersion:    "1.0.0",
+		Signatures:       []*commonpb.SignatureMatch{},
+		Anomalies:        []*commonpb.AnomalyDetection{},
+		AnalyzedAt:       timestamppb.Now(),
+	}
 }
 
 func (s *Server) UpdateSecurityRules() error {
@@ -1308,13 +1671,8 @@ func (s *Server) UpdateSecurityRules() error {
 	return nil
 }
 
-func (s *Server) GetAuditSummary() map[string]interface{} {
-	return map[string]interface{}{
-		"total_events":    0,
-		"security_events": 0,
-		"error_events":    0,
-		"last_event":      time.Now().UTC(),
-	}
+func (s *Server) GetAuditSummary() []*commonpb.AuditEvent {
+	return []*commonpb.AuditEvent{}
 }
 
 func (s *Server) ExportAuditLogs(startTime, endTime time.Time) ([]byte, error) {
@@ -1322,43 +1680,41 @@ func (s *Server) ExportAuditLogs(startTime, endTime time.Time) ([]byte, error) {
 		zap.Time("start", startTime),
 		zap.Time("end", endTime))
 
-	auditData := map[string]interface{}{
-		"export_time": time.Now().UTC(),
-		"start_time":  startTime,
-		"end_time":    endTime,
-		"events":      []interface{}{},
-	}
-
+	auditData := []*commonpb.AuditEvent{}
 	return json.Marshal(auditData)
 }
 
-func (s *Server) TestConnectivity() map[string]interface{} {
-	results := make(map[string]interface{})
+func (s *Server) TestConnectivity() []*commonpb.ComponentHealth {
+	results := []*commonpb.ComponentHealth{}
 
-	results["database"] = s.testDatabaseConnectivity()
-	results["auth_service"] = s.testAuthServiceConnectivity()
+	results = append(results, s.testDatabaseConnectivity())
+	results = append(results, s.testAuthServiceConnectivity())
 
 	return results
 }
 
-func (s *Server) testDatabaseConnectivity() map[string]interface{} {
+func (s *Server) testDatabaseConnectivity() *commonpb.ComponentHealth {
 	start := time.Now()
 	err := s.db.HealthCheck()
 	duration := time.Since(start)
 
-	return map[string]interface{}{
-		"status":   err == nil,
-		"duration": duration.Milliseconds(),
-		"error":    func() string {
-			if err != nil {
-				return err.Error()
-			}
-			return ""
-		}(),
+	status := commonpb.Status_STATUS_SUCCESS
+	message := "healthy"
+	if err != nil {
+		status = commonpb.Status_STATUS_ERROR
+		message = err.Error()
+	}
+
+	return &commonpb.ComponentHealth{
+		Name:         "database",
+		Status:       status,
+		Message:      message,
+		LastCheck:    timestamppb.Now(),
+		ResponseTime: durationpb.New(duration),
 	}
 }
 
-func (s *Server) testAuthServiceConnectivity() map[string]interface{} {
+func (s *Server) testAuthServiceConnectivity() *commonpb.ComponentHealth {
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -1366,15 +1722,19 @@ func (s *Server) testAuthServiceConnectivity() map[string]interface{} {
 	_, err := s.authClient.HealthCheck(ctx, &authpb.HealthCheckRequest{})
 	duration := time.Since(start)
 
-	return map[string]interface{}{
-		"status":   err == nil,
-		"duration": duration.Milliseconds(),
-		"error":    func() string {
-			if err != nil {
-				return err.Error()
-			}
-			return ""
-		}(),
+	status := commonpb.Status_STATUS_SUCCESS
+	message := "healthy"
+	if err != nil {
+		status = commonpb.Status_STATUS_ERROR
+		message = err.Error()
+	}
+
+	return &commonpb.ComponentHealth{
+		Name:         "auth_service",
+		Status:       status,
+		Message:      message,
+		LastCheck:    timestamppb.Now(),
+		ResponseTime: durationpb.New(duration),
 	}
 }
 
@@ -1382,13 +1742,14 @@ func (s *Server) GetVersion() string {
 	return "1.0.0"
 }
 
-func (s *Server) GetBuildInfo() map[string]interface{} {
-	return map[string]interface{}{
-		"version":    "1.0.0",
-		"build_time": time.Now().Format(time.RFC3339),
-		"git_commit": "unknown",
-		"go_version": runtime.Version(),
-		"platform":   runtime.GOOS + "/" + runtime.GOARCH,
+func (s *Server) GetBuildInfo() *commonpb.SystemInfo {
+	return &commonpb.SystemInfo{
+		ServiceName:  "gateway",
+		Version:      "1.0.0",
+		BuildCommit:  "unknown",
+		BuildTime:    timestamppb.Now(),
+		Environment:  string(s.config.Environment),
+		StartTime:    timestamppb.New(s.startTime),
 	}
 }
 
@@ -1413,23 +1774,52 @@ func (s *Server) Cleanup() error {
 
 func ValidateServerConfig(cfg *config.Config) error {
 	if cfg.Gateway.HTTPPort == cfg.Gateway.GRPCPort {
-		return errors.New(errors.ErrCodeConfigError, "HTTP and gRPC ports cannot be the same")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "HTTP and gRPC ports cannot be the same",
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if cfg.Gateway.HTTPPort < 1024 && os.Getuid() != 0 {
-		return errors.New(errors.ErrCodeConfigError, "privileged port requires root access")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INSUFFICIENT_PERMISSIONS,
+			Message:   "privileged port requires root access",
+			Details:   fmt.Sprintf("HTTP port: %d", cfg.Gateway.HTTPPort),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if cfg.Gateway.GRPCPort < 1024 && os.Getuid() != 0 {
-		return errors.New(errors.ErrCodeConfigError, "privileged port requires root access")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INSUFFICIENT_PERMISSIONS,
+			Message:   "privileged port requires root access",
+			Details:   fmt.Sprintf("gRPC port: %d", cfg.Gateway.GRPCPort),
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if cfg.Gateway.RequestTimeout < time.Second {
-		return errors.New(errors.ErrCodeConfigError, "request timeout too short")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "request timeout too short",
+			Details:   cfg.Gateway.RequestTimeout.String(),
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	if cfg.Gateway.MaxConcurrentRequests < 1 {
-		return errors.New(errors.ErrCodeConfigError, "max concurrent requests must be positive")
+		return &commonpb.ErrorDetails{
+			Code:      commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST,
+			Message:   "max concurrent requests must be positive",
+			Details:   fmt.Sprintf("value: %d", cfg.Gateway.MaxConcurrentRequests),
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
+			Timestamp: timestamppb.Now(),
+		}
 	}
 
 	return nil

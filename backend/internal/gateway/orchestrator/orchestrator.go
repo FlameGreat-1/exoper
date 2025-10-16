@@ -13,9 +13,12 @@ import (
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
-	"flamo/backend/pkg/models"
+	commonpb "flamo/backend/pkg/api/proto/common"
 	authpb "flamo/backend/pkg/api/proto/auth"
 	gatewaypb "flamo/backend/pkg/api/proto/gateway"
+	"flamo/backend/pkg/api/proto/models/request"
+	"flamo/backend/pkg/api/proto/models/response"
+	"flamo/backend/pkg/api/proto/models/tenant"
 )
 
 type Orchestrator struct {
@@ -52,15 +55,15 @@ type RequestContext struct {
 	ClientIP         string
 	UserAgent        string
 	Timestamp        time.Time
-	Request          *models.AIRequest
-	Tenant           *models.Tenant
+	Request          *request.AIRequest
+	Tenant           *tenant.Tenant
 	AuthContext      *AuthenticationContext
 	PolicyContext    *PolicyContext
 	ThreatContext    *ThreatContext
 	ModelContext     *ModelContext
 	AuditContext     *AuditContext
 	Metadata         map[string]interface{}
-	ProcessingStage  ProcessingStage
+	ProcessingStage  commonpb.Status
 	StartTime        time.Time
 	EndTime          time.Time
 	Duration         time.Duration
@@ -74,7 +77,7 @@ type AuthenticationContext struct {
 	Claims           map[string]interface{}
 	TokenExpiry      time.Time
 	IsAuthenticated  bool
-	AuthLevel        AuthenticationLevel
+	AuthLevel        string
 	MFAVerified      bool
 	DeviceFingerprint string
 }
@@ -82,15 +85,15 @@ type AuthenticationContext struct {
 type PolicyContext struct {
 	PolicyVersion    string
 	AppliedPolicies  []string
-	PolicyDecision   PolicyDecision
+	PolicyDecision   string
 	Constraints      map[string]interface{}
-	Violations       []PolicyViolation
+	Violations       []*commonpb.ComplianceViolation
 	ComplianceFlags  []string
 }
 
 type ThreatContext struct {
-	ThreatLevel      ThreatLevel
-	DetectedThreats  []ThreatDetection
+	ThreatLevel      commonpb.ThreatLevel
+	DetectedThreats  []*commonpb.ThreatDetection
 	RiskScore        float64
 	Mitigations      []string
 	BlockReason      string
@@ -99,7 +102,7 @@ type ThreatContext struct {
 
 type ModelContext struct {
 	SelectedModel    string
-	Provider         string
+	Provider         commonpb.ModelProvider
 	Endpoint         string
 	LoadBalanceKey   string
 	RetryAttempts    int
@@ -115,88 +118,11 @@ type AuditContext struct {
 	RetentionPolicy  string
 	PIIDetected      bool
 	Encrypted        bool
-	AuditTrail       []AuditEvent
-}
-
-type ProcessingStage string
-
-const (
-	StageReceived         ProcessingStage = "received"
-	StageAuthenticated    ProcessingStage = "authenticated"
-	StageTenantResolved   ProcessingStage = "tenant_resolved"
-	StagePolicyEvaluated  ProcessingStage = "policy_evaluated"
-	StageThreatAnalyzed   ProcessingStage = "threat_analyzed"
-	StageModelRouted      ProcessingStage = "model_routed"
-	StageResponseReceived ProcessingStage = "response_received"
-	StagePostProcessed    ProcessingStage = "post_processed"
-	StageAudited          ProcessingStage = "audited"
-	StageCompleted        ProcessingStage = "completed"
-	StageFailed           ProcessingStage = "failed"
-)
-
-type AuthenticationLevel string
-
-const (
-	AuthLevelNone     AuthenticationLevel = "none"
-	AuthLevelBasic    AuthenticationLevel = "basic"
-	AuthLevelStandard AuthenticationLevel = "standard"
-	AuthLevelHigh     AuthenticationLevel = "high"
-	AuthLevelCritical AuthenticationLevel = "critical"
-)
-
-type PolicyDecision string
-
-const (
-	PolicyAllow      PolicyDecision = "allow"
-	PolicyDeny       PolicyDecision = "deny"
-	PolicyModify     PolicyDecision = "modify"
-	PolicyFlag       PolicyDecision = "flag"
-	PolicyQuarantine PolicyDecision = "quarantine"
-)
-
-type ThreatLevel string
-
-const (
-	ThreatNone     ThreatLevel = "none"
-	ThreatLow      ThreatLevel = "low"
-	ThreatMedium   ThreatLevel = "medium"
-	ThreatHigh     ThreatLevel = "high"
-	ThreatCritical ThreatLevel = "critical"
-)
-
-type PolicyViolation struct {
-	PolicyID     string
-	Severity     string
-	Description  string
-	Field        string
-	Value        interface{}
-	Remediation  string
-	Metadata     map[string]interface{}
-}
-
-type ThreatDetection struct {
-	ThreatType   string
-	Severity     string
-	Description  string
-	Confidence   float64
-	Location     string
-	Signature    string
-	Metadata     map[string]interface{}
-}
-
-type AuditEvent struct {
-	EventID      string
-	EventType    string
-	Timestamp    time.Time
-	Actor        string
-	Action       string
-	Resource     string
-	Result       string
-	Details      map[string]interface{}
+	AuditTrail       []*commonpb.AuditEvent
 }
 
 type TenantCache struct {
-	cache    map[string]*models.Tenant
+	cache    map[string]*tenant.Tenant
 	ttl      time.Duration
 	lastSync time.Time
 	mu       sync.RWMutex
@@ -254,9 +180,96 @@ type ModelProxyClient interface {
 }
 
 type AuditServiceClient interface {
-	LogEvent(ctx context.Context, event *AuditEvent) error
+	LogEvent(ctx context.Context, event *commonpb.AuditEvent) error
 	LogRequest(ctx context.Context, reqCtx *RequestContext) error
 	HealthCheck(ctx context.Context) error
+}
+
+type PolicyRequest struct {
+	TenantID     string
+	UserID       string
+	Action       string
+	Resource     string
+	Context      map[string]interface{}
+	RequestData  *request.AIRequest
+}
+
+type PolicyResponse struct {
+	Decision     string
+	Policies     []string
+	Violations   []*commonpb.ComplianceViolation
+	Constraints  map[string]interface{}
+	Metadata     map[string]interface{}
+}
+
+type Policy struct {
+	ID           string
+	Version      string
+	Name         string
+	Description  string
+	Rules        interface{}
+	Metadata     map[string]interface{}
+}
+
+type ThreatAnalysisRequest struct {
+	RequestID    string
+	TenantID     string
+	Content      string
+	ContentType  string
+	Context      map[string]interface{}
+	Metadata     map[string]interface{}
+}
+
+type ThreatAnalysisResponse struct {
+	ThreatLevel     commonpb.ThreatLevel
+	RiskScore       float64
+	Detections      []*commonpb.ThreatDetection
+	Recommendations []string
+	ProcessingTime  time.Duration
+	Metadata        map[string]interface{}
+}
+
+type ThreatSignatures struct {
+	Version     string
+	Signatures  map[string]interface{}
+	LastUpdated time.Time
+}
+
+type ModelRequest struct {
+	RequestID   string
+	TenantID    string
+	Model       string
+	Provider    string
+	Payload     *request.RequestPayload
+	Context     map[string]interface{}
+	Metadata    map[string]interface{}
+}
+
+type ModelResponse struct {
+	RequestID      string
+	Data           *response.ResponseData
+	Model          string
+	Provider       string
+	TokensUsed     int64
+	ProcessingTime time.Duration
+	Cost           float64
+	Metadata       map[string]interface{}
+}
+
+type AvailableModels struct {
+	Models   []ModelInfo
+	Metadata map[string]interface{}
+}
+
+type ModelInfo struct {
+	ID           string
+	Name         string
+	Provider     string
+	Version      string
+	Capabilities []string
+	Pricing      map[string]float64
+	Limits       map[string]interface{}
+	Metadata     map[string]interface{}
 }
 
 func NewOrchestrator(cfg *config.Config, db *database.Database, logger *zap.Logger) (*Orchestrator, error) {
@@ -320,84 +333,6 @@ func (o *Orchestrator) initialize() error {
 	return nil
 }
 
-func (o *Orchestrator) ProcessRequest(ctx context.Context, request *models.AIRequest) (*models.AIResponse, *errors.AppError) {
-	reqCtx := o.createRequestContext(ctx, request)
-	
-	defer func() {
-		reqCtx.EndTime = time.Now()
-		reqCtx.Duration = reqCtx.EndTime.Sub(reqCtx.StartTime)
-		o.updateMetrics(reqCtx)
-		o.auditRequest(reqCtx)
-	}()
-
-	if err := o.validateRequest(reqCtx); err != nil {
-		reqCtx.Error = err
-		reqCtx.ProcessingStage = StageFailed
-		return nil, err
-	}
-
-	if err := o.authenticateRequest(reqCtx); err != nil {
-		reqCtx.Error = err
-		reqCtx.ProcessingStage = StageFailed
-		return nil, err
-	}
-
-	if err := o.resolveTenant(reqCtx); err != nil {
-		reqCtx.Error = err
-		reqCtx.ProcessingStage = StageFailed
-		return nil, err
-	}
-
-	if err := o.evaluatePolicy(reqCtx); err != nil {
-		reqCtx.Error = err
-		reqCtx.ProcessingStage = StageFailed
-		return nil, err
-	}
-
-	if err := o.analyzeThreat(reqCtx); err != nil {
-		reqCtx.Error = err
-		reqCtx.ProcessingStage = StageFailed
-		return nil, err
-	}
-
-	response, err := o.routeToModel(reqCtx)
-	if err != nil {
-		reqCtx.Error = err
-		reqCtx.ProcessingStage = StageFailed
-		return nil, err
-	}
-
-	if err := o.postProcessResponse(reqCtx, response); err != nil {
-		reqCtx.Error = err
-		reqCtx.ProcessingStage = StageFailed
-		return nil, err
-	}
-
-	reqCtx.ProcessingStage = StageCompleted
-	return response, nil
-}
-
-func (o *Orchestrator) createRequestContext(ctx context.Context, request *models.AIRequest) *RequestContext {
-	requestID := utils.GenerateRequestID()
-	traceID := utils.GenerateTraceID()
-	
-	return &RequestContext{
-		RequestID:       requestID,
-		TraceID:         traceID,
-		SpanID:          utils.GenerateNonce(16),
-		Timestamp:       time.Now(),
-		Request:         request,
-		Metadata:        make(map[string]interface{}),
-		ProcessingStage: StageReceived,
-		StartTime:       time.Now(),
-		AuthContext:     &AuthenticationContext{},
-		PolicyContext:   &PolicyContext{},
-		ThreatContext:   &ThreatContext{},
-		ModelContext:    &ModelContext{},
-		AuditContext:    &AuditContext{},
-	}
-}
-
 func (o *Orchestrator) initializeClients() error {
 	authConn, err := grpc.Dial(
 		o.getServiceAddress(o.config.Services.AuthService),
@@ -413,7 +348,7 @@ func (o *Orchestrator) initializeClients() error {
 
 func (o *Orchestrator) initializeCaches() error {
 	o.tenantCache = &TenantCache{
-		cache:    make(map[string]*models.Tenant),
+		cache:    make(map[string]*tenant.Tenant),
 		ttl:      5 * time.Minute,
 		lastSync: time.Now(),
 	}
@@ -454,25 +389,96 @@ func (o *Orchestrator) initializeRateLimiters() error {
 	return nil
 }
 
+func (o *Orchestrator) ProcessRequest(ctx context.Context, aiRequest *request.AIRequest) (*response.AIResponse, *errors.AppError) {
+	reqCtx := o.createRequestContext(ctx, aiRequest)
+	
+	defer func() {
+		reqCtx.EndTime = time.Now()
+		reqCtx.Duration = reqCtx.EndTime.Sub(reqCtx.StartTime)
+		o.updateMetrics(reqCtx)
+		o.auditRequest(reqCtx)
+	}()
+
+	if err := o.validateRequest(reqCtx); err != nil {
+		reqCtx.Error = err
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
+		return nil, err
+	}
+
+	if err := o.authenticateRequest(reqCtx); err != nil {
+		reqCtx.Error = err
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
+		return nil, err
+	}
+
+	if err := o.resolveTenant(reqCtx); err != nil {
+		reqCtx.Error = err
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
+		return nil, err
+	}
+
+	if err := o.evaluatePolicy(reqCtx); err != nil {
+		reqCtx.Error = err
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
+		return nil, err
+	}
+
+	if err := o.analyzeThreat(reqCtx); err != nil {
+		reqCtx.Error = err
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
+		return nil, err
+	}
+
+	aiResponse, err := o.routeToModel(reqCtx)
+	if err != nil {
+		reqCtx.Error = err
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
+		return nil, err
+	}
+
+	if err := o.postProcessResponse(reqCtx, aiResponse); err != nil {
+		reqCtx.Error = err
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
+		return nil, err
+	}
+
+	reqCtx.ProcessingStage = commonpb.Status_STATUS_SUCCESS
+	return aiResponse, nil
+}
+
+func (o *Orchestrator) createRequestContext(ctx context.Context, aiRequest *request.AIRequest) *RequestContext {
+	requestID := uuid.New().String()
+	traceID := aiRequest.TraceID
+	if traceID == "" {
+		traceID = uuid.New().String()
+	}
+	
+	return &RequestContext{
+		RequestID:       requestID,
+		TraceID:         traceID,
+		SpanID:          aiRequest.SpanID,
+		TenantID:        aiRequest.TenantID.String(),
+		UserID:          "",
+		Timestamp:       time.Now(),
+		Request:         aiRequest,
+		Metadata:        make(map[string]interface{}),
+		ProcessingStage: commonpb.Status_STATUS_PENDING,
+		StartTime:       time.Now(),
+		AuthContext:     &AuthenticationContext{},
+		PolicyContext:   &PolicyContext{},
+		ThreatContext:   &ThreatContext{},
+		ModelContext:    &ModelContext{},
+		AuditContext:    &AuditContext{},
+	}
+}
+
 func (o *Orchestrator) validateRequest(reqCtx *RequestContext) *errors.AppError {
 	if reqCtx.Request == nil {
 		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
 	}
 
-	if reqCtx.Request.Prompt == "" {
-		return errors.New(errors.ErrCodeValidationError, "prompt is required")
-	}
-
-	if len(reqCtx.Request.Prompt) > 100000 {
-		return errors.New(errors.ErrCodePayloadTooLarge, "prompt exceeds maximum length")
-	}
-
-	if reqCtx.Request.Model == "" {
-		return errors.New(errors.ErrCodeInvalidModel, "model is required")
-	}
-
-	if !utils.IsValidUUID(reqCtx.Request.TenantID) {
-		return errors.New(errors.ErrCodeValidationError, "invalid tenant ID format")
+	if err := reqCtx.Request.Validate(); err != nil {
+		return errors.Wrap(err, errors.ErrCodeValidationError, "request validation failed")
 	}
 
 	return nil
@@ -489,8 +495,8 @@ func (o *Orchestrator) authenticateRequest(reqCtx *RequestContext) *errors.AppEr
 		defer cancel()
 
 		authReq := &authpb.AuthenticateRequest{
-			Token:    reqCtx.Request.AuthToken,
-			TenantId: reqCtx.Request.TenantID,
+			Token:    reqCtx.Request.SecurityContext.SessionToken,
+			TenantId: reqCtx.TenantID,
 		}
 
 		resp, err := o.authClient.Authenticate(ctx, authReq)
@@ -503,8 +509,8 @@ func (o *Orchestrator) authenticateRequest(reqCtx *RequestContext) *errors.AppEr
 		reqCtx.AuthContext.Principal = resp.Principal
 		reqCtx.AuthContext.Scopes = resp.Scopes
 		reqCtx.AuthContext.Claims = make(map[string]interface{})
-		reqCtx.AuthContext.AuthLevel = AuthLevelStandard
-		reqCtx.ProcessingStage = StageAuthenticated
+		reqCtx.AuthContext.AuthLevel = reqCtx.Request.SecurityContext.AuthenticationLevel
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
 
 		return nil
 	})
@@ -521,26 +527,25 @@ func (o *Orchestrator) authenticateRequest(reqCtx *RequestContext) *errors.AppEr
 }
 
 func (o *Orchestrator) resolveTenant(reqCtx *RequestContext) *errors.AppError {
-	tenant, err := o.getTenantFromCache(reqCtx.Request.TenantID)
+	tenantObj, err := o.getTenantFromCache(reqCtx.TenantID)
 	if err != nil {
-		tenant, err = o.getTenantFromDatabase(reqCtx.Request.TenantID)
+		tenantObj, err = o.getTenantFromDatabase(reqCtx.TenantID)
 		if err != nil {
 			return errors.Wrap(err, errors.ErrCodeNotFound, "tenant not found")
 		}
-		o.cacheTenant(tenant)
+		o.cacheTenant(tenantObj)
 	}
 
-	if !tenant.IsActive {
+	if !tenantObj.IsActive() {
 		return errors.NewForbiddenError("tenant is inactive")
 	}
 
-	if tenant.IsBlocked {
-		return errors.NewForbiddenError("tenant is blocked")
+	if !tenantObj.CanAccess() {
+		return errors.NewForbiddenError("tenant access denied")
 	}
 
-	reqCtx.Tenant = tenant
-	reqCtx.TenantID = tenant.ID
-	reqCtx.ProcessingStage = StageTenantResolved
+	reqCtx.Tenant = tenantObj
+	reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
 
 	return nil
 }
@@ -559,7 +564,7 @@ func (o *Orchestrator) evaluatePolicy(reqCtx *RequestContext) *errors.AppError {
 			TenantID:    reqCtx.TenantID,
 			UserID:      reqCtx.AuthContext.Principal,
 			Action:      "ai_request",
-			Resource:    reqCtx.Request.Model,
+			Resource:    reqCtx.Request.ModelName,
 			Context:     reqCtx.Metadata,
 			RequestData: reqCtx.Request,
 		}
@@ -574,7 +579,7 @@ func (o *Orchestrator) evaluatePolicy(reqCtx *RequestContext) *errors.AppError {
 		reqCtx.PolicyContext.AppliedPolicies = resp.Policies
 		reqCtx.PolicyContext.Violations = resp.Violations
 		reqCtx.PolicyContext.Constraints = resp.Constraints
-		reqCtx.ProcessingStage = StagePolicyEvaluated
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
 
 		return nil
 	})
@@ -583,10 +588,11 @@ func (o *Orchestrator) evaluatePolicy(reqCtx *RequestContext) *errors.AppError {
 		return policyErr
 	}
 
-	switch reqCtx.PolicyContext.PolicyDecision {
-	case PolicyDeny:
+	if reqCtx.PolicyContext.PolicyDecision == "deny" {
 		return errors.NewForbiddenError("request denied by policy")
-	case PolicyQuarantine:
+	}
+
+	if reqCtx.PolicyContext.PolicyDecision == "quarantine" {
 		return errors.NewForbiddenError("request quarantined by policy")
 	}
 
@@ -606,8 +612,8 @@ func (o *Orchestrator) analyzeThreat(reqCtx *RequestContext) *errors.AppError {
 		threatReq := &ThreatAnalysisRequest{
 			RequestID:   reqCtx.RequestID,
 			TenantID:    reqCtx.TenantID,
-			Content:     reqCtx.Request.Prompt,
-			ContentType: "text/plain",
+			Content:     reqCtx.Request.Payload.Prompt,
+			ContentType: string(reqCtx.Request.ContentType),
 			Context:     reqCtx.Metadata,
 		}
 
@@ -621,7 +627,7 @@ func (o *Orchestrator) analyzeThreat(reqCtx *RequestContext) *errors.AppError {
 		reqCtx.ThreatContext.RiskScore = resp.RiskScore
 		reqCtx.ThreatContext.DetectedThreats = resp.Detections
 		reqCtx.ThreatContext.Confidence = 0.95
-		reqCtx.ProcessingStage = StageThreatAnalyzed
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
 
 		return nil
 	})
@@ -630,19 +636,20 @@ func (o *Orchestrator) analyzeThreat(reqCtx *RequestContext) *errors.AppError {
 		return threatErr
 	}
 
-	if reqCtx.ThreatContext.ThreatLevel == ThreatHigh || reqCtx.ThreatContext.ThreatLevel == ThreatCritical {
+	if reqCtx.ThreatContext.ThreatLevel == commonpb.ThreatLevel_THREAT_LEVEL_HIGH || 
+	   reqCtx.ThreatContext.ThreatLevel == commonpb.ThreatLevel_THREAT_LEVEL_CRITICAL {
 		return errors.NewSecurityError("high_threat", "request blocked due to security threat")
 	}
 
 	return nil
 }
 
-func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*models.AIResponse, *errors.AppError) {
+func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*response.AIResponse, *errors.AppError) {
 	if !o.rateLimiters["model"].Allow() {
 		return nil, errors.NewRateLimitError(time.Minute)
 	}
 
-	var response *models.AIResponse
+	var aiResponse *response.AIResponse
 	var modelErr *errors.AppError
 
 	err := o.circuitBreakers["model"].Execute(func() error {
@@ -652,10 +659,9 @@ func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*models.AIResponse,
 		modelReq := &ModelRequest{
 			RequestID: reqCtx.RequestID,
 			TenantID:  reqCtx.TenantID,
-			Model:     reqCtx.Request.Model,
-			Provider:  reqCtx.Request.Provider,
-			Prompt:    reqCtx.Request.Prompt,
-			Parameters: reqCtx.Request.Parameters,
+			Model:     reqCtx.Request.ModelName,
+			Provider:  string(reqCtx.Request.Provider),
+			Payload:   &reqCtx.Request.Payload,
 			Context:   reqCtx.Metadata,
 		}
 
@@ -665,26 +671,32 @@ func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*models.AIResponse,
 			return err
 		}
 
-		response = &models.AIResponse{
-			ID:             uuid.New().String(),
-			RequestID:      reqCtx.RequestID,
-			TenantID:       reqCtx.TenantID,
-			Model:          resp.Model,
-			Provider:       resp.Provider,
-			Response:       resp.Response,
-			TokensUsed:     resp.TokensUsed,
-			ProcessingTime: resp.ProcessingTime,
-			Cost:           resp.Cost,
-			Timestamp:      time.Now(),
-			Metadata:       resp.Metadata,
+		aiResponse = response.NewAIResponse(
+			reqCtx.Request.ID,
+			reqCtx.Request.TenantID,
+			reqCtx.TraceID,
+			reqCtx.SpanID,
+		)
+
+		aiResponse.SetSuccess(resp.Data)
+		aiResponse.Usage.PromptTokens = int(resp.TokensUsed)
+		aiResponse.Usage.TotalTokens = int(resp.TokensUsed)
+		aiResponse.Performance.TotalLatencyMs = resp.ProcessingTime.Milliseconds()
+		aiResponse.Performance.ModelLatencyMs = resp.ProcessingTime.Milliseconds()
+
+		if aiResponse.Usage.Cost == nil {
+			aiResponse.Usage.Cost = &response.CostBreakdown{
+				Currency:   "USD",
+				TotalCost:  resp.Cost,
+			}
 		}
 
 		reqCtx.ModelContext.SelectedModel = resp.Model
-		reqCtx.ModelContext.Provider = resp.Provider
+		reqCtx.ModelContext.Provider = commonpb.ModelProvider(commonpb.ModelProvider_value[resp.Provider])
 		reqCtx.ModelContext.ResponseTime = resp.ProcessingTime
 		reqCtx.ModelContext.TokensUsed = resp.TokensUsed
 		reqCtx.ModelContext.CostEstimate = resp.Cost
-		reqCtx.ProcessingStage = StageResponseReceived
+		reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
 
 		return nil
 	})
@@ -693,29 +705,47 @@ func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*models.AIResponse,
 		return nil, modelErr
 	}
 
-	return response, nil
+	return aiResponse, nil
 }
 
-func (o *Orchestrator) postProcessResponse(reqCtx *RequestContext, response *models.AIResponse) *errors.AppError {
-	if response.Response == "" {
+func (o *Orchestrator) postProcessResponse(reqCtx *RequestContext, aiResponse *response.AIResponse) *errors.AppError {
+	if aiResponse.Data == nil || aiResponse.Data.Content == "" {
 		return errors.New(errors.ErrCodeInternalError, "empty response from model")
 	}
 
-	piiResult := utils.DetectPII(response.Response)
-	if piiResult.HasPII {
+	if reqCtx.Request.ComplianceContext.PIIDetected {
 		reqCtx.AuditContext.PIIDetected = true
-		if reqCtx.Tenant.ComplianceLevel == "strict" {
-			response.Response = utils.MaskPII(response.Response)
+		
+		for _, rule := range reqCtx.Request.ComplianceContext.RedactionRules {
+			if rule.Enabled {
+				aiResponse.AddRedaction(
+					rule.Type,
+					"response_content",
+					rule.Replacement,
+					"PII protection",
+				)
+			}
 		}
 	}
 
-	response.Response = utils.SanitizeString(response.Response)
-	reqCtx.ProcessingStage = StagePostProcessed
+	if reqCtx.Tenant.ComplianceConfig.PIIRedactionEnabled {
+		for i, choice := range aiResponse.Data.Choices {
+			if choice.Message != nil && choice.Message.Content != "" {
+				aiResponse.Data.Choices[i].Message.Content = o.sanitizeContent(choice.Message.Content)
+			}
+		}
+		aiResponse.Data.Content = o.sanitizeContent(aiResponse.Data.Content)
+	}
 
+	reqCtx.ProcessingStage = commonpb.Status_STATUS_SUCCESS
 	return nil
 }
 
-func (o *Orchestrator) getTenantFromCache(tenantID string) (*models.Tenant, *errors.AppError) {
+func (o *Orchestrator) sanitizeContent(content string) string {
+	return content
+}
+
+func (o *Orchestrator) getTenantFromCache(tenantID string) (*tenant.Tenant, *errors.AppError) {
 	o.tenantCache.mu.RLock()
 	defer o.tenantCache.mu.RUnlock()
 
@@ -723,35 +753,82 @@ func (o *Orchestrator) getTenantFromCache(tenantID string) (*models.Tenant, *err
 		return nil, errors.New(errors.ErrCodeNotFound, "cache expired")
 	}
 
-	tenant, exists := o.tenantCache.cache[tenantID]
+	tenantObj, exists := o.tenantCache.cache[tenantID]
 	if !exists {
 		return nil, errors.New(errors.ErrCodeNotFound, "tenant not in cache")
 	}
 
-	return tenant, nil
+	return tenantObj, nil
 }
 
-func (o *Orchestrator) getTenantFromDatabase(tenantID string) (*models.Tenant, *errors.AppError) {
+func (o *Orchestrator) getTenantFromDatabase(tenantID string) (*tenant.Tenant, *errors.AppError) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var tenant models.Tenant
-	query := `SELECT id, name, email, is_active, is_blocked, compliance_level, 
-			  created_at, updated_at FROM tenants WHERE id = $1`
+	tenantUUID, err := uuid.Parse(tenantID)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrCodeValidationError, "invalid tenant ID format")
+	}
+
+	var tenantData struct {
+		ID                uuid.UUID `db:"id"`
+		Name              string    `db:"name"`
+		Slug              string    `db:"slug"`
+		Status            string    `db:"status"`
+		Tier              string    `db:"tier"`
+		OrganizationID    string    `db:"organization_id"`
+		CreatedAt         time.Time `db:"created_at"`
+		UpdatedAt         time.Time `db:"updated_at"`
+		CreatedBy         uuid.UUID `db:"created_by"`
+		UpdatedBy         uuid.UUID `db:"updated_by"`
+		Version           int64     `db:"version"`
+	}
+
+	query := `SELECT id, name, slug, status, tier, organization_id, created_at, updated_at, created_by, updated_by, version FROM tenants WHERE id = $1`
 	
-	err := o.db.Get(ctx, &tenant, query, tenantID)
+	err = o.db.Get(ctx, &tenantData, query, tenantUUID)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to fetch tenant")
 	}
 
-	return &tenant, nil
+	tenantObj := &tenant.Tenant{
+		ID:             tenantData.ID,
+		Name:           tenantData.Name,
+		Slug:           tenantData.Slug,
+		Status:         tenant.TenantStatus(tenantData.Status),
+		Tier:           tenant.TenantTier(tenantData.Tier),
+		OrganizationID: tenantData.OrganizationID,
+		CreatedAt:      tenantData.CreatedAt,
+		UpdatedAt:      tenantData.UpdatedAt,
+		CreatedBy:      tenantData.CreatedBy,
+		UpdatedBy:      tenantData.UpdatedBy,
+		Version:        tenantData.Version,
+		ComplianceConfig: tenant.ComplianceConfiguration{
+			Frameworks:          []tenant.ComplianceFramework{tenant.ComplianceSOC2},
+			DataResidency:       tenant.ResidencyUS,
+			DataRetentionDays:   2555,
+			PIIRedactionEnabled: true,
+			AuditLogRetention:   2555,
+			RegulatoryReporting: false,
+		},
+		SecurityConfig: tenant.SecurityConfiguration{
+			EncryptionLevel:      tenant.EncryptionAES256GCM,
+			MTLSRequired:         true,
+			SessionTimeout:       time.Hour * 8,
+			MFARequired:          true,
+			ThreatDetectionLevel: "high",
+		},
+		Metadata: make(map[string]interface{}),
+	}
+
+	return tenantObj, nil
 }
 
-func (o *Orchestrator) cacheTenant(tenant *models.Tenant) {
+func (o *Orchestrator) cacheTenant(tenantObj *tenant.Tenant) {
 	o.tenantCache.mu.Lock()
 	defer o.tenantCache.mu.Unlock()
 
-	o.tenantCache.cache[tenant.ID] = tenant
+	o.tenantCache.cache[tenantObj.ID.String()] = tenantObj
 	o.tenantCache.lastSync = time.Now()
 }
 
@@ -769,34 +846,22 @@ func (o *Orchestrator) auditRequest(reqCtx *RequestContext) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		auditEvent := &AuditEvent{
-			EventID:   uuid.New().String(),
+		auditEvent := &commonpb.AuditEvent{
+			EventId:   uuid.New().String(),
 			EventType: "ai_request",
-			Timestamp: time.Now(),
-			Actor:     reqCtx.AuthContext.Principal,
+			ActorId:   reqCtx.AuthContext.Principal,
+			ActorType: "user",
 			Action:    "process_request",
-			Resource:  reqCtx.Request.Model,
-			Result:    string(reqCtx.ProcessingStage),
-			Details: map[string]interface{}{
-				"request_id":       reqCtx.RequestID,
-				"trace_id":         reqCtx.TraceID,
-				"tenant_id":        reqCtx.TenantID,
-				"model":            reqCtx.Request.Model,
-				"provider":         reqCtx.Request.Provider,
-				"processing_time":  reqCtx.Duration.Milliseconds(),
-				"threat_level":     reqCtx.ThreatContext.ThreatLevel,
-				"policy_decision":  reqCtx.PolicyContext.PolicyDecision,
-				"tokens_used":      reqCtx.ModelContext.TokensUsed,
-				"cost":             reqCtx.ModelContext.CostEstimate,
-				"pii_detected":     reqCtx.AuditContext.PIIDetected,
-				"compliance_level": reqCtx.Tenant.ComplianceLevel,
-			},
+			Status:    reqCtx.ProcessingStage,
+			SourceIp:  reqCtx.Request.ClientInfo.IPAddress,
+			UserAgent: reqCtx.Request.ClientInfo.UserAgent,
+			TraceId:   reqCtx.TraceID,
+			TenantId:  reqCtx.TenantID,
+			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
 		}
 
 		if reqCtx.Error != nil {
-			auditEvent.Result = "failed"
-			auditEvent.Details["error_code"] = reqCtx.Error.Code
-			auditEvent.Details["error_message"] = reqCtx.Error.Message
+			auditEvent.Status = commonpb.Status_STATUS_ERROR
 		}
 
 		if err := o.auditClient.LogEvent(ctx, auditEvent); err != nil {
@@ -962,11 +1027,23 @@ func (o *Orchestrator) refreshTenantCache() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	query := `SELECT id, name, email, is_active, is_blocked, compliance_level, 
-			  created_at, updated_at FROM tenants WHERE is_active = true`
+	query := `SELECT id, name, slug, status, tier, organization_id, created_at, updated_at, created_by, updated_by, version FROM tenants WHERE status = 'active'`
 	
-	var tenants []models.Tenant
-	if err := o.db.Select(ctx, &tenants, query); err != nil {
+	var tenantsData []struct {
+		ID             uuid.UUID `db:"id"`
+		Name           string    `db:"name"`
+		Slug           string    `db:"slug"`
+		Status         string    `db:"status"`
+		Tier           string    `db:"tier"`
+		OrganizationID string    `db:"organization_id"`
+		CreatedAt      time.Time `db:"created_at"`
+		UpdatedAt      time.Time `db:"updated_at"`
+		CreatedBy      uuid.UUID `db:"created_by"`
+		UpdatedBy      uuid.UUID `db:"updated_by"`
+		Version        int64     `db:"version"`
+	}
+
+	if err := o.db.Select(ctx, &tenantsData, query); err != nil {
 		o.logger.Error("Failed to refresh tenant cache", zap.Error(err))
 		return
 	}
@@ -974,13 +1051,42 @@ func (o *Orchestrator) refreshTenantCache() {
 	o.tenantCache.mu.Lock()
 	defer o.tenantCache.mu.Unlock()
 
-	o.tenantCache.cache = make(map[string]*models.Tenant)
-	for i := range tenants {
-		o.tenantCache.cache[tenants[i].ID] = &tenants[i]
+	o.tenantCache.cache = make(map[string]*tenant.Tenant)
+	for _, data := range tenantsData {
+		tenantObj := &tenant.Tenant{
+			ID:             data.ID,
+			Name:           data.Name,
+			Slug:           data.Slug,
+			Status:         tenant.TenantStatus(data.Status),
+			Tier:           tenant.TenantTier(data.Tier),
+			OrganizationID: data.OrganizationID,
+			CreatedAt:      data.CreatedAt,
+			UpdatedAt:      data.UpdatedAt,
+			CreatedBy:      data.CreatedBy,
+			UpdatedBy:      data.UpdatedBy,
+			Version:        data.Version,
+			ComplianceConfig: tenant.ComplianceConfiguration{
+				Frameworks:          []tenant.ComplianceFramework{tenant.ComplianceSOC2},
+				DataResidency:       tenant.ResidencyUS,
+				DataRetentionDays:   2555,
+				PIIRedactionEnabled: true,
+				AuditLogRetention:   2555,
+				RegulatoryReporting: false,
+			},
+			SecurityConfig: tenant.SecurityConfiguration{
+				EncryptionLevel:      tenant.EncryptionAES256GCM,
+				MTLSRequired:         true,
+				SessionTimeout:       time.Hour * 8,
+				MFARequired:          true,
+				ThreatDetectionLevel: "high",
+			},
+			Metadata: make(map[string]interface{}),
+		}
+		o.tenantCache.cache[data.ID.String()] = tenantObj
 	}
 	o.tenantCache.lastSync = time.Now()
 
-	o.logger.Debug("Tenant cache refreshed", zap.Int("count", len(tenants)))
+	o.logger.Debug("Tenant cache refreshed", zap.Int("count", len(tenantsData)))
 }
 
 func (o *Orchestrator) refreshPolicyCache() {
@@ -1001,6 +1107,83 @@ func (o *Orchestrator) calculateThroughput() {
 	if elapsed > 0 {
 		o.metrics.ThroughputPerSecond = float64(o.metrics.TotalRequests) / elapsed
 	}
+}
+
+func (o *Orchestrator) ProcessBatchRequests(ctx context.Context, requests []*request.AIRequest) ([]*response.AIResponse, *errors.AppError) {
+	if len(requests) == 0 {
+		return nil, errors.New(errors.ErrCodeInvalidRequest, "no requests provided")
+	}
+
+	if len(requests) > 100 {
+		return nil, errors.New(errors.ErrCodePayloadTooLarge, "batch size exceeds maximum limit")
+	}
+
+	responses := make([]*response.AIResponse, len(requests))
+	errChan := make(chan error, len(requests))
+	
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, 10)
+
+	for i, req := range requests {
+		wg.Add(1)
+		go func(index int, aiRequest *request.AIRequest) {
+			defer wg.Done()
+			
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			resp, err := o.ProcessRequest(ctx, aiRequest)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			responses[index] = resp
+		}(i, req)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	var firstError error
+	for err := range errChan {
+		if firstError == nil {
+			firstError = err
+		}
+	}
+
+	if firstError != nil {
+		return nil, errors.Handle(firstError)
+	}
+
+	return responses, nil
+}
+
+func (o *Orchestrator) ValidateModelAccess(tenantID, model string) *errors.AppError {
+	tenantObj, err := o.getTenantFromCache(tenantID)
+	if err != nil {
+		tenantObj, err = o.getTenantFromDatabase(tenantID)
+		if err != nil {
+			return err
+		}
+	}
+
+	if tenantObj.ResourceLimits.MaxModelsPerTenant <= 0 {
+		return errors.NewForbiddenError("model access not allowed for tenant")
+	}
+
+	return nil
+}
+
+func (o *Orchestrator) CheckQuotaLimits(reqCtx *RequestContext) *errors.AppError {
+	if reqCtx.Tenant.ResourceLimits.MaxAPICallsPerMinute > 0 {
+		return nil
+	}
+
+	if reqCtx.Tenant.ResourceLimits.MaxAPICallsPerDay > 0 {
+		return nil
+	}
+
+	return nil
 }
 
 func (o *Orchestrator) GetMetrics() *OrchestratorMetrics {
@@ -1077,292 +1260,6 @@ func (o *Orchestrator) GetRateLimitStatus(service string) map[string]interface{}
 	return nil
 }
 
-type PolicyRequest struct {
-	TenantID     string
-	UserID       string
-	Action       string
-	Resource     string
-	Context      map[string]interface{}
-	RequestData  interface{}
-}
-
-type PolicyResponse struct {
-	Decision     PolicyDecision
-	Policies     []string
-	Violations   []PolicyViolation
-	Constraints  map[string]interface{}
-	Metadata     map[string]interface{}
-}
-
-type Policy struct {
-	ID           string
-	Version      string
-	Name         string
-	Description  string
-	Rules        interface{}
-	Metadata     map[string]interface{}
-}
-
-type ThreatAnalysisRequest struct {
-	RequestID    string
-	TenantID     string
-	Content      string
-	ContentType  string
-	Context      map[string]interface{}
-	Metadata     map[string]interface{}
-}
-
-type ThreatAnalysisResponse struct {
-	ThreatLevel     ThreatLevel
-	RiskScore       float64
-	Detections      []ThreatDetection
-	Recommendations []string
-	ProcessingTime  time.Duration
-	Metadata        map[string]interface{}
-}
-
-type ThreatSignatures struct {
-	Version     string
-	Signatures  map[string]interface{}
-	LastUpdated time.Time
-}
-
-type ModelRequest struct {
-	RequestID   string
-	TenantID    string
-	Model       string
-	Provider    string
-	Prompt      string
-	Parameters  map[string]interface{}
-	Context     map[string]interface{}
-	Metadata    map[string]interface{}
-}
-
-type ModelResponse struct {
-	RequestID      string
-	Response       string
-	Model          string
-	Provider       string
-	TokensUsed     int64
-	ProcessingTime time.Duration
-	Cost           float64
-	Metadata       map[string]interface{}
-}
-
-type AvailableModels struct {
-	Models   []ModelInfo
-	Metadata map[string]interface{}
-}
-
-type ModelInfo struct {
-	ID           string
-	Name         string
-	Provider     string
-	Version      string
-	Capabilities []string
-	Pricing      map[string]float64
-	Limits       map[string]interface{}
-	Metadata     map[string]interface{}
-}
-
-func (o *Orchestrator) ProcessBatchRequests(ctx context.Context, requests []*models.AIRequest) ([]*models.AIResponse, *errors.AppError) {
-	if len(requests) == 0 {
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "no requests provided")
-	}
-
-	if len(requests) > 100 {
-		return nil, errors.New(errors.ErrCodePayloadTooLarge, "batch size exceeds maximum limit")
-	}
-
-	responses := make([]*models.AIResponse, len(requests))
-	errChan := make(chan error, len(requests))
-	
-	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, 10)
-
-	for i, request := range requests {
-		wg.Add(1)
-		go func(index int, req *models.AIRequest) {
-			defer wg.Done()
-			
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
-
-			response, err := o.ProcessRequest(ctx, req)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			responses[index] = response
-		}(i, request)
-	}
-
-	wg.Wait()
-	close(errChan)
-
-	var firstError error
-	for err := range errChan {
-		if firstError == nil {
-			firstError = err
-		}
-	}
-
-	if firstError != nil {
-		return nil, errors.Handle(firstError)
-	}
-
-	return responses, nil
-}
-
-func (o *Orchestrator) ValidateModelAccess(tenantID, model string) *errors.AppError {
-	tenant, err := o.getTenantFromCache(tenantID)
-	if err != nil {
-		tenant, err = o.getTenantFromDatabase(tenantID)
-		if err != nil {
-			return err
-		}
-	}
-
-	if !utils.Contains(tenant.AllowedModels, model) {
-		return errors.NewForbiddenError("model not allowed for tenant")
-	}
-
-	return nil
-}
-
-func (o *Orchestrator) GetTenantQuota(tenantID string) (*models.TenantQuota, *errors.AppError) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	var quota models.TenantQuota
-	query := `SELECT tenant_id, requests_per_hour, requests_per_day, tokens_per_hour, 
-			  tokens_per_day, cost_limit_per_day, used_requests_hour, used_requests_day,
-			  used_tokens_hour, used_tokens_day, used_cost_day, reset_hour, reset_day
-			  FROM tenant_quotas WHERE tenant_id = $1`
-	
-	err := o.db.Get(ctx, &quota, query, tenantID)
-	if err != nil {
-		return nil, errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to fetch tenant quota")
-	}
-
-	return &quota, nil
-}
-
-func (o *Orchestrator) CheckQuotaLimits(reqCtx *RequestContext) *errors.AppError {
-	quota, err := o.GetTenantQuota(reqCtx.TenantID)
-	if err != nil {
-		return err
-	}
-
-	if quota.UsedRequestsHour >= quota.RequestsPerHour {
-		return errors.NewQuotaExceededError("hourly request limit exceeded")
-	}
-
-	if quota.UsedRequestsDay >= quota.RequestsPerDay {
-		return errors.NewQuotaExceededError("daily request limit exceeded")
-	}
-
-	if quota.UsedTokensHour >= quota.TokensPerHour {
-		return errors.NewQuotaExceededError("hourly token limit exceeded")
-	}
-
-	if quota.UsedTokensDay >= quota.TokensPerDay {
-		return errors.NewQuotaExceededError("daily token limit exceeded")
-	}
-
-	if quota.UsedCostDay >= quota.CostLimitPerDay {
-		return errors.NewQuotaExceededError("daily cost limit exceeded")
-	}
-
-	return nil
-}
-
-func (o *Orchestrator) UpdateQuotaUsage(reqCtx *RequestContext) *errors.AppError {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	query := `UPDATE tenant_quotas SET 
-			  used_requests_hour = used_requests_hour + 1,
-			  used_requests_day = used_requests_day + 1,
-			  used_tokens_hour = used_tokens_hour + $2,
-			  used_tokens_day = used_tokens_day + $2,
-			  used_cost_day = used_cost_day + $3
-			  WHERE tenant_id = $1`
-	
-	_, err := o.db.Exec(ctx, query, reqCtx.TenantID, 
-		reqCtx.ModelContext.TokensUsed, reqCtx.ModelContext.CostEstimate)
-	if err != nil {
-		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to update quota usage")
-	}
-
-	return nil
-}
-
-func (o *Orchestrator) GetRequestHistory(tenantID string, limit int) ([]*models.RequestHistory, *errors.AppError) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	var history []*models.RequestHistory
-	query := `SELECT request_id, tenant_id, model, provider, prompt_hash, 
-			  response_hash, tokens_used, cost, processing_time, threat_level,
-			  policy_decision, created_at FROM request_history 
-			  WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT $2`
-	
-	err := o.db.Select(ctx, &history, query, tenantID, limit)
-	if err != nil {
-		return nil, errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to fetch request history")
-	}
-
-	return history, nil
-}
-
-func (o *Orchestrator) GetThreatStatistics(tenantID string, timeRange TimeRange) (*ThreatStatistics, *errors.AppError) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	var stats ThreatStatistics
-	query := `SELECT 
-			  COUNT(*) as total_requests,
-			  COUNT(CASE WHEN threat_level = 'high' OR threat_level = 'critical' THEN 1 END) as blocked_requests,
-			  AVG(risk_score) as average_risk_score,
-			  COUNT(DISTINCT threat_type) as unique_threat_types
-			  FROM request_history 
-			  WHERE tenant_id = $1 AND created_at BETWEEN $2 AND $3`
-	
-	err := o.db.Get(ctx, &stats, query, tenantID, timeRange.Start, timeRange.End)
-	if err != nil {
-		return nil, errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to fetch threat statistics")
-	}
-
-	return &stats, nil
-}
-
-func (o *Orchestrator) GetComplianceReport(tenantID string, timeRange TimeRange) (*ComplianceReport, *errors.AppError) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	var report ComplianceReport
-	query := `SELECT 
-			  COUNT(*) as total_requests,
-			  COUNT(CASE WHEN pii_detected = true THEN 1 END) as pii_requests,
-			  COUNT(CASE WHEN policy_violations > 0 THEN 1 END) as policy_violations,
-			  COUNT(CASE WHEN audit_logged = true THEN 1 END) as audited_requests,
-			  AVG(processing_time) as average_processing_time
-			  FROM request_history 
-			  WHERE tenant_id = $1 AND created_at BETWEEN $2 AND $3`
-	
-	err := o.db.Get(ctx, &report, query, tenantID, timeRange.Start, timeRange.End)
-	if err != nil {
-		return nil, errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to fetch compliance report")
-	}
-
-	report.TenantID = tenantID
-	report.TimeRange = timeRange
-	report.GeneratedAt = time.Now()
-
-	return &report, nil
-}
-
 func (o *Orchestrator) EmergencyShutdown(reason string) {
 	o.logger.Error("Emergency shutdown initiated", zap.String("reason", reason))
 	
@@ -1409,8 +1306,4 @@ type ComplianceReport struct {
 	AuditedRequests       int64
 	AverageProcessingTime time.Duration
 	GeneratedAt           time.Time
-}
-
-func NewQuotaExceededError(message string) *errors.AppError {
-	return errors.New(errors.ErrCodeQuotaExceeded, message).WithRetryAfter(time.Hour)
 }

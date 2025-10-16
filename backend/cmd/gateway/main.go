@@ -311,7 +311,7 @@ func initializeLogger(level string) *zap.Logger {
 		},
 		Encoding: "json",
 		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:        "timestamp",
+			TimeKey:        "timestamp",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
 			LevelKey:       "level",
 			NameKey:        "logger",
 			CallerKey:      "caller",
