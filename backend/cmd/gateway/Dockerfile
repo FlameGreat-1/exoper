@@ -1,57 +1,45 @@
-# Multi-stage build for production-grade API Gateway
 FROM golang:1.21-alpine AS builder
 
-# Install security updates and required packages
 RUN apk update && apk add --no-cache \
     git \
     ca-certificates \
     tzdata \
     && update-ca-certificates
 
-# Create appuser for security
 RUN adduser -D -g '' appuser
 
-# Set working directory
 WORKDIR /build
 
-# Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies
 RUN go mod download && go mod verify
 
-# Copy source code
 COPY . .
 
-# Build the binary with security flags
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags='-w -s -extldflags "-static"' \
     -a -installsuffix cgo \
     -o gateway ./cmd/gateway
 
-# Final stage - minimal production image
-FROM scratch
+FROM alpine:latest
 
-# Import from builder
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=builder /etc/passwd /etc/passwd
+RUN apk --no-cache add ca-certificates tzdata curl
 
-# Copy binary
-COPY --from=builder /build/gateway /gateway
+RUN adduser -D -g '' appuser
 
-# Copy configuration
-COPY --from=builder /build/configs /configs
+WORKDIR /app
 
-# Use non-root user
+COPY --from=builder /build/gateway /app/gateway
+COPY --from=builder /build/configs /app/configs
+
+RUN chown -R appuser:appuser /app
+
 USER appuser
 
-# Expose ports
 EXPOSE 8080 9090 8081
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ["/gateway", "health"]
+    CMD curl -f http://localhost:8080/health || exit 1
 
-# Run the binary
-ENTRYPOINT ["/gateway"]
+ENTRYPOINT ["/app/gateway"]
+CMD ["--env=production"]

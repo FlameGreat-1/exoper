@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"flamo/backend/internal/auth/service"
@@ -31,8 +31,6 @@ func NewSessionHandler(authService *service.AuthService, cfg *config.Config, log
 }
 
 func (h *SessionHandler) CreateSession(ctx context.Context, req *authpb.CreateSessionRequest) (*authpb.CreateSessionResponse, error) {
-	startTime := time.Now()
-
 	if err := h.validateCreateSessionRequest(req); err != nil {
 		return h.buildCreateSessionErrorResponse(err), nil
 	}
@@ -42,7 +40,7 @@ func (h *SessionHandler) CreateSession(ctx context.Context, req *authpb.CreateSe
 		duration = req.Duration.AsDuration()
 	}
 
-	attributes := h.convertStructToMap(req.Attributes)
+	attributes := h.convertStructToMap(req.SessionAttributes)
 
 	result, err := h.service.CreateSession(ctx, req.UserId, req.TenantId, duration, attributes, req.RequireMfa)
 	if err != nil {
@@ -54,12 +52,8 @@ func (h *SessionHandler) CreateSession(ctx context.Context, req *authpb.CreateSe
 	}
 
 	response := &authpb.CreateSessionResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Session created successfully",
-		},
-		Result:         h.convertSessionResult(result),
-		ProcessingTime: durationpb.New(time.Since(startTime)),
+		Status: commonpb.Status_STATUS_SUCCESS,
+		Result: h.convertSessionResult(result),
 	}
 
 	h.logger.Info("Session created successfully",
@@ -71,8 +65,6 @@ func (h *SessionHandler) CreateSession(ctx context.Context, req *authpb.CreateSe
 }
 
 func (h *SessionHandler) ValidateSession(ctx context.Context, req *authpb.ValidateSessionRequest) (*authpb.ValidateSessionResponse, error) {
-	startTime := time.Now()
-
 	if err := h.validateSessionRequest(req); err != nil {
 		return h.buildValidateSessionErrorResponse(err), nil
 	}
@@ -91,25 +83,21 @@ func (h *SessionHandler) ValidateSession(ctx context.Context, req *authpb.Valida
 	}
 
 	response := &authpb.ValidateSessionResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Session validation successful",
-		},
-		Result:         h.convertSessionValidationResult(result),
-		ProcessingTime: durationpb.New(time.Since(startTime)),
+		Status: commonpb.Status_STATUS_SUCCESS,
+		Result: h.convertSessionValidationResult(result),
 	}
 
 	return response, nil
 }
 
 func (h *SessionHandler) RevokeSession(ctx context.Context, req *authpb.RevokeSessionRequest) (*authpb.RevokeSessionResponse, error) {
-	startTime := time.Now()
-
 	if err := h.validateRevokeSessionRequest(req); err != nil {
 		return h.buildRevokeSessionErrorResponse(err), nil
 	}
 
-	err := h.service.RevokeSession(ctx, req.SessionId, req.Reason, req.RevokedBy)
+	revokedBy := h.extractRevokedByFromContext(ctx)
+
+	err := h.service.RevokeSession(ctx, req.SessionId, req.Reason, revokedBy)
 	if err != nil {
 		h.logger.Error("Session revocation failed",
 			zap.String("session_id", req.SessionId),
@@ -119,11 +107,8 @@ func (h *SessionHandler) RevokeSession(ctx context.Context, req *authpb.RevokeSe
 	}
 
 	response := &authpb.RevokeSessionResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Session revoked successfully",
-		},
-		ProcessingTime: durationpb.New(time.Since(startTime)),
+		Status:    commonpb.Status_STATUS_SUCCESS,
+		RevokedAt: timestamppb.New(time.Now().UTC()),
 	}
 
 	h.logger.Info("Session revoked successfully",
@@ -208,11 +193,16 @@ func (h *SessionHandler) validateRevokeSessionRequest(req *authpb.RevokeSessionR
 		return errors.New(errors.ErrCodeInvalidRequest, "session ID is required")
 	}
 
-	if req.RevokedBy == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "revoked_by is required")
-	}
-
 	return nil
+}
+
+func (h *SessionHandler) extractRevokedByFromContext(ctx context.Context) string {
+	if principal := ctx.Value("principal"); principal != nil {
+		if p, ok := principal.(*service.Principal); ok {
+			return p.ID
+		}
+	}
+	return "system"
 }
 
 func (h *SessionHandler) convertSessionResult(result *service.SessionResult) *authpb.SessionResult {
@@ -306,6 +296,7 @@ func (h *SessionHandler) convertStructToMap(s *structpb.Struct) map[string]inter
 func (h *SessionHandler) buildCreateSessionErrorResponse(err error) *authpb.CreateSessionResponse {
 	return &authpb.CreateSessionResponse{
 		Status: h.convertErrorToStatus(err),
+		Error:  h.convertErrorToErrorDetails(err),
 	}
 }
 
@@ -315,49 +306,75 @@ func (h *SessionHandler) buildValidateSessionErrorResponse(err error) *authpb.Va
 		Result: &authpb.SessionValidationResult{
 			Valid: false,
 		},
+		Error: h.convertErrorToErrorDetails(err),
 	}
 }
 
 func (h *SessionHandler) buildRevokeSessionErrorResponse(err error) *authpb.RevokeSessionResponse {
 	return &authpb.RevokeSessionResponse{
 		Status: h.convertErrorToStatus(err),
+		Error:  h.convertErrorToErrorDetails(err),
 	}
 }
 
-func (h *SessionHandler) convertErrorToStatus(err error) *commonpb.Status {
-	if customErr, ok := err.(*errors.CustomError); ok {
-		return &commonpb.Status{
-			Code:    h.convertErrorCodeToStatusCode(customErr.Code),
-			Message: customErr.Message,
-			Details: customErr.Details,
+func (h *SessionHandler) convertErrorToStatus(err error) commonpb.Status {
+	if appErr, ok := err.(*errors.AppError); ok {
+		switch appErr.Code {
+		case errors.ErrCodeInvalidRequest:
+			return commonpb.Status_STATUS_ERROR
+		case errors.ErrCodeUnauthorized:
+			return commonpb.Status_STATUS_ERROR
+		case errors.ErrCodeForbidden:
+			return commonpb.Status_STATUS_BLOCKED
+		case errors.ErrCodeNotFound:
+			return commonpb.Status_STATUS_ERROR
+		case errors.ErrCodeConflict:
+			return commonpb.Status_STATUS_ERROR
+		default:
+			return commonpb.Status_STATUS_ERROR
+		}
+	}
+	return commonpb.Status_STATUS_ERROR
+}
+
+func (h *SessionHandler) convertErrorToErrorDetails(err error) *commonpb.ErrorDetails {
+	if appErr, ok := err.(*errors.AppError); ok {
+		return &commonpb.ErrorDetails{
+			Code:      h.convertErrorCodeToCommonErrorCode(appErr.Code),
+			Message:   appErr.Message,
+			Details:   appErr.Details,
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.New(time.Now().UTC()),
 		}
 	}
 
-	return &commonpb.Status{
-		Code:    commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR,
-		Message: err.Error(),
+	return &commonpb.ErrorDetails{
+		Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+		Message:   err.Error(),
+		Severity:  commonpb.Severity_SEVERITY_HIGH,
+		Timestamp: timestamppb.New(time.Now().UTC()),
 	}
 }
 
-func (h *SessionHandler) convertErrorCodeToStatusCode(code errors.ErrorCode) commonpb.StatusCode {
+func (h *SessionHandler) convertErrorCodeToCommonErrorCode(code errors.ErrorCode) commonpb.ErrorCode {
 	switch code {
 	case errors.ErrCodeInvalidRequest:
-		return commonpb.StatusCode_STATUS_CODE_INVALID_ARGUMENT
+		return commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST
 	case errors.ErrCodeUnauthorized:
-		return commonpb.StatusCode_STATUS_CODE_UNAUTHENTICATED
+		return commonpb.ErrorCode_ERROR_CODE_UNAUTHORIZED
 	case errors.ErrCodeForbidden:
-		return commonpb.StatusCode_STATUS_CODE_PERMISSION_DENIED
+		return commonpb.ErrorCode_ERROR_CODE_FORBIDDEN
 	case errors.ErrCodeNotFound:
-		return commonpb.StatusCode_STATUS_CODE_NOT_FOUND
+		return commonpb.ErrorCode_ERROR_CODE_NOT_FOUND
 	case errors.ErrCodeConflict:
-		return commonpb.StatusCode_STATUS_CODE_ALREADY_EXISTS
+		return commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR
 	case errors.ErrCodeDatabaseError:
-		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
+		return commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR
 	case errors.ErrCodeConfigError:
-		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
+		return commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR
 	case errors.ErrCodeServiceUnavailable:
-		return commonpb.StatusCode_STATUS_CODE_UNAVAILABLE
+		return commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR
 	default:
-		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
+		return commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR
 	}
 }

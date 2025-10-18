@@ -1,8 +1,12 @@
+
 package routing
 
 import (
 	"context"
 	"fmt"
+	"encoding/json"
+	"io"
+	"net/http"
 	"hash/fnv"
 	"math/rand"
 	"net/url"
@@ -16,7 +20,6 @@ import (
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
-	"flamo/backend/pkg/models"
 )
 
 type Router struct {
@@ -320,7 +323,7 @@ func (r *Router) RouteRequest(request *RoutingRequest) (*RoutingResult, *errors.
 
 	endpoints := r.getHealthyEndpoints(route)
 	if len(endpoints) == 0 {
-		return nil, errors.NewServiceUnavailableError("no healthy endpoints available")
+		return nil, errors.New(errors.ErrCodeServiceUnavailable, "no healthy endpoints available")
 	}
 
 	loadBalancer := r.loadBalancers[string(route.LoadBalanceType)]
@@ -393,7 +396,7 @@ func (r *Router) matchesPath(routePath, requestPath string) bool {
 
 	if strings.Contains(routePath, "*") {
 		pattern := strings.ReplaceAll(routePath, "*", ".*")
-		matched, _ := utils.MatchPattern(pattern, requestPath)
+		matched := utils.MatchPattern(pattern, requestPath)
 		return matched
 	}
 
@@ -423,7 +426,7 @@ func (r *Router) selectEndpoint(loadBalancer LoadBalancer, endpoints []*Endpoint
 	}
 	
 	if endpoint == nil {
-		return nil, errors.NewServiceUnavailableError("no endpoint selected")
+		return nil, errors.New(errors.ErrCodeServiceUnavailable, "no endpoint selected")
 	}
 	
 	endpoint.RequestCount++

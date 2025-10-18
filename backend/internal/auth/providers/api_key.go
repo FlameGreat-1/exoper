@@ -2,8 +2,6 @@ package providers
 
 import (
 	"context"
-	"crypto/subtle"
-	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -262,7 +260,6 @@ func (p *APIKeyProvider) validateSignature(credentials *authpb.APIKeyCredentials
 		credentials.Nonce,
 		credentials.Key)
 
-	expectedSignature := utils.GenerateHMAC(message, keyData.KeyHash)
 	
 	if !utils.VerifyHMAC(message, credentials.Signature, keyData.KeyHash) {
 		return errors.New(errors.ErrCodeUnauthorized, "invalid signature")

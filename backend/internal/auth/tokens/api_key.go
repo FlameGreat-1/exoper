@@ -124,8 +124,7 @@ func (akm *APIKeyManager) RevokeAPIKey(ctx context.Context, keyID, reason string
 		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to revoke API key")
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	if result.RowsAffected == 0 {
 		return errors.New(errors.ErrCodeNotFound, "API key not found or already revoked")
 	}
 

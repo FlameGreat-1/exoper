@@ -1027,7 +1027,7 @@ func (s *AuthService) getPrincipalScopes(principal *Principal, resourceType, res
 		}
 	}
 
-	return utils.RemoveDuplicateStrings(scopes)
+	return utils.Unique(scopes)
 }
 
 func (s *AuthService) evaluatePermissions(userPermissions, requiredPermissions []string) (bool, []string, []string) {
@@ -1103,7 +1103,7 @@ func (s *AuthService) enhanceAuthenticationResult(ctx context.Context, result *A
 	if result.Principal != nil {
 		enrichedPermissions, err := s.getPrincipalPermissions(ctx, result.Principal)
 		if err == nil {
-			result.Permissions = utils.MergeStringSlices(result.Permissions, enrichedPermissions)
+			result.Permissions = append(result.Permissions, enrichedPermissions...)
 		}
 
 		if result.Principal.Type == "user" {
@@ -1112,16 +1112,20 @@ func (s *AuthService) enhanceAuthenticationResult(ctx context.Context, result *A
 				"last_login_user_agent": req.UserAgent,
 				"last_login_method": req.Method.String(),
 			}
-			result.Metadata = utils.MergeMaps(result.Metadata, lastLoginUpdate)
+			for k, v := range lastLoginUpdate {
+				result.Metadata[k] = v
+			}
 		}
 	}
 
 	securityEnhancements := map[string]interface{}{
-		"tenant_security_level": tenantInfo.SecurityConfig.Level,
-		"compliance_requirements": tenantInfo.ComplianceConfig.Requirements,
+		"tenant_security_level": tenantInfo.SecurityConfig.ThreatDetectionLevel,
+		"compliance_requirements": tenantInfo.ComplianceConfig.Frameworks,
 		"authentication_timestamp": time.Now().UTC(),
 	}
-	result.Metadata = utils.MergeMaps(result.Metadata, securityEnhancements)
+	for k, v := range securityEnhancements {
+		result.Metadata[k] = v
+	}
 
 	return nil
 }

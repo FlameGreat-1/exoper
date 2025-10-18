@@ -33,10 +33,10 @@ build-gateway: ## Build API Gateway
 build-auth: ## Build Auth Service
 	CGO_ENABLED=0 GOOS=linux $(GOBUILD) -a -installsuffix cgo -ldflags '-extldflags "-static"' -o $(BUILD_DIR)/auth-service $(CMD_DIR)/auth-service
 
-build-tenant: ## Build Tenant Service
-	CGO_ENABLED=0 GOOS=linux $(GOBUILD) -a -installsuffix cgo -ldflags '-extldflags "-static"' -o $(BUILD_DIR)/tenant-service $(CMD_DIR)/tenant-service
+# build-tenant: ## Build Tenant Service - NOT IMPLEMENTED YET
+# 	CGO_ENABLED=0 GOOS=linux $(GOBUILD) -a -installsuffix cgo -ldflags '-extldflags "-static"' -o $(BUILD_DIR)/tenant-service $(CMD_DIR)/tenant-service
 
-build: deps build-gateway build-auth build-tenant ## Build all services
+build: deps build-gateway build-auth ## Build implemented services only
 
 test: ## Run tests
 	$(GOTEST) -v -race -coverprofile=coverage.out ./...

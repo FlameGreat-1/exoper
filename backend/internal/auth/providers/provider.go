@@ -2,10 +2,7 @@ package providers
 
 import (
 	"context"
-	"crypto/subtle"
-	"encoding/base64"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,8 +12,6 @@ import (
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
-	commonpb "flamo/backend/pkg/api/proto/common"
-	authpb "flamo/backend/pkg/api/proto/auth"
 	"flamo/backend/pkg/api/proto/models/tenant"
 )
 

@@ -2,12 +2,15 @@ package mtls
 
 import (
 	"context"
-	"crypto/tls"
+	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/x509"
-	"crypto/x509/pkix"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -17,7 +20,6 @@ import (
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
 )
 
 type CertificateStatus string
@@ -300,7 +302,7 @@ func (m *MTLSManager) loadTrustedCAs() error {
 	m.intermediateCAs = x509.NewCertPool()
 
 	if m.config.Security.MTLSRootCAPath != "" {
-		rootCAData, err := utils.ReadFile(m.config.Security.MTLSRootCAPath)
+		rootCAData, err := os.ReadFile(m.config.Security.MTLSRootCAPath)
 		if err != nil {
 			return fmt.Errorf("failed to read root CA file: %v", err)
 		}
@@ -311,7 +313,7 @@ func (m *MTLSManager) loadTrustedCAs() error {
 	}
 
 	if m.config.Security.MTLSIntermediateCAPath != "" {
-		intermediateCAData, err := utils.ReadFile(m.config.Security.MTLSIntermediateCAPath)
+		intermediateCAData, err := os.ReadFile(m.config.Security.MTLSIntermediateCAPath)
 		if err != nil {
 			return fmt.Errorf("failed to read intermediate CA file: %v", err)
 		}
@@ -358,8 +360,11 @@ func (m *MTLSManager) parseCertificate(certPEM string) (*x509.Certificate, error
 }
 
 func (m *MTLSManager) extractCertificateInfo(cert *x509.Certificate) *CertificateInfo {
-	fingerprint := utils.CalculateSHA1Fingerprint(cert.Raw)
-	fingerprintSHA256 := utils.CalculateSHA256Fingerprint(cert.Raw)
+	sha1Hash := sha1.Sum(cert.Raw)
+	fingerprint := hex.EncodeToString(sha1Hash[:])
+	
+	sha256Hash := sha256.Sum256(cert.Raw)
+	fingerprintSHA256 := hex.EncodeToString(sha256Hash[:])
 
 	keyUsage := m.extractKeyUsage(cert)
 	extKeyUsage := m.extractExtendedKeyUsage(cert)
@@ -685,7 +690,8 @@ func (m *MTLSManager) validateClientCertificateBasics(cert *x509.Certificate) er
 }
 
 func (m *MTLSManager) validateTenantCertificateAccess(ctx context.Context, cert *x509.Certificate, tenantID string) error {
-	fingerprint := utils.CalculateSHA256Fingerprint(cert.Raw)
+	sha256Hash := sha256.Sum256(cert.Raw)
+	fingerprint := hex.EncodeToString(sha256Hash[:])
 	
 	query := `
 		SELECT EXISTS(

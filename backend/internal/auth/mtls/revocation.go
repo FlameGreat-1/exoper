@@ -3,16 +3,15 @@ package mtls
 import (
 	"context"
 	"crypto/x509"
-	"crypto/x509/pkix"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ocsp"
 
-	"flamo/backend/internal/common/errors"
 )
 
 type TrustChainResult struct {

@@ -4,8 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-
-	"flamo/backend/internal/common/config"
 )
 
 type TLSConfig struct {

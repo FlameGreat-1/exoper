@@ -5,17 +5,15 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"flamo/backend/internal/auth/service"
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/database"
-	healthpb "flamo/backend/pkg/api/proto/health"
+	commonpb "flamo/backend/pkg/api/proto/common"
 )
 
 type HealthHandler struct {
-	healthpb.UnimplementedHealthServiceServer
 	service *service.AuthService
 	db      *database.Database
 	config  *config.Config
@@ -31,46 +29,17 @@ func NewHealthHandler(authService *service.AuthService, db *database.Database, c
 	}
 }
 
-func (h *HealthHandler) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
-	service := req.Service
+func (h *HealthHandler) Check(ctx context.Context, service string) (*commonpb.ComponentHealth, error) {
 	if service == "" {
 		service = "auth"
 	}
 
-	status := h.checkServiceHealth(ctx, service)
+	result := h.checkServiceHealth(ctx, service)
 	
-	return &healthpb.HealthCheckResponse{
-		Status: status,
-	}, nil
+	return result, nil
 }
 
-func (h *HealthHandler) Watch(req *healthpb.HealthCheckRequest, stream healthpb.HealthService_WatchServer) error {
-	service := req.Service
-	if service == "" {
-		service = "auth"
-	}
-
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-stream.Context().Done():
-			return nil
-		case <-ticker.C:
-			status := h.checkServiceHealth(stream.Context(), service)
-			
-			if err := stream.Send(&healthpb.HealthCheckResponse{
-				Status: status,
-			}); err != nil {
-				h.logger.Error("Failed to send health check response", zap.Error(err))
-				return err
-			}
-		}
-	}
-}
-
-func (h *HealthHandler) checkServiceHealth(ctx context.Context, service string) healthpb.HealthCheckResponse_ServingStatus {
+func (h *HealthHandler) checkServiceHealth(ctx context.Context, service string) *commonpb.ComponentHealth {
 	switch service {
 	case "auth":
 		return h.checkAuthServiceHealth(ctx)
@@ -79,66 +48,93 @@ func (h *HealthHandler) checkServiceHealth(ctx context.Context, service string) 
 	case "overall":
 		return h.checkOverallHealth(ctx)
 	default:
-		return healthpb.HealthCheckResponse_SERVICE_UNKNOWN
+		return &commonpb.ComponentHealth{
+			Name:      service,
+			Status:    commonpb.Status_STATUS_ERROR,
+			Message:   "unknown service",
+			LastCheck: timestamppb.Now(),
+		}
 	}
 }
 
-func (h *HealthHandler) checkAuthServiceHealth(ctx context.Context) healthpb.HealthCheckResponse_ServingStatus {
+func (h *HealthHandler) checkAuthServiceHealth(ctx context.Context) *commonpb.ComponentHealth {
 	supportedMethods := h.service.GetSupportedMethods()
 	if len(supportedMethods) == 0 {
 		h.logger.Warn("No authentication methods available")
-		return healthpb.HealthCheckResponse_NOT_SERVING
+		return &commonpb.ComponentHealth{
+			Name:      "auth_service",
+			Status:    commonpb.Status_STATUS_ERROR,
+			Message:   "no authentication methods available",
+			LastCheck: timestamppb.Now(),
+		}
 	}
 
-	return healthpb.HealthCheckResponse_SERVING
+	return &commonpb.ComponentHealth{
+		Name:      "auth_service",
+		Status:    commonpb.Status_STATUS_SUCCESS,
+		Message:   "healthy",
+		LastCheck: timestamppb.Now(),
+	}
 }
 
-func (h *HealthHandler) checkDatabaseHealth(ctx context.Context) healthpb.HealthCheckResponse_ServingStatus {
+func (h *HealthHandler) checkDatabaseHealth(ctx context.Context) *commonpb.ComponentHealth {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	if err := h.db.Ping(ctx); err != nil {
 		h.logger.Error("Database health check failed", zap.Error(err))
-		return healthpb.HealthCheckResponse_NOT_SERVING
-	}
-
-	return healthpb.HealthCheckResponse_SERVING
-}
-
-func (h *HealthHandler) checkOverallHealth(ctx context.Context) healthpb.HealthCheckResponse_ServingStatus {
-	authStatus := h.checkAuthServiceHealth(ctx)
-	dbStatus := h.checkDatabaseHealth(ctx)
-
-	if authStatus == healthpb.HealthCheckResponse_SERVING && 
-	   dbStatus == healthpb.HealthCheckResponse_SERVING {
-		return healthpb.HealthCheckResponse_SERVING
-	}
-
-	return healthpb.HealthCheckResponse_NOT_SERVING
-}
-
-func (h *HealthHandler) GetReadiness(ctx context.Context, req *healthpb.ReadinessRequest) (*healthpb.ReadinessResponse, error) {
-	checks := make(map[string]bool)
-	
-	checks["auth_service"] = h.checkAuthServiceHealth(ctx) == healthpb.HealthCheckResponse_SERVING
-	checks["database"] = h.checkDatabaseHealth(ctx) == healthpb.HealthCheckResponse_SERVING
-	
-	ready := true
-	for _, check := range checks {
-		if !check {
-			ready = false
-			break
+		return &commonpb.ComponentHealth{
+			Name:      "database",
+			Status:    commonpb.Status_STATUS_ERROR,
+			Message:   "database ping failed: " + err.Error(),
+			LastCheck: timestamppb.Now(),
 		}
 	}
 
-	return &healthpb.ReadinessResponse{
-		Ready:  ready,
-		Checks: checks,
+	return &commonpb.ComponentHealth{
+		Name:      "database",
+		Status:    commonpb.Status_STATUS_SUCCESS,
+		Message:   "healthy",
+		LastCheck: timestamppb.Now(),
+	}
+}
+
+func (h *HealthHandler) checkOverallHealth(ctx context.Context) *commonpb.ComponentHealth {
+	authStatus := h.checkAuthServiceHealth(ctx)
+	dbStatus := h.checkDatabaseHealth(ctx)
+
+	if authStatus.Status == commonpb.Status_STATUS_SUCCESS && 
+	   dbStatus.Status == commonpb.Status_STATUS_SUCCESS {
+		return &commonpb.ComponentHealth{
+			Name:      "overall",
+			Status:    commonpb.Status_STATUS_SUCCESS,
+			Message:   "all services healthy",
+			LastCheck: timestamppb.Now(),
+		}
+	}
+
+	return &commonpb.ComponentHealth{
+		Name:      "overall",
+		Status:    commonpb.Status_STATUS_ERROR,
+		Message:   "one or more services unhealthy",
+		LastCheck: timestamppb.Now(),
+	}
+}
+
+func (h *HealthHandler) GetReadiness(ctx context.Context) (*commonpb.SystemInfo, error) {
+	return &commonpb.SystemInfo{
+		ServiceName: "auth-service",
+		Version:     "1.0.0",
+		Environment: string(h.config.Environment),
+		StartTime:   timestamppb.Now(),
 	}, nil
 }
 
-func (h *HealthHandler) GetLiveness(ctx context.Context, req *healthpb.LivenessRequest) (*healthpb.LivenessResponse, error) {
-	return &healthpb.LivenessResponse{
-		Alive: true,
+func (h *HealthHandler) GetLiveness(ctx context.Context) (*commonpb.SystemInfo, error) {
+	return &commonpb.SystemInfo{
+		ServiceName: "auth-service",
+		Version:     "1.0.0",
+		Environment: string(h.config.Environment),
+		StartTime:   timestamppb.Now(),
 	}, nil
 }

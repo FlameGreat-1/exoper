@@ -102,9 +102,9 @@ rate_limiting:
   global:
     requests_per_second: 1000
     burst: 2000
-  per_tenant:
-    requests_per_second: 100
-    burst: 200
+  # per_tenant:  # Commented out - tenant service not implemented yet
+  #   requests_per_second: 100
+  #   burst: 200
   per_ip:
     requests_per_second: 50
     burst: 100
@@ -122,29 +122,29 @@ services:
       interval: "60s"
       timeout: "30s"
   
-  tenant_service:
-    host: "localhost"
-    port: 8082
-    grpc_port: 9092
-    timeout: "10s"
-    retry_attempts: 3
-    circuit_breaker:
-      enabled: true
-      max_requests: 100
-      interval: "60s"
-      timeout: "30s"
+  # tenant_service:  # Commented out - not implemented yet
+  #   host: "localhost"
+  #   port: 8082
+  #   grpc_port: 9092
+  #   timeout: "10s"
+  #   retry_attempts: 3
+  #   circuit_breaker:
+  #     enabled: true
+  #     max_requests: 100
+  #     interval: "60s"
+  #     timeout: "30s"
 
-  threat_detector:
-    host: "localhost"
-    port: 8083
-    grpc_port: 9093
-    timeout: "5s"
-    retry_attempts: 2
-    circuit_breaker:
-      enabled: true
-      max_requests: 200
-      interval: "30s"
-      timeout: "10s"
+  # threat_detector:  # Commented out - not implemented yet
+  #   host: "localhost"
+  #   port: 8083
+  #   grpc_port: 9093
+  #   timeout: "5s"
+  #   retry_attempts: 2
+  #   circuit_breaker:
+  #     enabled: true
+  #     max_requests: 200
+  #     interval: "30s"
+  #     timeout: "10s"
 
 audit:
   enabled: true
@@ -165,4 +165,4 @@ health_check:
     - "database"
     - "redis"
     - "auth_service"
-    - "tenant_service"
+    # - "tenant_service"  # Commented out - not implemented yet

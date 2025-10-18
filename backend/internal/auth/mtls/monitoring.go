@@ -119,9 +119,8 @@ func (cm *CertificateMonitor) CleanupExpiredCertificates(ctx context.Context) er
 		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to cleanup expired certificates")
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected > 0 {
-		cm.logger.Info("Expired certificates cleaned up", zap.Int64("count", rowsAffected))
+	if result.RowsAffected > 0 {
+		cm.logger.Info("Expired certificates cleaned up", zap.Int64("count", result.RowsAffected))
 	}
 
 	return nil

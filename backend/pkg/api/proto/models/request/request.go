@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -144,6 +145,7 @@ type ClientInformation struct {
 }
 
 type SecurityContext struct {
+	SessionToken         string                 `json:"session_token"`         
 	AuthenticationMethod string                 `json:"authentication_method"`
 	AuthenticationLevel  string                 `json:"authentication_level"`
 	APIKeyID             *uuid.UUID             `json:"api_key_id,omitempty"`

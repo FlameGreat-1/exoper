@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
@@ -11,14 +12,20 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
+	"math"
+	mathrand "math/rand"
 	"net"
+	"net/http"
 	"net/mail"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 
@@ -210,8 +217,12 @@ func GenerateSecurePassword(length int, includeSpecial bool) string {
 	
 	password := make([]byte, length)
 	for i := range password {
-		randomIndex, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		password[i] = charset[randomIndex.Int64()]
+		randomBytes := make([]byte, 1)
+		if _, err := io.ReadFull(rand.Reader, randomBytes); err != nil {
+			return ""
+		}
+		randomIndex := int(randomBytes[0]) % len(charset)
+		password[i] = charset[randomIndex]
 	}
 	
 	return string(password)
@@ -232,8 +243,12 @@ func GenerateAPIKey(length int) string {
 	
 	key := make([]byte, length)
 	for i := range key {
-		randomIndex, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		key[i] = charset[randomIndex.Int64()]
+		randomBytes := make([]byte, 1)
+		if _, err := io.ReadFull(rand.Reader, randomBytes); err != nil {
+			return ""
+		}
+		randomIndex := int(randomBytes[0]) % len(charset)
+		key[i] = charset[randomIndex]
 	}
 	
 	return string(key)
@@ -241,7 +256,7 @@ func GenerateAPIKey(length int) string {
 
 func GenerateSecretKey(length int) (string, error) {
 	bytes := make([]byte, length)
-	if _, err := rand.Read(bytes); err != nil {
+	if _, err := rand.Read(bytes); err != nil { 
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
@@ -452,17 +467,6 @@ func ToPascalCase(str string) string {
 	}
 	return strings.ToUpper(camel[:1]) + camel[1:]
 }
-
-import (
-	"context"
-	"crypto/big"
-	"encoding/xml"
-	"math"
-	"net/http"
-	"sort"
-	"sync"
-	"sync/atomic"
-)
 
 type TimeRange struct {
 	Start time.Time `json:"start"`
@@ -832,6 +836,20 @@ func (rl *RateLimiter) Allow() bool {
 	return false
 }
 
+func (rl *RateLimiter) GetTokens() int64 {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	return rl.tokens
+}
+
+func (rl *RateLimiter) GetCapacity() int64 {
+	return rl.capacity
+}
+
+func (rl *RateLimiter) GetRate() float64 {
+	return rl.rate
+}
+
 func RetryWithBackoff(ctx context.Context, config RetryConfig, fn func() error) error {
 	var lastErr error
 	
@@ -864,11 +882,37 @@ func calculateBackoff(attempt int, config RetryConfig) time.Duration {
 	}
 	
 	if config.Jitter {
-		jitter := time.Duration(rand.Int63n(int64(delay / 2)))
+		jitter := time.Duration(mathrand.Int63n(int64(delay / 2)))
 		delay = delay/2 + jitter
 	}
 	
 	return delay
+}
+
+func (cb *CircuitBreaker) GetState() string {
+	cb.mu.RLock()
+	defer cb.mu.RUnlock()
+	
+	switch cb.state {
+	case StateClosed:
+		return "closed"
+	case StateOpen:
+		return "open"
+	case StateHalfOpen:
+		return "half-open"
+	default:
+		return "unknown"
+	}
+}
+
+func (cb *CircuitBreaker) Reset() {
+	cb.mu.Lock()
+	defer cb.mu.Unlock()
+	
+	cb.state = StateClosed
+	cb.failures = 0
+	cb.successes = 0
+	cb.requests = 0
 }
 
 func NewHTTPClient(timeout time.Duration, retryConfig RetryConfig, circuitConfig CircuitBreakerConfig) *HTTPClient {
@@ -1001,8 +1045,12 @@ func GenerateNonce(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	nonce := make([]byte, length)
 	for i := range nonce {
-		randomIndex, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		nonce[i] = charset[randomIndex.Int64()]
+		randomBytes := make([]byte, 1)
+		if _, err := io.ReadFull(rand.Reader, randomBytes); err != nil {
+			return ""
+		}
+		randomIndex := int(randomBytes[0]) % len(charset)
+		nonce[i] = charset[randomIndex]
 	}
 	return string(nonce)
 }
@@ -1061,4 +1109,9 @@ func DerefOr[T any](ptr *T, defaultValue T) T {
 		return defaultValue
 	}
 	return *ptr
+}
+
+func MatchPattern(pattern, text string) bool {
+	matched, _ := regexp.MatchString(pattern, text)
+	return matched
 }

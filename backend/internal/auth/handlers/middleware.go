@@ -14,6 +14,7 @@ import (
 	"flamo/backend/internal/auth/service"
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/errors"
+	"flamo/backend/internal/common/utils" 
 	authpb "flamo/backend/pkg/api/proto/auth"
 )
 
@@ -275,7 +276,7 @@ func (m *AuthMiddleware) extractRequestContext(req interface{}) map[string]inter
 }
 
 func (m *AuthMiddleware) enrichContext(ctx context.Context) context.Context {
-	enrichedCtx := context.WithValue(ctx, "request_id", generateRequestID())
+	enrichedCtx := context.WithValue(ctx, "request_id", utils.GenerateRequestID())  // ADD utils.
 	enrichedCtx = context.WithValue(enrichedCtx, "timestamp", time.Now().UTC())
 	
 	return enrichedCtx
@@ -317,15 +318,3 @@ func (w *wrappedServerStream) Context() context.Context {
 	return w.ctx
 }
 
-func generateRequestID() string {
-	return time.Now().Format("20060102150405") + "-" + randomString(8)
-}
-
-func randomString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
-	}
-	return string(b)
-}

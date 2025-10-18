@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"go.uber.org/zap"

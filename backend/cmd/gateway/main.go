@@ -17,13 +17,13 @@ import (
 
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/gateway/server"
 	"flamo/backend/internal/gateway/orchestrator"
 	"flamo/backend/internal/gateway/handlers"
 	"flamo/backend/internal/gateway/middleware"
 	"flamo/backend/internal/gateway/routing"
 	authpb "flamo/backend/pkg/api/proto/auth"
+	gatewaypb "flamo/backend/pkg/api/proto/gateway"
 )
 
 const (
@@ -72,10 +72,10 @@ func main() {
 	}
 
 	if *port != defaultPort {
-		cfg.Gateway.HTTPPort = *port
+		cfg.Server.Port = *port
 	}
 	if *grpcPort != defaultGRPCPort {
-		cfg.Gateway.GRPCPort = *grpcPort
+		cfg.Server.GRPCPort = *grpcPort
 	}
 
 	if *validate {
@@ -121,9 +121,6 @@ func main() {
 		logger.Fatal("Failed to initialize orchestrator", zap.Error(err))
 	}
 
-	httpHandler := handlers.NewHTTPHandler(orch, cfg, logger)
-	grpcHandler := handlers.NewGRPCHandler(orch, cfg, logger)
-
 	if err := handlers.ValidateHandlerConfiguration(cfg); err != nil {
 		logger.Fatal("Handler configuration validation failed", zap.Error(err))
 	}
@@ -143,9 +140,9 @@ func main() {
 	}
 
 	logger.Info("Gateway server started successfully",
-		zap.String("http_address", fmt.Sprintf(":%d", cfg.Gateway.HTTPPort)),
-		zap.String("grpc_address", fmt.Sprintf(":%d", cfg.Gateway.GRPCPort)),
-		zap.Bool("tls_enabled", cfg.Security.TLSEnabled))
+		zap.String("http_address", fmt.Sprintf(":%d", cfg.Server.Port)),
+		zap.String("grpc_address", fmt.Sprintf(":%d", cfg.Server.GRPCPort)),
+		zap.Bool("tls_enabled", cfg.Server.TLSConfig.Enabled))
 
 	startHealthMonitoring(gatewayServer, orch, router, middlewareManager, logger)
 
@@ -176,12 +173,8 @@ func initializeAuthClient(cfg *config.Config, logger *zap.Logger) (authpb.Authen
 
 	client := authpb.NewAuthenticationServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	_, err = client.HealthCheck(ctx, &authpb.HealthCheckRequest{})
-	if err != nil {
-		logger.Warn("Auth service health check failed, continuing anyway", zap.Error(err))
+	if err := conn.Close(); err != nil {
+		logger.Warn("Failed to close auth service connection test", zap.Error(err))
 	} else {
 		logger.Info("Auth service connection established successfully")
 	}
@@ -210,7 +203,12 @@ func performHealthChecks(gatewayServer *server.Server, orch *orchestrator.Orches
 		"orchestrator": map[string]interface{}{
 			"healthy":      orch.IsHealthy(),
 			"tenant_count": orch.GetTenantCount(),
-			"metrics":      orch.GetMetrics(),
+			"metrics": func() interface{} {
+				if metrics, err := orch.GetMetrics(context.Background(), &gatewaypb.GetMetricsRequest{}); err == nil {
+					return metrics
+				}
+				return nil
+			}(),
 		},
 		"router": router.GetHealthStatus(),
 		"middleware": map[string]interface{}{
@@ -311,7 +309,7 @@ func initializeLogger(level string) *zap.Logger {
 		},
 		Encoding: "json",
 		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:        "timestamp",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+			TimeKey:        "timestamp",
 			LevelKey:       "level",
 			NameKey:        "logger",
 			CallerKey:      "caller",
@@ -343,7 +341,17 @@ func initializeLogger(level string) *zap.Logger {
 
 func loadConfiguration(configPath, environment string) (*config.Config, error) {
 	if configPath == "" {
-		configPath = fmt.Sprintf("configs/%s/gateway.yaml", environment)
+		envMap := map[string]string{
+			"development": "local",
+			"staging":     "staging",
+			"production":  "production",
+		}
+		
+		if mappedEnv, exists := envMap[environment]; exists {
+			configPath = fmt.Sprintf("configs/%s/gateway.yaml", mappedEnv)
+		} else {
+			configPath = fmt.Sprintf("configs/%s/gateway.yaml", environment)
+		}
 	}
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
@@ -392,14 +400,11 @@ func initializeDatabase(cfg *config.Config, logger *zap.Logger) (*database.Datab
 		return nil, fmt.Errorf("failed to create database connection: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := db.Connect(ctx); err != nil {
+	if err := db.Connect(); err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	if err := db.HealthCheck(); err != nil {
+	if err := db.HealthCheck(context.Background()); err != nil {
 		return nil, fmt.Errorf("database health check failed: %w", err)
 	}
 

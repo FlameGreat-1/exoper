@@ -20,12 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GatewayService_ProcessAIRequest_FullMethodName = "/exoper.gateway.v1.GatewayService/ProcessAIRequest"
-	GatewayService_StreamAIRequest_FullMethodName  = "/exoper.gateway.v1.GatewayService/StreamAIRequest"
-	GatewayService_ValidateRequest_FullMethodName  = "/exoper.gateway.v1.GatewayService/ValidateRequest"
-	GatewayService_GetHealth_FullMethodName        = "/exoper.gateway.v1.GatewayService/GetHealth"
-	GatewayService_GetMetrics_FullMethodName       = "/exoper.gateway.v1.GatewayService/GetMetrics"
-	GatewayService_GetRoutingInfo_FullMethodName   = "/exoper.gateway.v1.GatewayService/GetRoutingInfo"
+	GatewayService_ProcessAIRequest_FullMethodName    = "/exoper.gateway.v1.GatewayService/ProcessAIRequest"
+	GatewayService_StreamAIRequest_FullMethodName     = "/exoper.gateway.v1.GatewayService/StreamAIRequest"
+	GatewayService_ValidateRequest_FullMethodName     = "/exoper.gateway.v1.GatewayService/ValidateRequest"
+	GatewayService_GetHealth_FullMethodName           = "/exoper.gateway.v1.GatewayService/GetHealth"
+	GatewayService_GetMetrics_FullMethodName          = "/exoper.gateway.v1.GatewayService/GetMetrics"
+	GatewayService_GetRoutingInfo_FullMethodName      = "/exoper.gateway.v1.GatewayService/GetRoutingInfo"
+	GatewayService_ProcessBatchRequest_FullMethodName = "/exoper.gateway.v1.GatewayService/ProcessBatchRequest"
+	GatewayService_CheckModelAccess_FullMethodName    = "/exoper.gateway.v1.GatewayService/CheckModelAccess"
 )
 
 // GatewayServiceClient is the client API for GatewayService service.
@@ -33,11 +35,13 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GatewayServiceClient interface {
 	ProcessAIRequest(ctx context.Context, in *ProcessAIRequestRequest, opts ...grpc.CallOption) (*ProcessAIRequestResponse, error)
-	StreamAIRequest(ctx context.Context, in *StreamAIRequestRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamAIRequestResponse], error)
+	StreamAIRequest(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamAIRequestRequest, StreamAIRequestResponse], error)
 	ValidateRequest(ctx context.Context, in *ValidateRequestRequest, opts ...grpc.CallOption) (*ValidateRequestResponse, error)
 	GetHealth(ctx context.Context, in *GetHealthRequest, opts ...grpc.CallOption) (*GetHealthResponse, error)
 	GetMetrics(ctx context.Context, in *GetMetricsRequest, opts ...grpc.CallOption) (*GetMetricsResponse, error)
 	GetRoutingInfo(ctx context.Context, in *GetRoutingInfoRequest, opts ...grpc.CallOption) (*GetRoutingInfoResponse, error)
+	ProcessBatchRequest(ctx context.Context, in *BatchRequestProto, opts ...grpc.CallOption) (*BatchResponseProto, error)
+	CheckModelAccess(ctx context.Context, in *ModelAccessRequest, opts ...grpc.CallOption) (*ModelAccessResponse, error)
 }
 
 type gatewayServiceClient struct {
@@ -58,24 +62,18 @@ func (c *gatewayServiceClient) ProcessAIRequest(ctx context.Context, in *Process
 	return out, nil
 }
 
-func (c *gatewayServiceClient) StreamAIRequest(ctx context.Context, in *StreamAIRequestRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamAIRequestResponse], error) {
+func (c *gatewayServiceClient) StreamAIRequest(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamAIRequestRequest, StreamAIRequestResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &GatewayService_ServiceDesc.Streams[0], GatewayService_StreamAIRequest_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	x := &grpc.GenericClientStream[StreamAIRequestRequest, StreamAIRequestResponse]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GatewayService_StreamAIRequestClient = grpc.ServerStreamingClient[StreamAIRequestResponse]
+type GatewayService_StreamAIRequestClient = grpc.BidiStreamingClient[StreamAIRequestRequest, StreamAIRequestResponse]
 
 func (c *gatewayServiceClient) ValidateRequest(ctx context.Context, in *ValidateRequestRequest, opts ...grpc.CallOption) (*ValidateRequestResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -117,16 +115,38 @@ func (c *gatewayServiceClient) GetRoutingInfo(ctx context.Context, in *GetRoutin
 	return out, nil
 }
 
+func (c *gatewayServiceClient) ProcessBatchRequest(ctx context.Context, in *BatchRequestProto, opts ...grpc.CallOption) (*BatchResponseProto, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BatchResponseProto)
+	err := c.cc.Invoke(ctx, GatewayService_ProcessBatchRequest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayServiceClient) CheckModelAccess(ctx context.Context, in *ModelAccessRequest, opts ...grpc.CallOption) (*ModelAccessResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ModelAccessResponse)
+	err := c.cc.Invoke(ctx, GatewayService_CheckModelAccess_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GatewayServiceServer is the server API for GatewayService service.
 // All implementations must embed UnimplementedGatewayServiceServer
 // for forward compatibility.
 type GatewayServiceServer interface {
 	ProcessAIRequest(context.Context, *ProcessAIRequestRequest) (*ProcessAIRequestResponse, error)
-	StreamAIRequest(*StreamAIRequestRequest, grpc.ServerStreamingServer[StreamAIRequestResponse]) error
+	StreamAIRequest(grpc.BidiStreamingServer[StreamAIRequestRequest, StreamAIRequestResponse]) error
 	ValidateRequest(context.Context, *ValidateRequestRequest) (*ValidateRequestResponse, error)
 	GetHealth(context.Context, *GetHealthRequest) (*GetHealthResponse, error)
 	GetMetrics(context.Context, *GetMetricsRequest) (*GetMetricsResponse, error)
 	GetRoutingInfo(context.Context, *GetRoutingInfoRequest) (*GetRoutingInfoResponse, error)
+	ProcessBatchRequest(context.Context, *BatchRequestProto) (*BatchResponseProto, error)
+	CheckModelAccess(context.Context, *ModelAccessRequest) (*ModelAccessResponse, error)
 	mustEmbedUnimplementedGatewayServiceServer()
 }
 
@@ -140,7 +160,7 @@ type UnimplementedGatewayServiceServer struct{}
 func (UnimplementedGatewayServiceServer) ProcessAIRequest(context.Context, *ProcessAIRequestRequest) (*ProcessAIRequestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessAIRequest not implemented")
 }
-func (UnimplementedGatewayServiceServer) StreamAIRequest(*StreamAIRequestRequest, grpc.ServerStreamingServer[StreamAIRequestResponse]) error {
+func (UnimplementedGatewayServiceServer) StreamAIRequest(grpc.BidiStreamingServer[StreamAIRequestRequest, StreamAIRequestResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method StreamAIRequest not implemented")
 }
 func (UnimplementedGatewayServiceServer) ValidateRequest(context.Context, *ValidateRequestRequest) (*ValidateRequestResponse, error) {
@@ -154,6 +174,12 @@ func (UnimplementedGatewayServiceServer) GetMetrics(context.Context, *GetMetrics
 }
 func (UnimplementedGatewayServiceServer) GetRoutingInfo(context.Context, *GetRoutingInfoRequest) (*GetRoutingInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRoutingInfo not implemented")
+}
+func (UnimplementedGatewayServiceServer) ProcessBatchRequest(context.Context, *BatchRequestProto) (*BatchResponseProto, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessBatchRequest not implemented")
+}
+func (UnimplementedGatewayServiceServer) CheckModelAccess(context.Context, *ModelAccessRequest) (*ModelAccessResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckModelAccess not implemented")
 }
 func (UnimplementedGatewayServiceServer) mustEmbedUnimplementedGatewayServiceServer() {}
 func (UnimplementedGatewayServiceServer) testEmbeddedByValue()                        {}
@@ -195,15 +221,11 @@ func _GatewayService_ProcessAIRequest_Handler(srv interface{}, ctx context.Conte
 }
 
 func _GatewayService_StreamAIRequest_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(StreamAIRequestRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(GatewayServiceServer).StreamAIRequest(m, &grpc.GenericServerStream[StreamAIRequestRequest, StreamAIRequestResponse]{ServerStream: stream})
+	return srv.(GatewayServiceServer).StreamAIRequest(&grpc.GenericServerStream[StreamAIRequestRequest, StreamAIRequestResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GatewayService_StreamAIRequestServer = grpc.ServerStreamingServer[StreamAIRequestResponse]
+type GatewayService_StreamAIRequestServer = grpc.BidiStreamingServer[StreamAIRequestRequest, StreamAIRequestResponse]
 
 func _GatewayService_ValidateRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ValidateRequestRequest)
@@ -277,6 +299,42 @@ func _GatewayService_GetRoutingInfo_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GatewayService_ProcessBatchRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchRequestProto)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServiceServer).ProcessBatchRequest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GatewayService_ProcessBatchRequest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServiceServer).ProcessBatchRequest(ctx, req.(*BatchRequestProto))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GatewayService_CheckModelAccess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModelAccessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServiceServer).CheckModelAccess(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GatewayService_CheckModelAccess_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServiceServer).CheckModelAccess(ctx, req.(*ModelAccessRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GatewayService_ServiceDesc is the grpc.ServiceDesc for GatewayService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -304,12 +362,21 @@ var GatewayService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetRoutingInfo",
 			Handler:    _GatewayService_GetRoutingInfo_Handler,
 		},
+		{
+			MethodName: "ProcessBatchRequest",
+			Handler:    _GatewayService_ProcessBatchRequest_Handler,
+		},
+		{
+			MethodName: "CheckModelAccess",
+			Handler:    _GatewayService_CheckModelAccess_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "StreamAIRequest",
 			Handler:       _GatewayService_StreamAIRequest_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "pkg/api/proto/gateway/gateway.proto",

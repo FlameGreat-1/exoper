@@ -5,7 +5,10 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"flamo/backend/internal/auth/service"
@@ -42,12 +45,14 @@ func (h *AuthHandler) Authenticate(ctx context.Context, req *authpb.Authenticate
 		return h.buildAuthenticateErrorResponse(err), nil
 	}
 
+	clientInfo := h.extractClientInformation(ctx)
+
 	serviceReq := &service.AuthenticationRequest{
 		Method:              req.Method,
 		Credentials:         credentials,
-		TenantID:           req.TenantId,
-		ClientIP:           h.extractClientIP(ctx),
-		UserAgent:          h.extractUserAgent(ctx),
+		TenantID:           req.Metadata.TenantId,
+		ClientIP:           clientInfo.IpAddress,
+		UserAgent:          clientInfo.UserAgent,
 		RequiredScopes:     req.RequiredScopes,
 		RequiredPermissions: req.RequiredPermissions,
 		RequireMFA:         req.RequireMfa,
@@ -57,23 +62,20 @@ func (h *AuthHandler) Authenticate(ctx context.Context, req *authpb.Authenticate
 	result, err := h.service.Authenticate(ctx, serviceReq)
 	if err != nil {
 		h.logger.Error("Authentication failed", 
-			zap.String("tenant_id", req.TenantId),
+			zap.String("tenant_id", req.Metadata.TenantId),
 			zap.String("method", req.Method.String()),
 			zap.Error(err))
 		return h.buildAuthenticateErrorResponse(err), nil
 	}
 
 	response := &authpb.AuthenticateResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Authentication successful",
-		},
+		Status:         commonpb.Status_STATUS_SUCCESS,
 		Result:         h.convertAuthenticationResult(result),
 		ProcessingTime: durationpb.New(time.Since(startTime)),
 	}
 
 	h.logger.Info("Authentication successful",
-		zap.String("tenant_id", req.TenantId),
+		zap.String("tenant_id", req.Metadata.TenantId),
 		zap.String("method", req.Method.String()),
 		zap.String("principal_id", result.Principal.ID),
 		zap.Duration("processing_time", time.Since(startTime)))
@@ -97,10 +99,7 @@ func (h *AuthHandler) ValidateToken(ctx context.Context, req *authpb.ValidateTok
 	}
 
 	response := &authpb.ValidateTokenResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Token validation successful",
-		},
+		Status:         commonpb.Status_STATUS_SUCCESS,
 		Result:         h.convertTokenValidationResult(result),
 		ProcessingTime: durationpb.New(time.Since(startTime)),
 	}
@@ -136,10 +135,7 @@ func (h *AuthHandler) Authorize(ctx context.Context, req *authpb.AuthorizeReques
 	}
 
 	response := &authpb.AuthorizeResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Authorization evaluation completed",
-		},
+		Status:         commonpb.Status_STATUS_SUCCESS,
 		Result:         h.convertAuthorizationResult(result),
 		ProcessingTime: durationpb.New(time.Since(startTime)),
 	}
@@ -148,8 +144,6 @@ func (h *AuthHandler) Authorize(ctx context.Context, req *authpb.AuthorizeReques
 }
 
 func (h *AuthHandler) RefreshToken(ctx context.Context, req *authpb.RefreshTokenRequest) (*authpb.RefreshTokenResponse, error) {
-	startTime := time.Now()
-
 	if err := h.validateRefreshTokenRequest(req); err != nil {
 		return h.buildRefreshTokenErrorResponse(err), nil
 	}
@@ -166,20 +160,14 @@ func (h *AuthHandler) RefreshToken(ctx context.Context, req *authpb.RefreshToken
 	}
 
 	response := &authpb.RefreshTokenResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Token refresh successful",
-		},
-		Result:         h.convertTokenRefreshResult(result),
-		ProcessingTime: durationpb.New(time.Since(startTime)),
+		Status: commonpb.Status_STATUS_SUCCESS,
+		Result: h.convertTokenRefreshResult(result),
 	}
 
 	return response, nil
 }
 
 func (h *AuthHandler) GetPermissions(ctx context.Context, req *authpb.GetPermissionsRequest) (*authpb.GetPermissionsResponse, error) {
-	startTime := time.Now()
-
 	if err := h.validateGetPermissionsRequest(req); err != nil {
 		return h.buildGetPermissionsErrorResponse(err), nil
 	}
@@ -193,20 +181,14 @@ func (h *AuthHandler) GetPermissions(ctx context.Context, req *authpb.GetPermiss
 	}
 
 	response := &authpb.GetPermissionsResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Permissions retrieved successfully",
-		},
-		Result:         h.convertPermissionsResult(result),
-		ProcessingTime: durationpb.New(time.Since(startTime)),
+		Status: commonpb.Status_STATUS_SUCCESS,
+		Result: h.convertPermissionsResult(result),
 	}
 
 	return response, nil
 }
 
 func (h *AuthHandler) VerifyCertificate(ctx context.Context, req *authpb.VerifyCertificateRequest) (*authpb.VerifyCertificateResponse, error) {
-	startTime := time.Now()
-
 	if err := h.validateVerifyCertificateRequest(req); err != nil {
 		return h.buildVerifyCertificateErrorResponse(err), nil
 	}
@@ -218,12 +200,8 @@ func (h *AuthHandler) VerifyCertificate(ctx context.Context, req *authpb.VerifyC
 	}
 
 	response := &authpb.VerifyCertificateResponse{
-		Status: &commonpb.Status{
-			Code:    commonpb.StatusCode_STATUS_CODE_OK,
-			Message: "Certificate verification completed",
-		},
-		Result:         h.convertCertificateVerificationResult(result),
-		ProcessingTime: durationpb.New(time.Since(startTime)),
+		Status: commonpb.Status_STATUS_SUCCESS,
+		Result: h.convertCertificateVerificationResult(result),
 	}
 
 	return response, nil
@@ -231,23 +209,23 @@ func (h *AuthHandler) VerifyCertificate(ctx context.Context, req *authpb.VerifyC
 
 func (h *AuthHandler) validateAuthenticateRequest(req *authpb.AuthenticateRequest) error {
 	if req == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request is required")
 	}
 
 	if req.Metadata == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request metadata is required")
 	}
 
-	if req.TenantId == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "tenant ID is required")
+	if req.Metadata.TenantId == "" {
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "tenant ID is required")
 	}
 
 	if req.Method == authpb.AuthenticationMethod_AUTHENTICATION_METHOD_UNSPECIFIED {
-		return errors.New(errors.ErrCodeInvalidRequest, "authentication method is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "authentication method is required")
 	}
 
 	if req.Credentials == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "credentials are required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "credentials are required")
 	}
 
 	return nil
@@ -255,15 +233,15 @@ func (h *AuthHandler) validateAuthenticateRequest(req *authpb.AuthenticateReques
 
 func (h *AuthHandler) validateTokenRequest(req *authpb.ValidateTokenRequest) error {
 	if req == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request is required")
 	}
 
 	if req.Metadata == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request metadata is required")
 	}
 
 	if req.Token == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "token is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "token is required")
 	}
 
 	return nil
@@ -271,23 +249,23 @@ func (h *AuthHandler) validateTokenRequest(req *authpb.ValidateTokenRequest) err
 
 func (h *AuthHandler) validateAuthorizeRequest(req *authpb.AuthorizeRequest) error {
 	if req == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request is required")
 	}
 
 	if req.Metadata == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request metadata is required")
 	}
 
 	if req.PrincipalId == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "principal ID is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "principal ID is required")
 	}
 
 	if req.Resource == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "resource is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "resource is required")
 	}
 
 	if req.Action == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "action is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "action is required")
 	}
 
 	return nil
@@ -295,15 +273,15 @@ func (h *AuthHandler) validateAuthorizeRequest(req *authpb.AuthorizeRequest) err
 
 func (h *AuthHandler) validateRefreshTokenRequest(req *authpb.RefreshTokenRequest) error {
 	if req == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request is required")
 	}
 
 	if req.Metadata == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request metadata is required")
 	}
 
 	if req.RefreshToken == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "refresh token is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "refresh token is required")
 	}
 
 	return nil
@@ -311,15 +289,15 @@ func (h *AuthHandler) validateRefreshTokenRequest(req *authpb.RefreshTokenReques
 
 func (h *AuthHandler) validateGetPermissionsRequest(req *authpb.GetPermissionsRequest) error {
 	if req == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request is required")
 	}
 
 	if req.Metadata == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request metadata is required")
 	}
 
 	if req.PrincipalId == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "principal ID is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "principal ID is required")
 	}
 
 	return nil
@@ -327,15 +305,15 @@ func (h *AuthHandler) validateGetPermissionsRequest(req *authpb.GetPermissionsRe
 
 func (h *AuthHandler) validateVerifyCertificateRequest(req *authpb.VerifyCertificateRequest) error {
 	if req == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request is required")
 	}
 
 	if req.Metadata == nil {
-		return errors.New(errors.ErrCodeInvalidRequest, "request metadata is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "request metadata is required")
 	}
 
 	if req.Certificate == "" {
-		return errors.New(errors.ErrCodeInvalidRequest, "certificate is required")
+		return h.createValidationError(errors.ErrCodeInvalidRequest, "certificate is required")
 	}
 
 	return nil
@@ -344,84 +322,108 @@ func (h *AuthHandler) validateVerifyCertificateRequest(req *authpb.VerifyCertifi
 func (h *AuthHandler) extractCredentials(req *authpb.AuthenticateRequest) (interface{}, error) {
 	switch req.Method {
 	case authpb.AuthenticationMethod_AUTHENTICATION_METHOD_API_KEY:
-		if apiKeyCreds := req.GetApiKeyCredentials(); apiKeyCreds != nil {
+		if apiKeyCreds := req.GetApiKey(); apiKeyCreds != nil {
 			return apiKeyCreds, nil
 		}
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "API key credentials required")
+		return nil, h.createValidationError(errors.ErrCodeInvalidRequest, "API key credentials required")
 
 	case authpb.AuthenticationMethod_AUTHENTICATION_METHOD_JWT:
-		if jwtCreds := req.GetJwtCredentials(); jwtCreds != nil {
+		if jwtCreds := req.GetJwt(); jwtCreds != nil {
 			return jwtCreds, nil
 		}
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "JWT credentials required")
+		return nil, h.createValidationError(errors.ErrCodeInvalidRequest, "JWT credentials required")
 
 	case authpb.AuthenticationMethod_AUTHENTICATION_METHOD_BASIC:
-		if basicCreds := req.GetBasicCredentials(); basicCreds != nil {
+		if basicCreds := req.GetBasic(); basicCreds != nil {
 			return basicCreds, nil
 		}
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "basic credentials required")
+		return nil, h.createValidationError(errors.ErrCodeInvalidRequest, "basic credentials required")
 
 	case authpb.AuthenticationMethod_AUTHENTICATION_METHOD_MTLS:
-		if mtlsCreds := req.GetMtlsCredentials(); mtlsCreds != nil {
+		if mtlsCreds := req.GetMtls(); mtlsCreds != nil {
 			return mtlsCreds, nil
 		}
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "mTLS credentials required")
+		return nil, h.createValidationError(errors.ErrCodeInvalidRequest, "mTLS credentials required")
 
 	case authpb.AuthenticationMethod_AUTHENTICATION_METHOD_OAUTH2:
-		if oauth2Creds := req.GetOauth2Credentials(); oauth2Creds != nil {
+		if oauth2Creds := req.GetOauth2(); oauth2Creds != nil {
 			return oauth2Creds, nil
 		}
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "OAuth2 credentials required")
+		return nil, h.createValidationError(errors.ErrCodeInvalidRequest, "OAuth2 credentials required")
 
 	case authpb.AuthenticationMethod_AUTHENTICATION_METHOD_SAML:
-		if samlCreds := req.GetSamlCredentials(); samlCreds != nil {
+		if samlCreds := req.GetSaml(); samlCreds != nil {
 			return samlCreds, nil
 		}
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "SAML credentials required")
+		return nil, h.createValidationError(errors.ErrCodeInvalidRequest, "SAML credentials required")
 
 	case authpb.AuthenticationMethod_AUTHENTICATION_METHOD_OIDC:
-		if oidcCreds := req.GetOidcCredentials(); oidcCreds != nil {
+		if oidcCreds := req.GetOidc(); oidcCreds != nil {
 			return oidcCreds, nil
 		}
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "OIDC credentials required")
+		return nil, h.createValidationError(errors.ErrCodeInvalidRequest, "OIDC credentials required")
 
 	default:
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "unsupported authentication method")
+		return nil, h.createValidationError(errors.ErrCodeInvalidRequest, "unsupported authentication method")
 	}
 }
 
-func (h *AuthHandler) extractClientIP(ctx context.Context) string {
+func (h *AuthHandler) extractClientInformation(ctx context.Context) *commonpb.ClientInformation {
+	clientInfo := &commonpb.ClientInformation{}
+
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		if ips := md.Get("x-forwarded-for"); len(ips) > 0 {
-			return ips[0]
+			clientInfo.IpAddress = ips[0]
+		} else if ips := md.Get("x-real-ip"); len(ips) > 0 {
+			clientInfo.IpAddress = ips[0]
 		}
-		if ips := md.Get("x-real-ip"); len(ips) > 0 {
-			return ips[0]
-		}
-	}
-	
-	if peer, ok := peer.FromContext(ctx); ok {
-		return peer.Addr.String()
-	}
-	
-	return ""
-}
 
-func (h *AuthHandler) extractUserAgent(ctx context.Context) string {
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		if agents := md.Get("user-agent"); len(agents) > 0 {
-			return agents[0]
+			clientInfo.UserAgent = agents[0]
+		}
+
+		if origins := md.Get("origin"); len(origins) > 0 {
+			clientInfo.Origin = origins[0]
+		}
+
+		if referers := md.Get("referer"); len(referers) > 0 {
+			clientInfo.Referer = referers[0]
+		}
+
+		if languages := md.Get("accept-language"); len(languages) > 0 {
+			clientInfo.Language = languages[0]
 		}
 	}
-	return ""
+
+	if clientInfo.IpAddress == "" {
+		if peer, ok := peer.FromContext(ctx); ok {
+			clientInfo.IpAddress = peer.Addr.String()
+		}
+	}
+
+	return clientInfo
 }
 
-func (h *AuthHandler) extractRequestContext(metadata map[string]string) map[string]interface{} {
+func (h *AuthHandler) extractRequestContext(metadata *commonpb.RequestMetadata) map[string]interface{} {
 	context := make(map[string]interface{})
-	for key, value := range metadata {
-		context[key] = value
+	if metadata != nil {
+		context["tenant_id"] = metadata.TenantId
+		context["user_id"] = metadata.UserId
+		context["request_id"] = metadata.RequestId
+		context["trace_id"] = metadata.TraceId
+		context["span_id"] = metadata.SpanId
+		context["session_id"] = metadata.SessionId
 	}
 	return context
+}
+
+func (h *AuthHandler) createValidationError(code errors.ErrorCode, message string) error {
+	return &errors.AppError{
+		Code:      code,
+		Message:   message,
+		Details:   "",
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (h *AuthHandler) convertStructToMap(s *structpb.Struct) map[string]interface{} {
@@ -477,7 +479,7 @@ func (h *AuthHandler) convertTokenInfo(tokenInfo *service.TokenInfo) *authpb.Tok
 
 	return &authpb.TokenInfo{
 		TokenId:   tokenInfo.TokenID,
-		Type:      tokenInfo.Type,
+		Type:      h.convertStringToTokenType(tokenInfo.Type),
 		Issuer:    tokenInfo.Issuer,
 		Subject:   tokenInfo.Subject,
 		Audience:  tokenInfo.Audience,
@@ -526,7 +528,7 @@ func (h *AuthHandler) convertCertificateInfo(certInfo *service.CertificateInfo) 
 		KeyUsage:           certInfo.KeyUsage,
 		ExtendedKeyUsage:   certInfo.ExtendedKeyUsage,
 		SubjectAltNames:    certInfo.SubjectAltNames,
-		Status:             certInfo.Status,
+		Status:             h.convertStringToCertificateStatus(certInfo.Status),
 		RevocationReason:   certInfo.RevocationReason,
 		RevocationTime:     h.convertTimeToTimestamp(certInfo.RevocationTime),
 	}
@@ -593,7 +595,7 @@ func (h *AuthHandler) convertValidationErrors(errors []service.ValidationError) 
 			Code:     err.Code,
 			Message:  err.Message,
 			Field:    err.Field,
-			Severity: h.convertErrorSeverity(err.Severity),
+			Severity: h.convertErrorSeverityToCommonSeverity(err.Severity),
 		}
 	}
 	return result
@@ -629,18 +631,52 @@ func (h *AuthHandler) convertRoleInfos(roles []service.RoleInfo) []*authpb.RoleI
 	return result
 }
 
-func (h *AuthHandler) convertErrorSeverity(severity errors.ErrorSeverity) authpb.ErrorSeverity {
+func (h *AuthHandler) convertStringToTokenType(tokenType string) authpb.TokenType {
+	switch tokenType {
+	case "access":
+		return authpb.TokenType_TOKEN_TYPE_ACCESS
+	case "refresh":
+		return authpb.TokenType_TOKEN_TYPE_REFRESH
+	case "id":
+		return authpb.TokenType_TOKEN_TYPE_ID
+	case "api_key":
+		return authpb.TokenType_TOKEN_TYPE_API_KEY
+	case "session":
+		return authpb.TokenType_TOKEN_TYPE_SESSION
+	default:
+		return authpb.TokenType_TOKEN_TYPE_UNSPECIFIED
+	}
+}
+
+func (h *AuthHandler) convertStringToCertificateStatus(status string) authpb.CertificateStatus {
+	switch status {
+	case "valid":
+		return authpb.CertificateStatus_CERTIFICATE_STATUS_VALID
+	case "expired":
+		return authpb.CertificateStatus_CERTIFICATE_STATUS_EXPIRED
+	case "revoked":
+		return authpb.CertificateStatus_CERTIFICATE_STATUS_REVOKED
+	case "invalid":
+		return authpb.CertificateStatus_CERTIFICATE_STATUS_INVALID
+	case "unknown":
+		return authpb.CertificateStatus_CERTIFICATE_STATUS_UNKNOWN
+	default:
+		return authpb.CertificateStatus_CERTIFICATE_STATUS_UNSPECIFIED
+	}
+}
+
+func (h *AuthHandler) convertErrorSeverityToCommonSeverity(severity errors.ErrorSeverity) commonpb.Severity {
 	switch severity {
 	case errors.SeverityLow:
-		return authpb.ErrorSeverity_ERROR_SEVERITY_LOW
+		return commonpb.Severity_SEVERITY_LOW
 	case errors.SeverityMedium:
-		return authpb.ErrorSeverity_ERROR_SEVERITY_MEDIUM
+		return commonpb.Severity_SEVERITY_MEDIUM
 	case errors.SeverityHigh:
-		return authpb.ErrorSeverity_ERROR_SEVERITY_HIGH
+		return commonpb.Severity_SEVERITY_HIGH
 	case errors.SeverityCritical:
-		return authpb.ErrorSeverity_ERROR_SEVERITY_CRITICAL
+		return commonpb.Severity_SEVERITY_CRITICAL
 	default:
-		return authpb.ErrorSeverity_ERROR_SEVERITY_UNSPECIFIED
+		return commonpb.Severity_SEVERITY_UNSPECIFIED
 	}
 }
 
@@ -671,6 +707,7 @@ func (h *AuthHandler) buildAuthenticateErrorResponse(err error) *authpb.Authenti
 		Result: &authpb.AuthenticationResult{
 			Authenticated: false,
 		},
+		Error: h.convertErrorToErrorDetails(err),
 	}
 }
 
@@ -680,6 +717,7 @@ func (h *AuthHandler) buildValidateTokenErrorResponse(err error) *authpb.Validat
 		Result: &authpb.TokenValidationResult{
 			Valid: false,
 		},
+		Error: h.convertErrorToErrorDetails(err),
 	}
 }
 
@@ -691,18 +729,21 @@ func (h *AuthHandler) buildAuthorizeErrorResponse(err error) *authpb.AuthorizeRe
 			Decision:   "deny",
 			Reason:     err.Error(),
 		},
+		Error: h.convertErrorToErrorDetails(err),
 	}
 }
 
 func (h *AuthHandler) buildRefreshTokenErrorResponse(err error) *authpb.RefreshTokenResponse {
 	return &authpb.RefreshTokenResponse{
 		Status: h.convertErrorToStatus(err),
+		Error:  h.convertErrorToErrorDetails(err),
 	}
 }
 
 func (h *AuthHandler) buildGetPermissionsErrorResponse(err error) *authpb.GetPermissionsResponse {
 	return &authpb.GetPermissionsResponse{
 		Status: h.convertErrorToStatus(err),
+		Error:  h.convertErrorToErrorDetails(err),
 	}
 }
 
@@ -712,43 +753,59 @@ func (h *AuthHandler) buildVerifyCertificateErrorResponse(err error) *authpb.Ver
 		Result: &authpb.CertificateVerificationResult{
 			Valid: false,
 		},
+		Error: h.convertErrorToErrorDetails(err),
 	}
 }
 
-func (h *AuthHandler) convertErrorToStatus(err error) *commonpb.Status {
-	if customErr, ok := err.(*errors.CustomError); ok {
-		return &commonpb.Status{
-			Code:    h.convertErrorCodeToStatusCode(customErr.Code),
-			Message: customErr.Message,
-			Details: customErr.Details,
+func (h *AuthHandler) convertErrorToStatus(err error) commonpb.Status {
+	if appErr, ok := err.(*errors.AppError); ok {
+		switch appErr.Code {
+		case errors.ErrCodeInvalidRequest:
+			return commonpb.Status_STATUS_ERROR
+		case errors.ErrCodeUnauthorized:
+			return commonpb.Status_STATUS_ERROR
+		case errors.ErrCodeForbidden:
+			return commonpb.Status_STATUS_BLOCKED
+		case errors.ErrCodeNotFound:
+			return commonpb.Status_STATUS_ERROR
+		default:
+			return commonpb.Status_STATUS_ERROR
+		}
+	}
+	return commonpb.Status_STATUS_ERROR
+}
+
+func (h *AuthHandler) convertErrorToErrorDetails(err error) *commonpb.ErrorDetails {
+	if appErr, ok := err.(*errors.AppError); ok {
+		return &commonpb.ErrorDetails{
+			Code:      h.convertErrorCodeToCommonErrorCode(appErr.Code),
+			Message:   appErr.Message,
+			Details:   appErr.Details,
+			Severity:  commonpb.Severity_SEVERITY_HIGH,
+			Timestamp: timestamppb.New(time.Now().UTC()),
 		}
 	}
 
-	return &commonpb.Status{
-		Code:    commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR,
-		Message: err.Error(),
+	return &commonpb.ErrorDetails{
+		Code:      commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR,
+		Message:   err.Error(),
+		Details:   "",
+		Severity:  commonpb.Severity_SEVERITY_HIGH,
+		Timestamp: timestamppb.New(time.Now().UTC()),
 	}
 }
 
-func (h *AuthHandler) convertErrorCodeToStatusCode(code errors.ErrorCode) commonpb.StatusCode {
+func (h *AuthHandler) convertErrorCodeToCommonErrorCode(code errors.ErrorCode) commonpb.ErrorCode {
 	switch code {
 	case errors.ErrCodeInvalidRequest:
-		return commonpb.StatusCode_STATUS_CODE_INVALID_ARGUMENT
+		return commonpb.ErrorCode_ERROR_CODE_INVALID_REQUEST
 	case errors.ErrCodeUnauthorized:
-		return commonpb.StatusCode_STATUS_CODE_UNAUTHENTICATED
+		return commonpb.ErrorCode_ERROR_CODE_UNAUTHORIZED
 	case errors.ErrCodeForbidden:
-		return commonpb.StatusCode_STATUS_CODE_PERMISSION_DENIED
+		return commonpb.ErrorCode_ERROR_CODE_FORBIDDEN
 	case errors.ErrCodeNotFound:
-		return commonpb.StatusCode_STATUS_CODE_NOT_FOUND
-	case errors.ErrCodeConflict:
-		return commonpb.StatusCode_STATUS_CODE_ALREADY_EXISTS
-	case errors.ErrCodeDatabaseError:
-		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
-	case errors.ErrCodeConfigError:
-		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
-	case errors.ErrCodeServiceUnavailable:
-		return commonpb.StatusCode_STATUS_CODE_UNAVAILABLE
+		return commonpb.ErrorCode_ERROR_CODE_NOT_FOUND
 	default:
-		return commonpb.StatusCode_STATUS_CODE_INTERNAL_ERROR
+		return commonpb.ErrorCode_ERROR_CODE_INTERNAL_ERROR
 	}
 }

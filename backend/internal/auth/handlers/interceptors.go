@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/metrics"
 )
 
@@ -223,3 +222,5 @@ func getGRPCCode(err error) string {
 	}
 	return codes.Unknown.String()
 }
+
+

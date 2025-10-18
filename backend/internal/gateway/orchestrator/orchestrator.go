@@ -1,6 +1,7 @@
 package orchestrator
 
 import (
+	"fmt"
 	"context"
 	"sync"
 	"time"
@@ -8,6 +9,9 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/database"
@@ -16,12 +20,11 @@ import (
 	commonpb "flamo/backend/pkg/api/proto/common"
 	authpb "flamo/backend/pkg/api/proto/auth"
 	gatewaypb "flamo/backend/pkg/api/proto/gateway"
-	"flamo/backend/pkg/api/proto/models/request"
-	"flamo/backend/pkg/api/proto/models/response"
 	"flamo/backend/pkg/api/proto/models/tenant"
 )
 
 type Orchestrator struct {
+	gatewaypb.UnimplementedGatewayServiceServer
 	config           *config.Config
 	db               *database.Database
 	logger           *zap.Logger
@@ -55,7 +58,7 @@ type RequestContext struct {
 	ClientIP         string
 	UserAgent        string
 	Timestamp        time.Time
-	Request          *request.AIRequest
+	Request          *gatewaypb.ProcessAIRequestRequest
 	Tenant           *tenant.Tenant
 	AuthContext      *AuthenticationContext
 	PolicyContext    *PolicyContext
@@ -63,7 +66,7 @@ type RequestContext struct {
 	ModelContext     *ModelContext
 	AuditContext     *AuditContext
 	Metadata         map[string]interface{}
-	ProcessingStage  commonpb.Status
+	ProcessingStage  gatewaypb.ProcessingStage
 	StartTime        time.Time
 	EndTime          time.Time
 	Duration         time.Duration
@@ -191,7 +194,7 @@ type PolicyRequest struct {
 	Action       string
 	Resource     string
 	Context      map[string]interface{}
-	RequestData  *request.AIRequest
+	RequestData  *gatewaypb.AIRequestPayload
 }
 
 type PolicyResponse struct {
@@ -240,14 +243,14 @@ type ModelRequest struct {
 	TenantID    string
 	Model       string
 	Provider    string
-	Payload     *request.RequestPayload
+	Payload     *gatewaypb.RequestContent
 	Context     map[string]interface{}
 	Metadata    map[string]interface{}
 }
 
 type ModelResponse struct {
 	RequestID      string
-	Data           *response.ResponseData
+	Data           *gatewaypb.AIResponsePayload
 	Model          string
 	Provider       string
 	TokensUsed     int64
@@ -270,6 +273,29 @@ type ModelInfo struct {
 	Pricing      map[string]float64
 	Limits       map[string]interface{}
 	Metadata     map[string]interface{}
+}
+
+type TimeRange struct {
+	Start time.Time
+	End   time.Time
+}
+
+type ThreatStatistics struct {
+	TotalRequests     int64
+	BlockedRequests   int64
+	AverageRiskScore  float64
+	UniqueThreatTypes int64
+}
+
+type ComplianceReport struct {
+	TenantID              string
+	TimeRange             TimeRange
+	TotalRequests         int64
+	PIIRequests           int64
+	PolicyViolations      int64
+	AuditedRequests       int64
+	AverageProcessingTime time.Duration
+	GeneratedAt           time.Time
 }
 
 func NewOrchestrator(cfg *config.Config, db *database.Database, logger *zap.Logger) (*Orchestrator, error) {
@@ -389,8 +415,8 @@ func (o *Orchestrator) initializeRateLimiters() error {
 	return nil
 }
 
-func (o *Orchestrator) ProcessRequest(ctx context.Context, aiRequest *request.AIRequest) (*response.AIResponse, *errors.AppError) {
-	reqCtx := o.createRequestContext(ctx, aiRequest)
+func (o *Orchestrator) ProcessAIRequest(ctx context.Context, req *gatewaypb.ProcessAIRequestRequest) (*gatewaypb.ProcessAIRequestResponse, error) {
+	reqCtx := o.createRequestContext(ctx, req)
 	
 	defer func() {
 		reqCtx.EndTime = time.Now()
@@ -401,54 +427,109 @@ func (o *Orchestrator) ProcessRequest(ctx context.Context, aiRequest *request.AI
 
 	if err := o.validateRequest(reqCtx); err != nil {
 		reqCtx.Error = err
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
-		return nil, err
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_FAILED
+		return &gatewaypb.ProcessAIRequestResponse{
+			Status: commonpb.Status_STATUS_ERROR,
+			Error: &commonpb.ErrorDetails{
+				Message: string(err.Code) + ": " + err.Message,
+			},
+		}, nil
 	}
 
 	if err := o.authenticateRequest(reqCtx); err != nil {
 		reqCtx.Error = err
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
-		return nil, err
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_FAILED
+		return &gatewaypb.ProcessAIRequestResponse{
+			Status: commonpb.Status_STATUS_ERROR,
+			Error: &commonpb.ErrorDetails{
+				Message: string(err.Code) + ": " + err.Message,
+			},
+		}, nil
 	}
 
 	if err := o.resolveTenant(reqCtx); err != nil {
 		reqCtx.Error = err
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
-		return nil, err
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_FAILED
+		return &gatewaypb.ProcessAIRequestResponse{
+			Status: commonpb.Status_STATUS_ERROR,
+			Error: &commonpb.ErrorDetails{
+				Message: string(err.Code) + ": " + err.Message,
+			},
+		}, nil
 	}
 
 	if err := o.evaluatePolicy(reqCtx); err != nil {
 		reqCtx.Error = err
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
-		return nil, err
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_FAILED
+		return &gatewaypb.ProcessAIRequestResponse{
+			Status: commonpb.Status_STATUS_ERROR,
+			Error: &commonpb.ErrorDetails{
+				Message: string(err.Code) + ": " + err.Message,
+			},
+		}, nil
 	}
 
 	if err := o.analyzeThreat(reqCtx); err != nil {
 		reqCtx.Error = err
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
-		return nil, err
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_FAILED
+		return &gatewaypb.ProcessAIRequestResponse{
+			Status: commonpb.Status_STATUS_ERROR,
+			Error: &commonpb.ErrorDetails{
+				Message: string(err.Code) + ": " + err.Message,
+			},
+		}, nil
 	}
 
 	aiResponse, err := o.routeToModel(reqCtx)
 	if err != nil {
 		reqCtx.Error = err
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
-		return nil, err
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_FAILED
+		return &gatewaypb.ProcessAIRequestResponse{
+			Status: commonpb.Status_STATUS_ERROR,
+			Error: &commonpb.ErrorDetails{
+				Message: string(err.Code) + ": " + err.Message,
+			},
+		}, nil
 	}
 
 	if err := o.postProcessResponse(reqCtx, aiResponse); err != nil {
 		reqCtx.Error = err
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_ERROR
-		return nil, err
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_FAILED
+		return &gatewaypb.ProcessAIRequestResponse{
+			Status: commonpb.Status_STATUS_ERROR,
+			Error: &commonpb.ErrorDetails{
+				Message: string(err.Code) + ": " + err.Message,
+			},
+		}, nil
 	}
 
-	reqCtx.ProcessingStage = commonpb.Status_STATUS_SUCCESS
-	return aiResponse, nil
+	reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_COMPLETED
+
+	processingResult := &gatewaypb.ProcessingResult{
+		RequestId:   reqCtx.RequestID,
+		TraceId:     reqCtx.TraceID,
+		FinalStage:  reqCtx.ProcessingStage,
+		RoutingDecision: gatewaypb.RoutingDecision_ROUTING_DECISION_ALLOW,
+		SecurityAnalysis: &commonpb.SecurityAnalysis{
+			ThreatLevel: reqCtx.ThreatContext.ThreatLevel,
+			RiskScore:   reqCtx.ThreatContext.RiskScore,
+		},
+		PerformanceMetrics: &commonpb.PerformanceMetrics{
+			TotalLatencyMs: reqCtx.Duration.Milliseconds(),
+		},
+	}
+
+	return &gatewaypb.ProcessAIRequestResponse{
+		Status:           commonpb.Status_STATUS_SUCCESS,
+		Response:         aiResponse,
+		ProcessingResult: processingResult,
+		TotalProcessingTime: durationpb.New(reqCtx.Duration),
+	}, nil
 }
 
-func (o *Orchestrator) createRequestContext(ctx context.Context, aiRequest *request.AIRequest) *RequestContext {
+func (o *Orchestrator) createRequestContext(ctx context.Context, req *gatewaypb.ProcessAIRequestRequest) *RequestContext {
 	requestID := uuid.New().String()
-	traceID := aiRequest.TraceID
+	traceID := req.Metadata.TraceId
 	if traceID == "" {
 		traceID = uuid.New().String()
 	}
@@ -456,13 +537,13 @@ func (o *Orchestrator) createRequestContext(ctx context.Context, aiRequest *requ
 	return &RequestContext{
 		RequestID:       requestID,
 		TraceID:         traceID,
-		SpanID:          aiRequest.SpanID,
-		TenantID:        aiRequest.TenantID.String(),
-		UserID:          "",
+		SpanID:          req.Metadata.SpanId,
+		TenantID:        req.Metadata.TenantId,
+		UserID:          req.Metadata.UserId,
 		Timestamp:       time.Now(),
-		Request:         aiRequest,
+		Request:         req,
 		Metadata:        make(map[string]interface{}),
-		ProcessingStage: commonpb.Status_STATUS_PENDING,
+		ProcessingStage: gatewaypb.ProcessingStage_PROCESSING_STAGE_RECEIVED,
 		StartTime:       time.Now(),
 		AuthContext:     &AuthenticationContext{},
 		PolicyContext:   &PolicyContext{},
@@ -477,11 +558,28 @@ func (o *Orchestrator) validateRequest(reqCtx *RequestContext) *errors.AppError 
 		return errors.New(errors.ErrCodeInvalidRequest, "request is required")
 	}
 
-	if err := reqCtx.Request.Validate(); err != nil {
-		return errors.Wrap(err, errors.ErrCodeValidationError, "request validation failed")
+	if reqCtx.Request.Payload == nil {
+		return errors.New(errors.ErrCodeInvalidRequest, "request payload is required")
 	}
 
+	if reqCtx.Request.Payload.ModelName == "" {
+		return errors.New(errors.ErrCodeValidationError, "model name is required")
+	}
+
+	reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_VALIDATED
+
 	return nil
+}
+
+func (o *Orchestrator) convertProcessingStageToStatus(stage gatewaypb.ProcessingStage) commonpb.Status {
+	switch stage {
+	case gatewaypb.ProcessingStage_PROCESSING_STAGE_COMPLETED:
+		return commonpb.Status_STATUS_SUCCESS
+	case gatewaypb.ProcessingStage_PROCESSING_STAGE_FAILED:
+		return commonpb.Status_STATUS_ERROR
+	default:
+		return commonpb.Status_STATUS_PROCESSING
+	}
 }
 
 func (o *Orchestrator) authenticateRequest(reqCtx *RequestContext) *errors.AppError {
@@ -495,8 +593,20 @@ func (o *Orchestrator) authenticateRequest(reqCtx *RequestContext) *errors.AppEr
 		defer cancel()
 
 		authReq := &authpb.AuthenticateRequest{
-			Token:    reqCtx.Request.SecurityContext.SessionToken,
-			TenantId: reqCtx.TenantID,
+			Metadata: &commonpb.RequestMetadata{
+				RequestId: reqCtx.RequestID,
+				TenantId:  reqCtx.TenantID,
+				UserId:    reqCtx.UserID,
+				SecurityContext: &commonpb.SecurityContext{
+					SessionToken: reqCtx.Request.Metadata.SecurityContext.SessionToken,
+				},
+			},
+			Method: authpb.AuthenticationMethod_AUTHENTICATION_METHOD_JWT,
+			Credentials: &authpb.AuthenticateRequest_Jwt{
+				Jwt: &authpb.JWTCredentials{
+					Token: reqCtx.Request.Metadata.SecurityContext.SessionToken,
+				},
+			},
 		}
 
 		resp, err := o.authClient.Authenticate(ctx, authReq)
@@ -505,12 +615,12 @@ func (o *Orchestrator) authenticateRequest(reqCtx *RequestContext) *errors.AppEr
 			return err
 		}
 
-		reqCtx.AuthContext.IsAuthenticated = resp.Valid
-		reqCtx.AuthContext.Principal = resp.Principal
-		reqCtx.AuthContext.Scopes = resp.Scopes
+		reqCtx.AuthContext.IsAuthenticated = resp.Result.Authenticated
+		reqCtx.AuthContext.Principal = resp.Result.Principal.Name
+		reqCtx.AuthContext.Scopes = resp.Result.Scopes
 		reqCtx.AuthContext.Claims = make(map[string]interface{})
-		reqCtx.AuthContext.AuthLevel = reqCtx.Request.SecurityContext.AuthenticationLevel
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
+		reqCtx.AuthContext.AuthLevel = reqCtx.Request.Payload.SecurityLevel.String()
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_AUTHENTICATED
 
 		return nil
 	})
@@ -545,7 +655,7 @@ func (o *Orchestrator) resolveTenant(reqCtx *RequestContext) *errors.AppError {
 	}
 
 	reqCtx.Tenant = tenantObj
-	reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
+	reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_AUTHORIZED
 
 	return nil
 }
@@ -564,9 +674,9 @@ func (o *Orchestrator) evaluatePolicy(reqCtx *RequestContext) *errors.AppError {
 			TenantID:    reqCtx.TenantID,
 			UserID:      reqCtx.AuthContext.Principal,
 			Action:      "ai_request",
-			Resource:    reqCtx.Request.ModelName,
+			Resource:    reqCtx.Request.Payload.ModelName,
 			Context:     reqCtx.Metadata,
-			RequestData: reqCtx.Request,
+			RequestData: reqCtx.Request.Payload,
 		}
 
 		resp, err := o.policyClient.EvaluatePolicy(ctx, policyReq)
@@ -579,7 +689,7 @@ func (o *Orchestrator) evaluatePolicy(reqCtx *RequestContext) *errors.AppError {
 		reqCtx.PolicyContext.AppliedPolicies = resp.Policies
 		reqCtx.PolicyContext.Violations = resp.Violations
 		reqCtx.PolicyContext.Constraints = resp.Constraints
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_COMPLIANCE_CHECKED
 
 		return nil
 	})
@@ -612,8 +722,8 @@ func (o *Orchestrator) analyzeThreat(reqCtx *RequestContext) *errors.AppError {
 		threatReq := &ThreatAnalysisRequest{
 			RequestID:   reqCtx.RequestID,
 			TenantID:    reqCtx.TenantID,
-			Content:     reqCtx.Request.Payload.Prompt,
-			ContentType: string(reqCtx.Request.ContentType),
+			Content:     reqCtx.Request.Payload.Content.Prompt,
+			ContentType: reqCtx.Request.Payload.ContentType.String(),
 			Context:     reqCtx.Metadata,
 		}
 
@@ -627,7 +737,7 @@ func (o *Orchestrator) analyzeThreat(reqCtx *RequestContext) *errors.AppError {
 		reqCtx.ThreatContext.RiskScore = resp.RiskScore
 		reqCtx.ThreatContext.DetectedThreats = resp.Detections
 		reqCtx.ThreatContext.Confidence = 0.95
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_SECURITY_ANALYZED
 
 		return nil
 	})
@@ -644,12 +754,12 @@ func (o *Orchestrator) analyzeThreat(reqCtx *RequestContext) *errors.AppError {
 	return nil
 }
 
-func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*response.AIResponse, *errors.AppError) {
+func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*gatewaypb.AIResponsePayload, *errors.AppError) {
 	if !o.rateLimiters["model"].Allow() {
 		return nil, errors.NewRateLimitError(time.Minute)
 	}
 
-	var aiResponse *response.AIResponse
+	var aiResponse *gatewaypb.AIResponsePayload
 	var modelErr *errors.AppError
 
 	err := o.circuitBreakers["model"].Execute(func() error {
@@ -659,9 +769,9 @@ func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*response.AIRespons
 		modelReq := &ModelRequest{
 			RequestID: reqCtx.RequestID,
 			TenantID:  reqCtx.TenantID,
-			Model:     reqCtx.Request.ModelName,
-			Provider:  string(reqCtx.Request.Provider),
-			Payload:   &reqCtx.Request.Payload,
+			Model:     reqCtx.Request.Payload.ModelName,
+			Provider:  reqCtx.Request.Payload.Provider.String(),
+			Payload:   reqCtx.Request.Payload.Content,
 			Context:   reqCtx.Metadata,
 		}
 
@@ -671,32 +781,14 @@ func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*response.AIRespons
 			return err
 		}
 
-		aiResponse = response.NewAIResponse(
-			reqCtx.Request.ID,
-			reqCtx.Request.TenantID,
-			reqCtx.TraceID,
-			reqCtx.SpanID,
-		)
-
-		aiResponse.SetSuccess(resp.Data)
-		aiResponse.Usage.PromptTokens = int(resp.TokensUsed)
-		aiResponse.Usage.TotalTokens = int(resp.TokensUsed)
-		aiResponse.Performance.TotalLatencyMs = resp.ProcessingTime.Milliseconds()
-		aiResponse.Performance.ModelLatencyMs = resp.ProcessingTime.Milliseconds()
-
-		if aiResponse.Usage.Cost == nil {
-			aiResponse.Usage.Cost = &response.CostBreakdown{
-				Currency:   "USD",
-				TotalCost:  resp.Cost,
-			}
-		}
+		aiResponse = resp.Data
 
 		reqCtx.ModelContext.SelectedModel = resp.Model
 		reqCtx.ModelContext.Provider = commonpb.ModelProvider(commonpb.ModelProvider_value[resp.Provider])
 		reqCtx.ModelContext.ResponseTime = resp.ProcessingTime
 		reqCtx.ModelContext.TokensUsed = resp.TokensUsed
 		reqCtx.ModelContext.CostEstimate = resp.Cost
-		reqCtx.ProcessingStage = commonpb.Status_STATUS_PROCESSING
+		reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_ROUTED
 
 		return nil
 	})
@@ -708,36 +800,28 @@ func (o *Orchestrator) routeToModel(reqCtx *RequestContext) (*response.AIRespons
 	return aiResponse, nil
 }
 
-func (o *Orchestrator) postProcessResponse(reqCtx *RequestContext, aiResponse *response.AIResponse) *errors.AppError {
-	if aiResponse.Data == nil || aiResponse.Data.Content == "" {
+func (o *Orchestrator) postProcessResponse(reqCtx *RequestContext, aiResponse *gatewaypb.AIResponsePayload) *errors.AppError {
+	if aiResponse == nil || len(aiResponse.Choices) == 0 {
 		return errors.New(errors.ErrCodeInternalError, "empty response from model")
 	}
 
-	if reqCtx.Request.ComplianceContext.PIIDetected {
-		reqCtx.AuditContext.PIIDetected = true
-		
-		for _, rule := range reqCtx.Request.ComplianceContext.RedactionRules {
-			if rule.Enabled {
-				aiResponse.AddRedaction(
-					rule.Type,
-					"response_content",
-					rule.Replacement,
-					"PII protection",
-				)
+	if reqCtx.Request.Context != nil && reqCtx.Request.Context.Fields != nil {
+		if piiField, exists := reqCtx.Request.Context.Fields["pii_detected"]; exists {
+			if piiField.GetBoolValue() {
+				reqCtx.AuditContext.PIIDetected = true
 			}
 		}
 	}
 
 	if reqCtx.Tenant.ComplianceConfig.PIIRedactionEnabled {
-		for i, choice := range aiResponse.Data.Choices {
+		for i, choice := range aiResponse.Choices {
 			if choice.Message != nil && choice.Message.Content != "" {
-				aiResponse.Data.Choices[i].Message.Content = o.sanitizeContent(choice.Message.Content)
+				aiResponse.Choices[i].Message.Content = o.sanitizeContent(choice.Message.Content)
 			}
 		}
-		aiResponse.Data.Content = o.sanitizeContent(aiResponse.Data.Content)
 	}
 
-	reqCtx.ProcessingStage = commonpb.Status_STATUS_SUCCESS
+	reqCtx.ProcessingStage = gatewaypb.ProcessingStage_PROCESSING_STAGE_PROCESSED
 	return nil
 }
 
@@ -846,15 +930,17 @@ func (o *Orchestrator) auditRequest(reqCtx *RequestContext) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
+		auditStatus := o.convertProcessingStageToStatus(reqCtx.ProcessingStage)
+
 		auditEvent := &commonpb.AuditEvent{
 			EventId:   uuid.New().String(),
 			EventType: "ai_request",
 			ActorId:   reqCtx.AuthContext.Principal,
 			ActorType: "user",
 			Action:    "process_request",
-			Status:    reqCtx.ProcessingStage,
-			SourceIp:  reqCtx.Request.ClientInfo.IPAddress,
-			UserAgent: reqCtx.Request.ClientInfo.UserAgent,
+			Status:    auditStatus,
+			SourceIp:  reqCtx.Request.Metadata.ClientInfo.IpAddress,
+			UserAgent: reqCtx.Request.Metadata.ClientInfo.UserAgent,
 			TraceId:   reqCtx.TraceID,
 			TenantId:  reqCtx.TenantID,
 			Severity:  commonpb.Severity_SEVERITY_MEDIUM,
@@ -970,7 +1056,6 @@ func (o *Orchestrator) performHealthCheck() {
 	totalServices := 0
 
 	services := map[string]func() error{
-		"auth":   func() error { return o.authClient.HealthCheck(context.Background()) },
 		"policy": func() error { return o.policyClient.HealthCheck(context.Background()) },
 		"threat": func() error { return o.threatClient.HealthCheck(context.Background()) },
 		"model":  func() error { return o.modelProxyClient.HealthCheck(context.Background()) },
@@ -979,7 +1064,6 @@ func (o *Orchestrator) performHealthCheck() {
 
 	for serviceName, healthCheck := range services {
 		totalServices++
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		
 		if err := healthCheck(); err != nil {
 			o.healthStatus.Services[serviceName] = "unhealthy"
@@ -990,10 +1074,12 @@ func (o *Orchestrator) performHealthCheck() {
 			o.healthStatus.Services[serviceName] = "healthy"
 			healthyServices++
 		}
-		cancel()
 	}
 
-	if err := o.db.HealthCheck(); err != nil {
+	dbCtx, dbCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer dbCancel()
+
+	if err := o.db.HealthCheck(dbCtx); err != nil {
 		o.healthStatus.Dependencies["database"] = "unhealthy"
 	} else {
 		o.healthStatus.Dependencies["database"] = "healthy"
@@ -1109,16 +1195,117 @@ func (o *Orchestrator) calculateThroughput() {
 	}
 }
 
-func (o *Orchestrator) ProcessBatchRequests(ctx context.Context, requests []*request.AIRequest) ([]*response.AIResponse, *errors.AppError) {
+func (o *Orchestrator) GetHealth(ctx context.Context, req *gatewaypb.GetHealthRequest) (*gatewaypb.GetHealthResponse, error) {
+	o.performHealthCheck()
+	
+	serviceHealthList := make([]*gatewaypb.ServiceHealth, 0)
+	for serviceName, status := range o.healthStatus.Services {
+		serviceHealthList = append(serviceHealthList, &gatewaypb.ServiceHealth{
+			ServiceName: serviceName,
+			Status:      o.convertHealthStringToStatus(status),
+			LastCheck:   timestamppb.New(o.healthStatus.LastHealthCheck),
+		})
+	}
+	
+	return &gatewaypb.GetHealthResponse{
+		Status: commonpb.Status_STATUS_SUCCESS,
+		ServiceHealth: serviceHealthList,
+		LastUpdated:   timestamppb.New(o.healthStatus.LastHealthCheck),
+	}, nil
+}
+
+func (o *Orchestrator) GetMetrics(ctx context.Context, req *gatewaypb.GetMetricsRequest) (*gatewaypb.GetMetricsResponse, error) {
+	o.metrics.mu.RLock()
+	defer o.metrics.mu.RUnlock()
+	
+	metrics := []*gatewaypb.MetricData{
+		{
+			Name:        "total_requests",
+			Type:        "counter",
+			Description: "Total number of requests processed",
+			Points: []*gatewaypb.MetricPoint{
+				{
+					Timestamp: timestamppb.New(o.metrics.LastUpdated),
+					Value:     float64(o.metrics.TotalRequests),
+				},
+			},
+		},
+		{
+			Name:        "error_rate",
+			Type:        "gauge",
+			Description: "Current error rate",
+			Points: []*gatewaypb.MetricPoint{
+				{
+					Timestamp: timestamppb.New(o.metrics.LastUpdated),
+					Value:     o.metrics.ErrorRate,
+				},
+			},
+		},
+	}
+	
+	return &gatewaypb.GetMetricsResponse{
+		Status:      commonpb.Status_STATUS_SUCCESS,
+		Metrics:     metrics,
+		GeneratedAt: timestamppb.New(time.Now()),
+	}, nil
+}
+
+func (o *Orchestrator) ValidateRequest(ctx context.Context, req *gatewaypb.ValidateRequestRequest) (*gatewaypb.ValidateRequestResponse, error) {
+	validationErrors := make([]*gatewaypb.ValidationError, 0)
+	
+	if req.Payload == nil {
+		validationErrors = append(validationErrors, &gatewaypb.ValidationError{
+			Field:   "payload",
+			Code:    "required",
+			Message: "payload is required",
+		})
+	} else {
+		if req.Payload.ModelName == "" {
+			validationErrors = append(validationErrors, &gatewaypb.ValidationError{
+				Field:   "model_name",
+				Code:    "required",
+				Message: "model name is required",
+			})
+		}
+	}
+	
+	isValid := len(validationErrors) == 0
+	
+	return &gatewaypb.ValidateRequestResponse{
+		Status: commonpb.Status_STATUS_SUCCESS,
+		Result: &gatewaypb.ValidationResult{
+			Valid:       isValid,
+			Errors:      validationErrors,
+			ValidatedAt: timestamppb.New(time.Now()),
+		},
+	}, nil
+}
+
+func (o *Orchestrator) GetRoutingInfo(ctx context.Context, req *gatewaypb.GetRoutingInfoRequest) (*gatewaypb.GetRoutingInfoResponse, error) {
+	return &gatewaypb.GetRoutingInfoResponse{
+		Status: commonpb.Status_STATUS_SUCCESS,
+		RoutingInfo: &gatewaypb.RoutingInfo{
+			TargetEndpoint:      "model-proxy-service",
+			LoadBalancerPolicy:  "round_robin",
+			AvailableEndpoints:  []string{"endpoint1", "endpoint2"},
+		},
+	}, nil
+}
+
+func (o *Orchestrator) StreamAIRequest(req *gatewaypb.StreamAIRequestRequest, stream gatewaypb.GatewayService_StreamAIRequestServer) error {
+	return fmt.Errorf("streaming not implemented")
+}
+
+func (o *Orchestrator) ProcessBatchRequests(ctx context.Context, requests []*gatewaypb.ProcessAIRequestRequest) ([]*gatewaypb.ProcessAIRequestResponse, error) {
 	if len(requests) == 0 {
-		return nil, errors.New(errors.ErrCodeInvalidRequest, "no requests provided")
+		return nil, fmt.Errorf("no requests provided")
 	}
 
 	if len(requests) > 100 {
-		return nil, errors.New(errors.ErrCodePayloadTooLarge, "batch size exceeds maximum limit")
+		return nil, fmt.Errorf("batch size exceeds maximum limit")
 	}
 
-	responses := make([]*response.AIResponse, len(requests))
+	responses := make([]*gatewaypb.ProcessAIRequestResponse, len(requests))
 	errChan := make(chan error, len(requests))
 	
 	var wg sync.WaitGroup
@@ -1126,13 +1313,13 @@ func (o *Orchestrator) ProcessBatchRequests(ctx context.Context, requests []*req
 
 	for i, req := range requests {
 		wg.Add(1)
-		go func(index int, aiRequest *request.AIRequest) {
+		go func(index int, aiRequest *gatewaypb.ProcessAIRequestRequest) {
 			defer wg.Done()
 			
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			resp, err := o.ProcessRequest(ctx, aiRequest)
+			resp, err := o.ProcessAIRequest(ctx, aiRequest)
 			if err != nil {
 				errChan <- err
 				return
@@ -1152,7 +1339,7 @@ func (o *Orchestrator) ProcessBatchRequests(ctx context.Context, requests []*req
 	}
 
 	if firstError != nil {
-		return nil, errors.Handle(firstError)
+		return nil, firstError
 	}
 
 	return responses, nil
@@ -1186,7 +1373,7 @@ func (o *Orchestrator) CheckQuotaLimits(reqCtx *RequestContext) *errors.AppError
 	return nil
 }
 
-func (o *Orchestrator) GetMetrics() *OrchestratorMetrics {
+func (o *Orchestrator) GetInternalMetrics() *OrchestratorMetrics {
 	o.metrics.mu.RLock()
 	defer o.metrics.mu.RUnlock()
 	
@@ -1285,25 +1472,18 @@ func (o *Orchestrator) RecoverFromPanic() {
 	}
 }
 
-type TimeRange struct {
-	Start time.Time
-	End   time.Time
+func (o *Orchestrator) convertHealthStringToStatus(health string) commonpb.Status {
+	switch health {
+	case "healthy":
+		return commonpb.Status_STATUS_SUCCESS
+	case "unhealthy":
+		return commonpb.Status_STATUS_ERROR
+	default:
+		return commonpb.Status_STATUS_PROCESSING
+	}
 }
 
-type ThreatStatistics struct {
-	TotalRequests     int64
-	BlockedRequests   int64
-	AverageRiskScore  float64
-	UniqueThreatTypes int64
+func (o *Orchestrator) convertErrorCode(errCode errors.ErrorCode) string {
+	return string(errCode)
 }
 
-type ComplianceReport struct {
-	TenantID              string
-	TimeRange             TimeRange
-	TotalRequests         int64
-	PIIRequests           int64
-	PolicyViolations      int64
-	AuditedRequests       int64
-	AverageProcessingTime time.Duration
-	GeneratedAt           time.Time
-}

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/metrics"
 	authpb "flamo/backend/pkg/api/proto/auth"
-	healthpb "flamo/backend/pkg/api/proto/health"
 )
 
 type Server struct {
@@ -85,8 +85,8 @@ func (s *Server) setupGRPCServer(metrics *metrics.Metrics) error {
 			MinTime:             5 * time.Second,
 			PermitWithoutStream: true,
 		}),
-		grpc.MaxRecvMsgSize(4 * 1024 * 1024), // 4MB
-		grpc.MaxSendMsgSize(4 * 1024 * 1024), // 4MB
+		grpc.MaxRecvMsgSize(4 * 1024 * 1024),
+		grpc.MaxSendMsgSize(4 * 1024 * 1024),
 	}
 
 	s.grpcServer = grpc.NewServer(opts...)
@@ -105,20 +105,18 @@ func (s *Server) registerServices() {
 	authpb.RegisterAuthenticationServiceServer(s.grpcServer, s.authHandler)
 	authpb.RegisterAPIKeyServiceServer(s.grpcServer, s.apiKeyHandler)
 	authpb.RegisterSessionServiceServer(s.grpcServer, s.sessionHandler)
-	healthpb.RegisterHealthServiceServer(s.grpcServer, s.healthHandler)
 
 	s.logger.Info("gRPC services registered",
 		zap.Strings("services", []string{
 			"AuthenticationService",
 			"APIKeyService", 
 			"SessionService",
-			"HealthService",
 		}))
 }
 
 func (s *Server) Start() error {
-	address := s.config.Server.Address
-	if address == "" {
+	address := fmt.Sprintf("%s:%d", s.config.Server.Host, s.config.Server.Port)
+	if address == ":0" {
 		address = ":8080"
 	}
 
@@ -129,7 +127,7 @@ func (s *Server) Start() error {
 
 	s.logger.Info("Starting gRPC server",
 		zap.String("address", address),
-		zap.String("environment", s.config.Environment))
+		zap.String("environment", string(s.config.Environment)))
 
 	if err := s.grpcServer.Serve(listener); err != nil {
 		return errors.Wrap(err, errors.ErrCodeServiceUnavailable, "gRPC server failed")
@@ -164,4 +162,8 @@ func (s *Server) Stop(ctx context.Context) error {
 
 func (s *Server) GetAuthService() *service.AuthService {
 	return s.authService
+}
+
+func (s *Server) GetHealthHandler() *HealthHandler {
+	return s.healthHandler
 }

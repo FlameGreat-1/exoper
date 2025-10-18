@@ -4,9 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/hex"
-	"encoding/pem"
 	"fmt"
 	"time"
 
@@ -17,8 +15,6 @@ import (
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
-	authpb "flamo/backend/pkg/api/proto/auth"
 )
 
 type TokenType string
@@ -445,15 +441,14 @@ func (tm *TokenManager) CleanupExpiredTokens(ctx context.Context) error {
 		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to cleanup expired revoked tokens")
 	}
 
-	rowsAffected, _ := result.RowsAffected()
+	rowsAffected := result.RowsAffected
 	
 	infoQuery := `DELETE FROM token_info WHERE expires_at < $1`
 	infoResult, err := tm.db.Exec(ctx, infoQuery, now)
 	if err != nil {
 		tm.logger.Warn("Failed to cleanup expired token info", zap.Error(err))
 	} else {
-		infoRows, _ := infoResult.RowsAffected()
-		rowsAffected += infoRows
+		rowsAffected += infoResult.RowsAffected
 	}
 
 	tm.logger.Info("Expired tokens cleaned up", zap.Int64("count", rowsAffected))
@@ -524,22 +519,6 @@ func (tm *TokenManager) generateRefreshToken(ctx context.Context, req *TokenRequ
 }
 
 func (tm *TokenManager) loadKeys() error {
-	if tm.config.Security.JWTPrivateKey != "" {
-		block, _ := pem.Decode([]byte(tm.config.Security.JWTPrivateKey))
-		if block == nil {
-			return fmt.Errorf("failed to decode private key PEM")
-		}
-
-		privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			return fmt.Errorf("failed to parse private key: %v", err)
-		}
-
-		tm.privateKey = privateKey
-		tm.publicKey = &privateKey.PublicKey
-		return nil
-	}
-
 	if tm.config.Security.JWTSecret != "" {
 		key, err := rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {

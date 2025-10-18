@@ -12,7 +12,6 @@ import (
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
 )
 
 type SessionManager struct {
@@ -217,8 +216,7 @@ func (sm *SessionManager) ExtendSession(ctx context.Context, sessionID string, d
 		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to extend session")
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	if result.RowsAffected == 0 {
 		return errors.New(errors.ErrCodeNotFound, "session not found or inactive")
 	}
 
@@ -246,8 +244,7 @@ func (sm *SessionManager) RevokeSession(ctx context.Context, sessionID, revokedB
 		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to revoke session")
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	if result.RowsAffected == 0 {
 		return errors.New(errors.ErrCodeNotFound, "session not found or already revoked")
 	}
 
@@ -276,11 +273,10 @@ func (sm *SessionManager) RevokeAllUserSessions(ctx context.Context, userID, rev
 		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to revoke user sessions")
 	}
 
-	rowsAffected, _ := result.RowsAffected()
 	sm.logger.Info("All user sessions revoked",
 		zap.String("user_id", userID),
 		zap.String("reason", reason),
-		zap.Int64("sessions_revoked", rowsAffected))
+		zap.Int64("sessions_revoked", result.RowsAffected))
 
 	return nil
 }
@@ -322,7 +318,6 @@ func (sm *SessionManager) CleanupExpiredSessions(ctx context.Context) error {
 		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to cleanup expired sessions")
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	sm.logger.Info("Expired sessions cleaned up", zap.Int64("count", rowsAffected))
+	sm.logger.Info("Expired sessions cleaned up", zap.Int64("count", result.RowsAffected))
 	return nil
 }

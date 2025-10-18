@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/errors"
@@ -125,7 +126,7 @@ func (m *MiddlewareManager) SecurityMiddleware() mux.MiddlewareFunc {
 					"client_ip":    clientInfo.IPAddress,
 					"path":         r.URL.Path,
 					"user_agent":   clientInfo.UserAgent,
-					"threat_level": threatContext.ThreatLevel,
+					"threat_level": threatContext.Severity,
 				})
 				m.writeErrorResponse(w, appErr)
 				return
@@ -229,7 +230,16 @@ func (m *MiddlewareManager) authenticateRequest(r *http.Request) (*request.Secur
 	defer cancel()
 
 	authReq := &authpb.AuthenticateRequest{
-		Token: authToken,
+		Metadata: &commonpb.RequestMetadata{
+			RequestId: uuid.New().String(),
+			Timestamp: timestamppb.Now(),
+		},
+		Method: authpb.AuthenticationMethod_AUTHENTICATION_METHOD_JWT,
+		Credentials: &authpb.AuthenticateRequest_Jwt{
+			Jwt: &authpb.JWTCredentials{
+				Token: authToken,
+			},
+		},
 	}
 
 	resp, err := m.authClient.Authenticate(ctx, authReq)
@@ -237,20 +247,27 @@ func (m *MiddlewareManager) authenticateRequest(r *http.Request) (*request.Secur
 		return nil, errors.Wrap(err, errors.ErrCodeAuthenticationError, "authentication failed")
 	}
 
-	if !resp.Valid {
+	if resp.Status != commonpb.Status_STATUS_SUCCESS || !resp.Result.Authenticated {
 		return nil, errors.NewUnauthorizedError("invalid authentication token")
 	}
+
+	apiKeyUUID, _ := uuid.Parse(resp.Result.TokenInfo.TokenId)
 
 	securityContext := &request.SecurityContext{
 		SessionToken:         authToken,
 		AuthenticationMethod: m.detectAuthMethod(r),
 		AuthenticationLevel:  "standard",
-		UserID:               resp.UserId,
-		TenantID:             resp.TenantId,
-		Permissions:          resp.Scopes,
-		SessionExpiry:        time.Unix(resp.ExpiresAt, 0),
-		MFAVerified:          false,
-		DeviceFingerprint:    "",
+		APIKeyID:             &apiKeyUUID,
+		JWTClaims:            resp.Result.TokenInfo.Claims.AsMap(),
+		Permissions:          resp.Result.Permissions,
+		Scopes:               resp.Result.Scopes,
+		RiskScore:            resp.Result.RiskScore,
+		ThreatIndicators:     resp.Result.RiskFactors,
+		IPWhitelisted:        false,
+		RateLimitRemaining:   100,
+		QuotaRemaining:       1000,
+		MTLSVerified:         false,
+		CertificateSubject:   "",
 	}
 
 	return securityContext, nil
@@ -260,28 +277,28 @@ func (m *MiddlewareManager) performSecurityChecks(r *http.Request) (*commonpb.Th
 	clientInfo := request.ExtractClientInfo(r)
 	
 	threatDetection := &commonpb.ThreatDetection{
-		ThreatType:  commonpb.ThreatType_THREAT_TYPE_NONE,
+		Type:        "none",
 		Severity:    commonpb.Severity_SEVERITY_LOW,
 		Confidence:  0.0,
 		Description: "No threats detected",
-		Mitigations: []string{},
+		Mitigation:  "",
 	}
 
 	if m.isBlockedIP(clientInfo.IPAddress) {
-		threatDetection.ThreatType = commonpb.ThreatType_THREAT_TYPE_MALICIOUS_IP
+		threatDetection.Type = "malicious_ip"
 		threatDetection.Severity = commonpb.Severity_SEVERITY_HIGH
 		threatDetection.Description = "IP address is blocked"
 		return threatDetection, errors.NewSecurityError("blocked_ip", "IP address is blocked")
 	}
 
 	if m.isSuspiciousUserAgent(clientInfo.UserAgent) {
-		threatDetection.ThreatType = commonpb.ThreatType_THREAT_TYPE_SUSPICIOUS_ACTIVITY
+		threatDetection.Type = "suspicious_activity"
 		threatDetection.Severity = commonpb.Severity_SEVERITY_MEDIUM
 		threatDetection.Description = "Suspicious user agent detected"
 	}
 
 	if m.hasInvalidHeaders(r) {
-		threatDetection.ThreatType = commonpb.ThreatType_THREAT_TYPE_SUSPICIOUS_ACTIVITY
+		threatDetection.Type = "suspicious_activity"
 		threatDetection.Severity = commonpb.Severity_SEVERITY_MEDIUM
 		threatDetection.Description = "Invalid headers detected"
 	}
@@ -325,7 +342,7 @@ func (m *MiddlewareManager) ComplianceMiddleware() mux.MiddlewareFunc {
 				return
 			}
 
-			tenantObj, err := m.getTenant(securityContext.TenantID)
+			tenantObj, err := m.getTenant(securityContext.APIKeyID.String())
 			if err != nil {
 				m.writeErrorResponse(w, err)
 				return
@@ -733,7 +750,16 @@ func (m *MiddlewareManager) authenticateGRPCRequest(ctx context.Context) (*reque
 	defer cancel()
 
 	authReq := &authpb.AuthenticateRequest{
-		Token: authToken,
+		Metadata: &commonpb.RequestMetadata{
+			RequestId: uuid.New().String(),
+			Timestamp: timestamppb.Now(),
+		},
+		Method: authpb.AuthenticationMethod_AUTHENTICATION_METHOD_JWT,
+		Credentials: &authpb.AuthenticateRequest_Jwt{
+			Jwt: &authpb.JWTCredentials{
+				Token: authToken,
+			},
+		},
 	}
 
 	resp, err := m.authClient.Authenticate(authCtx, authReq)
@@ -741,20 +767,27 @@ func (m *MiddlewareManager) authenticateGRPCRequest(ctx context.Context) (*reque
 		return nil, errors.Wrap(err, errors.ErrCodeAuthenticationError, "authentication failed")
 	}
 
-	if !resp.Valid {
+	if resp.Status != commonpb.Status_STATUS_SUCCESS || !resp.Result.Authenticated {
 		return nil, errors.NewUnauthorizedError("invalid authentication token")
 	}
+
+	apiKeyUUID, _ := uuid.Parse(resp.Result.TokenInfo.TokenId)
 
 	securityContext := &request.SecurityContext{
 		SessionToken:         authToken,
 		AuthenticationMethod: "grpc",
 		AuthenticationLevel:  "standard",
-		UserID:               resp.UserId,
-		TenantID:             resp.TenantId,
-		Permissions:          resp.Scopes,
-		SessionExpiry:        time.Unix(resp.ExpiresAt, 0),
-		MFAVerified:          false,
-		DeviceFingerprint:    "",
+		APIKeyID:             &apiKeyUUID,
+		JWTClaims:            resp.Result.TokenInfo.Claims.AsMap(),
+		Permissions:          resp.Result.Permissions,
+		Scopes:               resp.Result.Scopes,
+		RiskScore:            resp.Result.RiskScore,
+		ThreatIndicators:     resp.Result.RiskFactors,
+		IPWhitelisted:        false,
+		RateLimitRemaining:   100,
+		QuotaRemaining:       1000,
+		MTLSVerified:         false,
+		CertificateSubject:   "",
 	}
 
 	return securityContext, nil
@@ -819,8 +852,8 @@ func (m *MiddlewareManager) getSecurityContext(ctx context.Context) *request.Sec
 }
 
 func (m *MiddlewareManager) getRateLimitKey(clientIP string, securityContext *request.SecurityContext) string {
-	if securityContext != nil && securityContext.TenantID != "" {
-		return "tenant:" + securityContext.TenantID
+	if securityContext != nil && securityContext.APIKeyID != nil {
+		return "tenant:" + securityContext.APIKeyID.String()
 	}
 	return "ip:" + clientIP
 }
@@ -951,18 +984,15 @@ func (m *MiddlewareManager) detectPIIInRequest(r *http.Request) (*request.Compli
 	piiResult := utils.DetectPII(string(body))
 	
 	complianceContext := &request.ComplianceContext{
-		PIIDetected:    piiResult.HasPII,
-		DataClassification: request.ClassificationPublic,
-		RedactionRules: []request.RedactionRule{},
-		RetentionPolicy: request.RetentionPolicy{
-			RetentionPeriod: time.Hour * 24 * 365,
-			AutoDelete:      false,
-		},
-		AuditRequired: piiResult.HasPII,
+		PIIDetected:        piiResult.HasPII,
+		DataClassification: []string{"public"},
+		RedactionRules:     []request.RedactionRule{},
+		DataRetentionDays:  365,
+		AuditRequired:      piiResult.HasPII,
 	}
 
 	if piiResult.HasPII {
-		complianceContext.DataClassification = request.ClassificationSensitive
+		complianceContext.DataClassification = []string{"sensitive"}
 		complianceContext.RedactionRules = []request.RedactionRule{
 			{
 				Type:        "email",
@@ -982,6 +1012,7 @@ func (m *MiddlewareManager) detectPIIInRequest(r *http.Request) (*request.Compli
 	return complianceContext, nil
 }
 
+
 func (m *MiddlewareManager) getTenant(tenantID string) (*tenant.Tenant, *errors.AppError) {
 	m.mu.RLock()
 	if cachedTenant, exists := m.tenantCache[tenantID]; exists {
@@ -999,8 +1030,8 @@ func (m *MiddlewareManager) getTenant(tenantID string) (*tenant.Tenant, *errors.
 		ID:             tenantUUID,
 		Name:           "Default Tenant",
 		Slug:           "default",
-		Status:         tenant.TenantStatusActive,
-		Tier:           tenant.TenantTierEnterprise,
+		Status:         tenant.StatusActive,
+		Tier:           tenant.TierEnterprise,
 		OrganizationID: "default-org",
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
@@ -1062,15 +1093,14 @@ func (m *MiddlewareManager) generateCacheKey(r *http.Request) string {
 	securityContext := m.getSecurityContext(r.Context())
 	key := r.URL.Path + "?" + r.URL.RawQuery
 	
-	if securityContext != nil {
-		key += "|tenant:" + securityContext.TenantID
+	if securityContext != nil && securityContext.APIKeyID != nil {
+		key += "|tenant:" + securityContext.APIKeyID.String()
 	}
 
 	return utils.HashSHA256(key)
 }
 
 func (m *MiddlewareManager) logAuditEvent(r *http.Request, aw *auditResponseWriter, startTime time.Time) {
-	duration := time.Since(startTime)
 	securityContext := m.getSecurityContext(r.Context())
 	clientInfo := request.ExtractClientInfo(r)
 
@@ -1087,10 +1117,10 @@ func (m *MiddlewareManager) logAuditEvent(r *http.Request, aw *auditResponseWrit
 		Severity:  commonpb.Severity_SEVERITY_LOW,
 	}
 
-	if securityContext != nil {
-		auditEvent.ActorId = securityContext.UserID
+	if securityContext != nil && securityContext.APIKeyID != nil {
+		auditEvent.ActorId = securityContext.APIKeyID.String()
 		auditEvent.ActorType = "user"
-		auditEvent.TenantId = securityContext.TenantID
+		auditEvent.TenantId = securityContext.APIKeyID.String()
 	}
 
 	if aw.statusCode >= 400 {
@@ -1102,7 +1132,6 @@ func (m *MiddlewareManager) logAuditEvent(r *http.Request, aw *auditResponseWrit
 }
 
 func (m *MiddlewareManager) logGRPCAuditEvent(ctx context.Context, method string, req interface{}, resp interface{}, err error, startTime time.Time) {
-	duration := time.Since(startTime)
 	securityContext := m.getSecurityContext(ctx)
 
 	auditEvent := &commonpb.AuditEvent{
@@ -1116,10 +1145,10 @@ func (m *MiddlewareManager) logGRPCAuditEvent(ctx context.Context, method string
 		Severity:  commonpb.Severity_SEVERITY_LOW,
 	}
 
-	if securityContext != nil {
-		auditEvent.ActorId = securityContext.UserID
+	if securityContext != nil && securityContext.APIKeyID != nil {
+		auditEvent.ActorId = securityContext.APIKeyID.String()
 		auditEvent.ActorType = "user"
-		auditEvent.TenantId = securityContext.TenantID
+		auditEvent.TenantId = securityContext.APIKeyID.String()
 	}
 
 	if err != nil {
@@ -1206,20 +1235,11 @@ func (m *MiddlewareManager) isAuthorized(securityContext *request.SecurityContex
 		return false
 	}
 
-	tenantObj, err := m.getTenant(securityContext.TenantID)
-	if err != nil {
-		return false
-	}
-
 	requiredScopes := m.getRequiredScopes(r.URL.Path, r.Method)
 	for _, required := range requiredScopes {
 		if !utils.Contains(securityContext.Permissions, required) {
 			return false
 		}
-	}
-
-	if tenantObj.SecurityConfig.MFARequired && !securityContext.MFAVerified {
-		return false
 	}
 
 	return true
@@ -1298,8 +1318,8 @@ func (m *MiddlewareManager) ResetRateLimiter(key string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if limiter, exists := m.rateLimiters[key]; exists {
-		limiter.Reset()
+	if _, exists := m.rateLimiters[key]; exists {
+		m.rateLimiters[key] = utils.NewRateLimiter(100.0, 1000)
 	}
 }
 
@@ -1307,12 +1327,18 @@ func (m *MiddlewareManager) ClearExpiredRateLimiters() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	expiredKeys := []string{}
 	for key, limiter := range m.rateLimiters {
-		if limiter.IsExpired() {
-			delete(m.rateLimiters, key)
+		if limiter.GetTokens() <= 0 {
+			expiredKeys = append(expiredKeys, key)
 		}
 	}
+
+	for _, key := range expiredKeys {
+		delete(m.rateLimiters, key)
+	}
 }
+
 
 func (m *MiddlewareManager) GetSecurityMetrics() map[string]interface{} {
 	return map[string]interface{}{
@@ -1423,40 +1449,49 @@ func ValidateMiddlewareConfig(cfg *config.Config) error {
 
 	return nil
 }
-
 func NewSecurityContext() *request.SecurityContext {
 	return &request.SecurityContext{
 		SessionToken:         "",
 		AuthenticationMethod: "none",
 		AuthenticationLevel:  "none",
-		UserID:               "",
-		TenantID:             "",
+		APIKeyID:             nil,
+		JWTClaims:            make(map[string]interface{}),
 		Permissions:          []string{},
-		SessionExpiry:        time.Time{},
-		MFAVerified:          false,
-		DeviceFingerprint:    "",
+		Scopes:               []string{},
+		RiskScore:            0.0,
+		ThreatIndicators:     []string{},
+		IPWhitelisted:        false,
+		RateLimitRemaining:   100,
+		QuotaRemaining:       1000,
+		MTLSVerified:         false,
+		CertificateSubject:   "",
 	}
 }
 
 func NewComplianceContext() *request.ComplianceContext {
 	return &request.ComplianceContext{
-		PIIDetected:        false,
-		DataClassification: request.ClassificationPublic,
-		RedactionRules:     []request.RedactionRule{},
-		RetentionPolicy: request.RetentionPolicy{
-			RetentionPeriod: time.Hour * 24 * 30,
-			AutoDelete:      false,
-		},
-		AuditRequired: false,
+		PIIDetected:          false,
+		DataClassification:   []string{"public"},
+		RedactionRules:       []request.RedactionRule{},
+		DataRetentionDays:    30,
+		EncryptionRequired:   false,
+		AuditRequired:        false,
+		ConsentRequired:      false,
+		ConsentProvided:      false,
+		DataResidency:        "us",
+		ComplianceFrameworks: []string{},
+		PIITypes:             []string{},
+		ComplianceMetadata:   make(map[string]interface{}),
 	}
 }
 
 func NewThreatContext() *commonpb.ThreatDetection {
 	return &commonpb.ThreatDetection{
-		ThreatType:  commonpb.ThreatType_THREAT_TYPE_NONE,
+		Type:        "none",
 		Severity:    commonpb.Severity_SEVERITY_LOW,
 		Confidence:  0.0,
 		Description: "No threats detected",
-		Mitigations: []string{},
+		Mitigation:  "",
 	}
 }
+

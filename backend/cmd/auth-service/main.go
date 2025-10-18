@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/metrics"
-	"flamo/backend/internal/common/utils"
 )
 
 const (
@@ -26,40 +26,34 @@ const (
 )
 
 func main() {
-	// Initialize logger first for early error reporting
 	logger := initializeLogger()
 	defer logger.Sync()
 
 	logger.Info("Starting auth service",
 		zap.String("service", serviceName),
 		zap.String("version", serviceVersion),
-		zap.String("go_version", utils.GetGoVersion()),
-		zap.String("build_time", utils.GetBuildTime()))
+		zap.String("go_version", runtime.Version()),
+		zap.String("build_time", time.Now().Format(time.RFC3339)))
 
-	// Load configuration
 	cfg, err := loadConfiguration(logger)
 	if err != nil {
 		logger.Fatal("Failed to load configuration", zap.Error(err))
 	}
 
-	// Reconfigure logger with loaded config
 	logger = reconfigureLogger(cfg)
 	logger.Info("Configuration loaded successfully",
-		zap.String("environment", cfg.Environment),
-		zap.String("log_level", cfg.Logging.Level))
+		zap.String("environment", string(cfg.Environment)),
+		zap.String("log_level", string(cfg.Monitoring.LogLevel)))
 
-	// Validate configuration
 	if err := validateConfiguration(cfg, logger); err != nil {
 		logger.Fatal("Configuration validation failed", zap.Error(err))
 	}
 
-	// Initialize metrics
 	metricsCollector, err := initializeMetrics(cfg, logger)
 	if err != nil {
 		logger.Fatal("Failed to initialize metrics", zap.Error(err))
 	}
 
-	// Initialize database
 	db, err := initializeDatabase(cfg, logger)
 	if err != nil {
 		logger.Fatal("Failed to initialize database", zap.Error(err))
@@ -70,29 +64,24 @@ func main() {
 		}
 	}()
 
-	// Run database migrations
 	if err := runMigrations(db, cfg, logger); err != nil {
 		logger.Fatal("Failed to run database migrations", zap.Error(err))
 	}
 
-	// Initialize auth server
 	server, err := initializeServer(cfg, db, metricsCollector, logger)
 	if err != nil {
 		logger.Fatal("Failed to initialize auth server", zap.Error(err))
 	}
 
-	// Setup graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Start server in goroutine
 	serverErrors := make(chan error, 1)
 	go func() {
 		logger.Info("Auth service ready to serve requests")
 		serverErrors <- server.Start()
 	}()
 
-	// Wait for shutdown signal or server error
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
@@ -105,7 +94,6 @@ func main() {
 		logger.Info("Shutdown signal received",
 			zap.String("signal", sig.String()))
 
-		// Graceful shutdown with timeout
 		shutdownCtx, shutdownCancel := context.WithTimeout(ctx, shutdownTimeout)
 		defer shutdownCancel()
 
@@ -148,7 +136,11 @@ func initializeLogger() *zap.Logger {
 func loadConfiguration(logger *zap.Logger) (*config.Config, error) {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
-		configPath = "configs/auth-service.yaml"
+		env := os.Getenv("ENVIRONMENT")
+		if env == "" {
+			env = "local"
+		}
+		configPath = fmt.Sprintf("configs/%s/auth.yaml", env)
 	}
 
 	logger.Info("Loading configuration", zap.String("path", configPath))
@@ -158,17 +150,12 @@ func loadConfiguration(logger *zap.Logger) (*config.Config, error) {
 		return nil, errors.Wrap(err, errors.ErrCodeConfigError, "failed to load configuration file")
 	}
 
-	// Override with environment variables
-	if err := config.LoadFromEnv(cfg); err != nil {
-		return nil, errors.Wrap(err, errors.ErrCodeConfigError, "failed to load environment variables")
-	}
-
 	return cfg, nil
 }
 
 func reconfigureLogger(cfg *config.Config) *zap.Logger {
 	var level zapcore.Level
-	switch cfg.Logging.Level {
+	switch cfg.Monitoring.LogLevel {
 	case "debug":
 		level = zap.DebugLevel
 	case "info":
@@ -182,14 +169,14 @@ func reconfigureLogger(cfg *config.Config) *zap.Logger {
 	}
 
 	config := zap.NewProductionConfig()
-	if cfg.Environment == "development" {
+	if cfg.Environment == "local" {
 		config = zap.NewDevelopmentConfig()
 		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	}
 
 	config.Level = zap.NewAtomicLevelAt(level)
-	config.OutputPaths = []string{cfg.Logging.Output}
-	config.ErrorOutputPaths = []string{cfg.Logging.ErrorOutput}
+	config.OutputPaths = []string{cfg.Monitoring.LogOutput}
+	config.ErrorOutputPaths = []string{"stderr"}
 
 	logger, err := config.Build(
 		zap.AddCaller(),
@@ -197,7 +184,7 @@ func reconfigureLogger(cfg *config.Config) *zap.Logger {
 		zap.Fields(
 			zap.String("service", serviceName),
 			zap.String("version", serviceVersion),
-			zap.String("environment", cfg.Environment),
+			zap.String("environment", string(cfg.Environment)),
 		),
 	)
 	if err != nil {
@@ -214,30 +201,34 @@ func validateConfiguration(cfg *config.Config, logger *zap.Logger) error {
 		return errors.New(errors.ErrCodeConfigError, "environment is required")
 	}
 
-	if cfg.Server.Address == "" {
-		logger.Warn("Server address not specified, using default :8080")
-		cfg.Server.Address = ":8080"
+	if cfg.Server.Host == "" {
+		logger.Warn("Server host not specified, using default 0.0.0.0")
+		cfg.Server.Host = "0.0.0.0"
+	}
+
+	if cfg.Server.Port == 0 {
+		logger.Warn("Server port not specified, using default 8081")
+		cfg.Server.Port = 8081
 	}
 
 	if cfg.Database.Host == "" {
 		return errors.New(errors.ErrCodeConfigError, "database host is required")
 	}
 
-	if cfg.Database.Name == "" {
+	if cfg.Database.Database == "" {
 		return errors.New(errors.ErrCodeConfigError, "database name is required")
 	}
 
-	if cfg.Security.JWTSecret == "" && cfg.Security.JWTPrivateKey == "" {
-		return errors.New(errors.ErrCodeConfigError, "JWT secret or private key is required")
+	if cfg.Security.JWTSecret == "" {
+		return errors.New(errors.ErrCodeConfigError, "JWT secret key is required")
 	}
 
-	// Validate security settings for production
 	if cfg.Environment == "production" {
-		if !cfg.Security.TLSEnabled {
+		if !cfg.Server.TLSConfig.Enabled {
 			logger.Warn("TLS is disabled in production environment")
 		}
 
-		if cfg.Security.JWTSecret != "" && len(cfg.Security.JWTSecret) < 32 {
+		if len(cfg.Security.JWTSecret) < 32 {
 			return errors.New(errors.ErrCodeConfigError, "JWT secret must be at least 32 characters in production")
 		}
 
@@ -254,9 +245,9 @@ func initializeMetrics(cfg *config.Config, logger *zap.Logger) (*metrics.Metrics
 	logger.Info("Initializing metrics collector")
 
 	metricsConfig := &metrics.Config{
-		Enabled:   cfg.Metrics.Enabled,
-		Address:   cfg.Metrics.Address,
-		Path:      cfg.Metrics.Path,
+		Enabled:   cfg.Monitoring.EnableMetrics,
+		Address:   fmt.Sprintf(":%d", cfg.Monitoring.MetricsPort),
+		Path:      "/metrics",
 		Namespace: "flamo_auth",
 		Subsystem: "service",
 	}
@@ -266,7 +257,6 @@ func initializeMetrics(cfg *config.Config, logger *zap.Logger) (*metrics.Metrics
 		return nil, errors.Wrap(err, errors.ErrCodeConfigError, "failed to create metrics collector")
 	}
 
-	// Register custom metrics
 	if err := registerCustomMetrics(metricsCollector); err != nil {
 		return nil, errors.Wrap(err, errors.ErrCodeConfigError, "failed to register custom metrics")
 	}
@@ -276,7 +266,6 @@ func initializeMetrics(cfg *config.Config, logger *zap.Logger) (*metrics.Metrics
 }
 
 func registerCustomMetrics(m *metrics.Metrics) error {
-	// Authentication metrics
 	if err := m.RegisterCounter("authentication_requests_total", "Total number of authentication requests", []string{"method", "status", "tenant_id"}); err != nil {
 		return err
 	}
@@ -289,7 +278,6 @@ func registerCustomMetrics(m *metrics.Metrics) error {
 		return err
 	}
 
-	// Authorization metrics
 	if err := m.RegisterCounter("authorization_requests_total", "Total number of authorization requests", []string{"resource", "action", "status"}); err != nil {
 		return err
 	}
@@ -298,7 +286,6 @@ func registerCustomMetrics(m *metrics.Metrics) error {
 		return err
 	}
 
-	// Token metrics
 	if err := m.RegisterCounter("tokens_issued_total", "Total number of tokens issued", []string{"type", "tenant_id"}); err != nil {
 		return err
 	}
@@ -311,7 +298,6 @@ func registerCustomMetrics(m *metrics.Metrics) error {
 		return err
 	}
 
-	// Session metrics
 	if err := m.RegisterCounter("sessions_created_total", "Total number of sessions created", []string{"tenant_id"}); err != nil {
 		return err
 	}
@@ -320,7 +306,6 @@ func registerCustomMetrics(m *metrics.Metrics) error {
 		return err
 	}
 
-	// Certificate metrics
 	if err := m.RegisterCounter("certificates_validated_total", "Total number of certificate validations", []string{"status"}); err != nil {
 		return err
 	}
@@ -329,7 +314,6 @@ func registerCustomMetrics(m *metrics.Metrics) error {
 		return err
 	}
 
-	// API Key metrics
 	if err := m.RegisterCounter("api_keys_created_total", "Total number of API keys created", []string{"tenant_id"}); err != nil {
 		return err
 	}
@@ -345,14 +329,13 @@ func initializeDatabase(cfg *config.Config, logger *zap.Logger) (*database.Datab
 	logger.Info("Initializing database connection",
 		zap.String("host", cfg.Database.Host),
 		zap.Int("port", cfg.Database.Port),
-		zap.String("database", cfg.Database.Name))
+		zap.String("database", cfg.Database.Database))
 
 	db, err := database.NewDatabase(cfg, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to create database connection")
 	}
 
-	// Test database connectivity
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -365,11 +348,6 @@ func initializeDatabase(cfg *config.Config, logger *zap.Logger) (*database.Datab
 }
 
 func runMigrations(db *database.Database, cfg *config.Config, logger *zap.Logger) error {
-	if !cfg.Database.RunMigrations {
-		logger.Info("Database migrations disabled, skipping")
-		return nil
-	}
-
 	logger.Info("Running database migrations")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -398,17 +376,14 @@ func initializeServer(cfg *config.Config, db *database.Database, metrics *metric
 func gracefulShutdown(ctx context.Context, server *handlers.Server, db *database.Database, metrics *metrics.Metrics, logger *zap.Logger) error {
 	logger.Info("Starting graceful shutdown")
 
-	// Stop accepting new requests
 	if err := server.Stop(ctx); err != nil {
 		logger.Error("Server shutdown error", zap.Error(err))
 	}
 
-	// Close database connections
 	if err := db.Close(); err != nil {
 		logger.Error("Database close error", zap.Error(err))
 	}
 
-	// Stop metrics collection
 	if err := metrics.Shutdown(ctx); err != nil {
 		logger.Error("Metrics shutdown error", zap.Error(err))
 	}

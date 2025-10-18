@@ -885,3 +885,7 @@ func CalculateBackoffDelay(attempt int, baseDelay time.Duration, maxDelay time.D
 	}
 	return delay
 }
+
+func NewServiceUnavailableError(message string) error {
+	return fmt.Errorf("service unavailable: %s", message)
+}

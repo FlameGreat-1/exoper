@@ -3,20 +3,15 @@ package providers
 import (
 	"context"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
 	authpb "flamo/backend/pkg/api/proto/auth"
 )
 
@@ -62,7 +57,7 @@ func (p *JWTProvider) Authenticate(ctx context.Context, req *AuthenticationReque
 		return nil, errors.New(errors.ErrCodeInvalidRequest, "invalid JWT credentials")
 	}
 
-	token, claims, err := p.validateToken(credentials.Token)
+	_, claims, err := p.validateToken(credentials.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -205,16 +200,11 @@ func (p *JWTProvider) validateClaims(claims *JWTClaims, credentials *authpb.JWTC
 		return errors.New(errors.ErrCodeUnauthorized, "token issuer mismatch")
 	}
 
-	if len(credentials.Audience) > 0 {
+	if credentials.Audience != "" {
 		found := false
-		for _, aud := range credentials.Audience {
-			for _, claimAud := range claims.Audience {
-				if aud == claimAud {
-					found = true
-					break
-				}
-			}
-			if found {
+		for _, claimAud := range claims.Audience {
+			if credentials.Audience == claimAud {
+				found = true
 				break
 			}
 		}

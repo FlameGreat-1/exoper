@@ -57,7 +57,7 @@ database:
   driver: "postgres"
   host: "localhost"
   port: 5432
-  name: "exoper_auth_local"
+  name: "exoper_local"
   user: "exoper_user"
   password: "exoper_pass"
   ssl_mode: "disable"
@@ -90,7 +90,7 @@ observability:
     prometheus:
       enabled: true
       path: "/metrics"
-      port: 8082
+      port: 8084
 
 session:
   store_type: "redis"

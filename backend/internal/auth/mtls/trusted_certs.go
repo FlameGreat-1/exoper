@@ -2,14 +2,16 @@ package mtls
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
+	"encoding/hex"
 	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
 )
 
 type TrustedCertificateRequest struct {
@@ -34,7 +36,8 @@ func (m *MTLSManager) AddTrustedCertificate(ctx context.Context, req *TrustedCer
 		return nil, err
 	}
 
-	fingerprint := utils.CalculateSHA256Fingerprint(cert.Raw)
+	hash := sha256.Sum256(cert.Raw)
+	fingerprint := hex.EncodeToString(hash[:])
 	
 	exists, err := m.certificateExists(ctx, req.TenantID, fingerprint)
 	if err != nil {
@@ -89,8 +92,7 @@ func (m *MTLSManager) RevokeTrustedCertificate(ctx context.Context, certID, reas
 		return errors.Wrap(err, errors.ErrCodeDatabaseError, "failed to revoke trusted certificate")
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	if result.RowsAffected == 0 {
 		return errors.New(errors.ErrCodeNotFound, "trusted certificate not found or already revoked")
 	}
 

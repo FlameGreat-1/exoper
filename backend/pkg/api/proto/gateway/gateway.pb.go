@@ -4063,6 +4063,202 @@ func (x *GetAuditLogsResponse) GetError() *common.ErrorDetails {
 	return nil
 }
 
+type CircuitBreakerRequest struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Metadata      *common.RequestMetadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	ServiceName   string                  `protobuf:"bytes,2,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
+	Operation     string                  `protobuf:"bytes,3,opt,name=operation,proto3" json:"operation,omitempty"` // "open", "close", "half-open"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CircuitBreakerRequest) Reset() {
+	*x = CircuitBreakerRequest{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CircuitBreakerRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CircuitBreakerRequest) ProtoMessage() {}
+
+func (x *CircuitBreakerRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CircuitBreakerRequest.ProtoReflect.Descriptor instead.
+func (*CircuitBreakerRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *CircuitBreakerRequest) GetMetadata() *common.RequestMetadata {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
+func (x *CircuitBreakerRequest) GetServiceName() string {
+	if x != nil {
+		return x.ServiceName
+	}
+	return ""
+}
+
+func (x *CircuitBreakerRequest) GetOperation() string {
+	if x != nil {
+		return x.Operation
+	}
+	return ""
+}
+
+type CircuitBreakerResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        common.Status          `protobuf:"varint,1,opt,name=status,proto3,enum=exoper.common.v1.Status" json:"status,omitempty"`
+	CurrentState  string                 `protobuf:"bytes,2,opt,name=current_state,json=currentState,proto3" json:"current_state,omitempty"`
+	Error         *common.ErrorDetails   `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CircuitBreakerResponse) Reset() {
+	*x = CircuitBreakerResponse{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CircuitBreakerResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CircuitBreakerResponse) ProtoMessage() {}
+
+func (x *CircuitBreakerResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CircuitBreakerResponse.ProtoReflect.Descriptor instead.
+func (*CircuitBreakerResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *CircuitBreakerResponse) GetStatus() common.Status {
+	if x != nil {
+		return x.Status
+	}
+	return common.Status(0)
+}
+
+func (x *CircuitBreakerResponse) GetCurrentState() string {
+	if x != nil {
+		return x.CurrentState
+	}
+	return ""
+}
+
+func (x *CircuitBreakerResponse) GetError() *common.ErrorDetails {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
+type CircuitBreakerStatusResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        common.Status          `protobuf:"varint,1,opt,name=status,proto3,enum=exoper.common.v1.Status" json:"status,omitempty"`
+	CurrentState  string                 `protobuf:"bytes,2,opt,name=current_state,json=currentState,proto3" json:"current_state,omitempty"`
+	FailureCount  int32                  `protobuf:"varint,3,opt,name=failure_count,json=failureCount,proto3" json:"failure_count,omitempty"`
+	LastFailure   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_failure,json=lastFailure,proto3" json:"last_failure,omitempty"`
+	Timeout       *durationpb.Duration   `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CircuitBreakerStatusResponse) Reset() {
+	*x = CircuitBreakerStatusResponse{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CircuitBreakerStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CircuitBreakerStatusResponse) ProtoMessage() {}
+
+func (x *CircuitBreakerStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CircuitBreakerStatusResponse.ProtoReflect.Descriptor instead.
+func (*CircuitBreakerStatusResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *CircuitBreakerStatusResponse) GetStatus() common.Status {
+	if x != nil {
+		return x.Status
+	}
+	return common.Status(0)
+}
+
+func (x *CircuitBreakerStatusResponse) GetCurrentState() string {
+	if x != nil {
+		return x.CurrentState
+	}
+	return ""
+}
+
+func (x *CircuitBreakerStatusResponse) GetFailureCount() int32 {
+	if x != nil {
+		return x.FailureCount
+	}
+	return 0
+}
+
+func (x *CircuitBreakerStatusResponse) GetLastFailure() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastFailure
+	}
+	return nil
+}
+
+func (x *CircuitBreakerStatusResponse) GetTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.Timeout
+	}
+	return nil
+}
+
 type GetSystemInfoResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Status        common.Status          `protobuf:"varint,1,opt,name=status,proto3,enum=exoper.common.v1.Status" json:"status,omitempty"`
@@ -4074,7 +4270,7 @@ type GetSystemInfoResponse struct {
 
 func (x *GetSystemInfoResponse) Reset() {
 	*x = GetSystemInfoResponse{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[49]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4086,7 +4282,7 @@ func (x *GetSystemInfoResponse) String() string {
 func (*GetSystemInfoResponse) ProtoMessage() {}
 
 func (x *GetSystemInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[49]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4099,7 +4295,7 @@ func (x *GetSystemInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSystemInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetSystemInfoResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{49}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *GetSystemInfoResponse) GetStatus() common.Status {
@@ -4134,7 +4330,7 @@ type ReloadConfigurationRequest struct {
 
 func (x *ReloadConfigurationRequest) Reset() {
 	*x = ReloadConfigurationRequest{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[50]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4146,7 +4342,7 @@ func (x *ReloadConfigurationRequest) String() string {
 func (*ReloadConfigurationRequest) ProtoMessage() {}
 
 func (x *ReloadConfigurationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[50]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4159,7 +4355,7 @@ func (x *ReloadConfigurationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReloadConfigurationRequest.ProtoReflect.Descriptor instead.
 func (*ReloadConfigurationRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{50}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *ReloadConfigurationRequest) GetMetadata() *common.RequestMetadata {
@@ -4195,7 +4391,7 @@ type ReloadConfigurationResponse struct {
 
 func (x *ReloadConfigurationResponse) Reset() {
 	*x = ReloadConfigurationResponse{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[51]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4207,7 +4403,7 @@ func (x *ReloadConfigurationResponse) String() string {
 func (*ReloadConfigurationResponse) ProtoMessage() {}
 
 func (x *ReloadConfigurationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[51]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4220,7 +4416,7 @@ func (x *ReloadConfigurationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReloadConfigurationResponse.ProtoReflect.Descriptor instead.
 func (*ReloadConfigurationResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{51}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *ReloadConfigurationResponse) GetStatus() common.Status {
@@ -4263,7 +4459,7 @@ type GetRealTimeMetricsRequest struct {
 
 func (x *GetRealTimeMetricsRequest) Reset() {
 	*x = GetRealTimeMetricsRequest{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[52]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4275,7 +4471,7 @@ func (x *GetRealTimeMetricsRequest) String() string {
 func (*GetRealTimeMetricsRequest) ProtoMessage() {}
 
 func (x *GetRealTimeMetricsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[52]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4288,7 +4484,7 @@ func (x *GetRealTimeMetricsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRealTimeMetricsRequest.ProtoReflect.Descriptor instead.
 func (*GetRealTimeMetricsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{52}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *GetRealTimeMetricsRequest) GetMetadata() *common.RequestMetadata {
@@ -4331,7 +4527,7 @@ type GetAlertsRequest struct {
 
 func (x *GetAlertsRequest) Reset() {
 	*x = GetAlertsRequest{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[53]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4343,7 +4539,7 @@ func (x *GetAlertsRequest) String() string {
 func (*GetAlertsRequest) ProtoMessage() {}
 
 func (x *GetAlertsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[53]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4356,7 +4552,7 @@ func (x *GetAlertsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAlertsRequest.ProtoReflect.Descriptor instead.
 func (*GetAlertsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{53}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *GetAlertsRequest) GetMetadata() *common.RequestMetadata {
@@ -4399,7 +4595,7 @@ type GetAlertsResponse struct {
 
 func (x *GetAlertsResponse) Reset() {
 	*x = GetAlertsResponse{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[54]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4411,7 +4607,7 @@ func (x *GetAlertsResponse) String() string {
 func (*GetAlertsResponse) ProtoMessage() {}
 
 func (x *GetAlertsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[54]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4424,7 +4620,7 @@ func (x *GetAlertsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAlertsResponse.ProtoReflect.Descriptor instead.
 func (*GetAlertsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{54}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *GetAlertsResponse) GetStatus() common.Status {
@@ -4472,7 +4668,7 @@ type AlertInfo struct {
 
 func (x *AlertInfo) Reset() {
 	*x = AlertInfo{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[55]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4484,7 +4680,7 @@ func (x *AlertInfo) String() string {
 func (*AlertInfo) ProtoMessage() {}
 
 func (x *AlertInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[55]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4497,7 +4693,7 @@ func (x *AlertInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AlertInfo.ProtoReflect.Descriptor instead.
 func (*AlertInfo) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{55}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *AlertInfo) GetAlertId() string {
@@ -4577,7 +4773,7 @@ type CreateAlertRequest struct {
 
 func (x *CreateAlertRequest) Reset() {
 	*x = CreateAlertRequest{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[56]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4589,7 +4785,7 @@ func (x *CreateAlertRequest) String() string {
 func (*CreateAlertRequest) ProtoMessage() {}
 
 func (x *CreateAlertRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[56]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4602,7 +4798,7 @@ func (x *CreateAlertRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAlertRequest.ProtoReflect.Descriptor instead.
 func (*CreateAlertRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{56}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *CreateAlertRequest) GetMetadata() *common.RequestMetadata {
@@ -4658,7 +4854,7 @@ type CreateAlertResponse struct {
 
 func (x *CreateAlertResponse) Reset() {
 	*x = CreateAlertResponse{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[57]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4670,7 +4866,7 @@ func (x *CreateAlertResponse) String() string {
 func (*CreateAlertResponse) ProtoMessage() {}
 
 func (x *CreateAlertResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[57]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4683,7 +4879,7 @@ func (x *CreateAlertResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAlertResponse.ProtoReflect.Descriptor instead.
 func (*CreateAlertResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{57}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *CreateAlertResponse) GetStatus() common.Status {
@@ -4722,7 +4918,7 @@ type UpdateAlertRequest struct {
 
 func (x *UpdateAlertRequest) Reset() {
 	*x = UpdateAlertRequest{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[58]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4734,7 +4930,7 @@ func (x *UpdateAlertRequest) String() string {
 func (*UpdateAlertRequest) ProtoMessage() {}
 
 func (x *UpdateAlertRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[58]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4747,7 +4943,7 @@ func (x *UpdateAlertRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAlertRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAlertRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{58}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *UpdateAlertRequest) GetMetadata() *common.RequestMetadata {
@@ -4809,7 +5005,7 @@ type UpdateAlertResponse struct {
 
 func (x *UpdateAlertResponse) Reset() {
 	*x = UpdateAlertResponse{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[59]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4821,7 +5017,7 @@ func (x *UpdateAlertResponse) String() string {
 func (*UpdateAlertResponse) ProtoMessage() {}
 
 func (x *UpdateAlertResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[59]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4834,7 +5030,7 @@ func (x *UpdateAlertResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAlertResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAlertResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{59}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *UpdateAlertResponse) GetStatus() common.Status {
@@ -4861,7 +5057,7 @@ type DeleteAlertRequest struct {
 
 func (x *DeleteAlertRequest) Reset() {
 	*x = DeleteAlertRequest{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[60]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4873,7 +5069,7 @@ func (x *DeleteAlertRequest) String() string {
 func (*DeleteAlertRequest) ProtoMessage() {}
 
 func (x *DeleteAlertRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[60]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4886,7 +5082,7 @@ func (x *DeleteAlertRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAlertRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAlertRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{60}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *DeleteAlertRequest) GetMetadata() *common.RequestMetadata {
@@ -4913,7 +5109,7 @@ type DeleteAlertResponse struct {
 
 func (x *DeleteAlertResponse) Reset() {
 	*x = DeleteAlertResponse{}
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[61]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4925,7 +5121,7 @@ func (x *DeleteAlertResponse) String() string {
 func (*DeleteAlertResponse) ProtoMessage() {}
 
 func (x *DeleteAlertResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[61]
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4938,7 +5134,7 @@ func (x *DeleteAlertResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAlertResponse.ProtoReflect.Descriptor instead.
 func (*DeleteAlertResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{61}
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *DeleteAlertResponse) GetStatus() common.Status {
@@ -4951,6 +5147,622 @@ func (x *DeleteAlertResponse) GetStatus() common.Status {
 func (x *DeleteAlertResponse) GetError() *common.ErrorDetails {
 	if x != nil {
 		return x.Error
+	}
+	return nil
+}
+
+type BatchRequestProto struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Metadata      *common.RequestMetadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Requests      []*AIRequestPayload     `protobuf:"bytes,2,rep,name=requests,proto3" json:"requests,omitempty"`
+	Options       *BatchProcessingOptions `protobuf:"bytes,3,opt,name=options,proto3" json:"options,omitempty"`
+	Context       *structpb.Struct        `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BatchRequestProto) Reset() {
+	*x = BatchRequestProto{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchRequestProto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchRequestProto) ProtoMessage() {}
+
+func (x *BatchRequestProto) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchRequestProto.ProtoReflect.Descriptor instead.
+func (*BatchRequestProto) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{65}
+}
+
+func (x *BatchRequestProto) GetMetadata() *common.RequestMetadata {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
+func (x *BatchRequestProto) GetRequests() []*AIRequestPayload {
+	if x != nil {
+		return x.Requests
+	}
+	return nil
+}
+
+func (x *BatchRequestProto) GetOptions() *BatchProcessingOptions {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+func (x *BatchRequestProto) GetContext() *structpb.Struct {
+	if x != nil {
+		return x.Context
+	}
+	return nil
+}
+
+type BatchResponseProto struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Status              common.Status          `protobuf:"varint,1,opt,name=status,proto3,enum=exoper.common.v1.Status" json:"status,omitempty"`
+	Results             []*BatchRequestResult  `protobuf:"bytes,2,rep,name=results,proto3" json:"results,omitempty"`
+	TotalUsage          *common.UsageMetrics   `protobuf:"bytes,3,opt,name=total_usage,json=totalUsage,proto3" json:"total_usage,omitempty"`
+	TotalProcessingTime *durationpb.Duration   `protobuf:"bytes,4,opt,name=total_processing_time,json=totalProcessingTime,proto3" json:"total_processing_time,omitempty"`
+	Error               *common.ErrorDetails   `protobuf:"bytes,5,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *BatchResponseProto) Reset() {
+	*x = BatchResponseProto{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[66]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchResponseProto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchResponseProto) ProtoMessage() {}
+
+func (x *BatchResponseProto) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[66]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchResponseProto.ProtoReflect.Descriptor instead.
+func (*BatchResponseProto) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{66}
+}
+
+func (x *BatchResponseProto) GetStatus() common.Status {
+	if x != nil {
+		return x.Status
+	}
+	return common.Status(0)
+}
+
+func (x *BatchResponseProto) GetResults() []*BatchRequestResult {
+	if x != nil {
+		return x.Results
+	}
+	return nil
+}
+
+func (x *BatchResponseProto) GetTotalUsage() *common.UsageMetrics {
+	if x != nil {
+		return x.TotalUsage
+	}
+	return nil
+}
+
+func (x *BatchResponseProto) GetTotalProcessingTime() *durationpb.Duration {
+	if x != nil {
+		return x.TotalProcessingTime
+	}
+	return nil
+}
+
+func (x *BatchResponseProto) GetError() *common.ErrorDetails {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
+type BatchProcessingOptions struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	MaxConcurrentRequests int32                  `protobuf:"varint,1,opt,name=max_concurrent_requests,json=maxConcurrentRequests,proto3" json:"max_concurrent_requests,omitempty"`
+	TimeoutPerRequest     *durationpb.Duration   `protobuf:"bytes,2,opt,name=timeout_per_request,json=timeoutPerRequest,proto3" json:"timeout_per_request,omitempty"`
+	TotalTimeout          *durationpb.Duration   `protobuf:"bytes,3,opt,name=total_timeout,json=totalTimeout,proto3" json:"total_timeout,omitempty"`
+	FailFast              bool                   `protobuf:"varint,4,opt,name=fail_fast,json=failFast,proto3" json:"fail_fast,omitempty"`
+	PreserveOrder         bool                   `protobuf:"varint,5,opt,name=preserve_order,json=preserveOrder,proto3" json:"preserve_order,omitempty"`
+	RetryCount            int32                  `protobuf:"varint,6,opt,name=retry_count,json=retryCount,proto3" json:"retry_count,omitempty"`
+	RetryDelay            *durationpb.Duration   `protobuf:"bytes,7,opt,name=retry_delay,json=retryDelay,proto3" json:"retry_delay,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *BatchProcessingOptions) Reset() {
+	*x = BatchProcessingOptions{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[67]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchProcessingOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchProcessingOptions) ProtoMessage() {}
+
+func (x *BatchProcessingOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[67]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchProcessingOptions.ProtoReflect.Descriptor instead.
+func (*BatchProcessingOptions) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{67}
+}
+
+func (x *BatchProcessingOptions) GetMaxConcurrentRequests() int32 {
+	if x != nil {
+		return x.MaxConcurrentRequests
+	}
+	return 0
+}
+
+func (x *BatchProcessingOptions) GetTimeoutPerRequest() *durationpb.Duration {
+	if x != nil {
+		return x.TimeoutPerRequest
+	}
+	return nil
+}
+
+func (x *BatchProcessingOptions) GetTotalTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.TotalTimeout
+	}
+	return nil
+}
+
+func (x *BatchProcessingOptions) GetFailFast() bool {
+	if x != nil {
+		return x.FailFast
+	}
+	return false
+}
+
+func (x *BatchProcessingOptions) GetPreserveOrder() bool {
+	if x != nil {
+		return x.PreserveOrder
+	}
+	return false
+}
+
+func (x *BatchProcessingOptions) GetRetryCount() int32 {
+	if x != nil {
+		return x.RetryCount
+	}
+	return 0
+}
+
+func (x *BatchProcessingOptions) GetRetryDelay() *durationpb.Duration {
+	if x != nil {
+		return x.RetryDelay
+	}
+	return nil
+}
+
+type BatchRequestResult struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	RequestIndex     int32                  `protobuf:"varint,1,opt,name=request_index,json=requestIndex,proto3" json:"request_index,omitempty"`
+	Status           common.Status          `protobuf:"varint,2,opt,name=status,proto3,enum=exoper.common.v1.Status" json:"status,omitempty"`
+	Response         *AIResponsePayload     `protobuf:"bytes,3,opt,name=response,proto3" json:"response,omitempty"`
+	ProcessingResult *ProcessingResult      `protobuf:"bytes,4,opt,name=processing_result,json=processingResult,proto3" json:"processing_result,omitempty"`
+	Error            *common.ErrorDetails   `protobuf:"bytes,5,opt,name=error,proto3" json:"error,omitempty"`
+	ProcessingTime   *durationpb.Duration   `protobuf:"bytes,6,opt,name=processing_time,json=processingTime,proto3" json:"processing_time,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *BatchRequestResult) Reset() {
+	*x = BatchRequestResult{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[68]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchRequestResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchRequestResult) ProtoMessage() {}
+
+func (x *BatchRequestResult) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[68]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchRequestResult.ProtoReflect.Descriptor instead.
+func (*BatchRequestResult) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{68}
+}
+
+func (x *BatchRequestResult) GetRequestIndex() int32 {
+	if x != nil {
+		return x.RequestIndex
+	}
+	return 0
+}
+
+func (x *BatchRequestResult) GetStatus() common.Status {
+	if x != nil {
+		return x.Status
+	}
+	return common.Status(0)
+}
+
+func (x *BatchRequestResult) GetResponse() *AIResponsePayload {
+	if x != nil {
+		return x.Response
+	}
+	return nil
+}
+
+func (x *BatchRequestResult) GetProcessingResult() *ProcessingResult {
+	if x != nil {
+		return x.ProcessingResult
+	}
+	return nil
+}
+
+func (x *BatchRequestResult) GetError() *common.ErrorDetails {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
+func (x *BatchRequestResult) GetProcessingTime() *durationpb.Duration {
+	if x != nil {
+		return x.ProcessingTime
+	}
+	return nil
+}
+
+type ModelAccessRequest struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Metadata      *common.RequestMetadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	TenantId      string                  `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	Provider      common.ModelProvider    `protobuf:"varint,3,opt,name=provider,proto3,enum=exoper.common.v1.ModelProvider" json:"provider,omitempty"`
+	ModelName     string                  `protobuf:"bytes,4,opt,name=model_name,json=modelName,proto3" json:"model_name,omitempty"`
+	RequestType   common.RequestType      `protobuf:"varint,5,opt,name=request_type,json=requestType,proto3,enum=exoper.common.v1.RequestType" json:"request_type,omitempty"`
+	SecurityLevel common.SecurityLevel    `protobuf:"varint,6,opt,name=security_level,json=securityLevel,proto3,enum=exoper.common.v1.SecurityLevel" json:"security_level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ModelAccessRequest) Reset() {
+	*x = ModelAccessRequest{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[69]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModelAccessRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModelAccessRequest) ProtoMessage() {}
+
+func (x *ModelAccessRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[69]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModelAccessRequest.ProtoReflect.Descriptor instead.
+func (*ModelAccessRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{69}
+}
+
+func (x *ModelAccessRequest) GetMetadata() *common.RequestMetadata {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
+func (x *ModelAccessRequest) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *ModelAccessRequest) GetProvider() common.ModelProvider {
+	if x != nil {
+		return x.Provider
+	}
+	return common.ModelProvider(0)
+}
+
+func (x *ModelAccessRequest) GetModelName() string {
+	if x != nil {
+		return x.ModelName
+	}
+	return ""
+}
+
+func (x *ModelAccessRequest) GetRequestType() common.RequestType {
+	if x != nil {
+		return x.RequestType
+	}
+	return common.RequestType(0)
+}
+
+func (x *ModelAccessRequest) GetSecurityLevel() common.SecurityLevel {
+	if x != nil {
+		return x.SecurityLevel
+	}
+	return common.SecurityLevel(0)
+}
+
+type ModelAccessResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        common.Status          `protobuf:"varint,1,opt,name=status,proto3,enum=exoper.common.v1.Status" json:"status,omitempty"`
+	AccessInfo    *ModelAccessInfo       `protobuf:"bytes,2,opt,name=access_info,json=accessInfo,proto3" json:"access_info,omitempty"`
+	Error         *common.ErrorDetails   `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ModelAccessResponse) Reset() {
+	*x = ModelAccessResponse{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[70]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModelAccessResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModelAccessResponse) ProtoMessage() {}
+
+func (x *ModelAccessResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[70]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModelAccessResponse.ProtoReflect.Descriptor instead.
+func (*ModelAccessResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{70}
+}
+
+func (x *ModelAccessResponse) GetStatus() common.Status {
+	if x != nil {
+		return x.Status
+	}
+	return common.Status(0)
+}
+
+func (x *ModelAccessResponse) GetAccessInfo() *ModelAccessInfo {
+	if x != nil {
+		return x.AccessInfo
+	}
+	return nil
+}
+
+func (x *ModelAccessResponse) GetError() *common.ErrorDetails {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
+type ModelAccessInfo struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	AccessGranted     bool                   `protobuf:"varint,1,opt,name=access_granted,json=accessGranted,proto3" json:"access_granted,omitempty"`
+	AccessLevel       string                 `protobuf:"bytes,2,opt,name=access_level,json=accessLevel,proto3" json:"access_level,omitempty"`
+	Limits            *common.ResourceLimits `protobuf:"bytes,3,opt,name=limits,proto3" json:"limits,omitempty"`
+	AllowedOperations []string               `protobuf:"bytes,4,rep,name=allowed_operations,json=allowedOperations,proto3" json:"allowed_operations,omitempty"`
+	AccessExpiresAt   *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=access_expires_at,json=accessExpiresAt,proto3" json:"access_expires_at,omitempty"`
+	AccessMetadata    *structpb.Struct       `protobuf:"bytes,6,opt,name=access_metadata,json=accessMetadata,proto3" json:"access_metadata,omitempty"`
+	Restrictions      []*AccessRestriction   `protobuf:"bytes,7,rep,name=restrictions,proto3" json:"restrictions,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *ModelAccessInfo) Reset() {
+	*x = ModelAccessInfo{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[71]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModelAccessInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModelAccessInfo) ProtoMessage() {}
+
+func (x *ModelAccessInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[71]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModelAccessInfo.ProtoReflect.Descriptor instead.
+func (*ModelAccessInfo) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{71}
+}
+
+func (x *ModelAccessInfo) GetAccessGranted() bool {
+	if x != nil {
+		return x.AccessGranted
+	}
+	return false
+}
+
+func (x *ModelAccessInfo) GetAccessLevel() string {
+	if x != nil {
+		return x.AccessLevel
+	}
+	return ""
+}
+
+func (x *ModelAccessInfo) GetLimits() *common.ResourceLimits {
+	if x != nil {
+		return x.Limits
+	}
+	return nil
+}
+
+func (x *ModelAccessInfo) GetAllowedOperations() []string {
+	if x != nil {
+		return x.AllowedOperations
+	}
+	return nil
+}
+
+func (x *ModelAccessInfo) GetAccessExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.AccessExpiresAt
+	}
+	return nil
+}
+
+func (x *ModelAccessInfo) GetAccessMetadata() *structpb.Struct {
+	if x != nil {
+		return x.AccessMetadata
+	}
+	return nil
+}
+
+func (x *ModelAccessInfo) GetRestrictions() []*AccessRestriction {
+	if x != nil {
+		return x.Restrictions
+	}
+	return nil
+}
+
+type AccessRestriction struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Parameters    *structpb.Struct       `protobuf:"bytes,3,opt,name=parameters,proto3" json:"parameters,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AccessRestriction) Reset() {
+	*x = AccessRestriction{}
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[72]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AccessRestriction) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AccessRestriction) ProtoMessage() {}
+
+func (x *AccessRestriction) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_proto_gateway_gateway_proto_msgTypes[72]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AccessRestriction.ProtoReflect.Descriptor instead.
+func (*AccessRestriction) Descriptor() ([]byte, []int) {
+	return file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP(), []int{72}
+}
+
+func (x *AccessRestriction) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *AccessRestriction) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *AccessRestriction) GetParameters() *structpb.Struct {
+	if x != nil {
+		return x.Parameters
 	}
 	return nil
 }
@@ -5315,7 +6127,21 @@ const file_pkg_api_proto_gateway_gateway_proto_rawDesc = "" +
 	"\n" +
 	"pagination\x18\x03 \x01(\v2\x1c.exoper.common.v1.PaginationR\n" +
 	"pagination\x124\n" +
-	"\x05error\x18\x04 \x01(\v2\x1e.exoper.common.v1.ErrorDetailsR\x05error\"\xbe\x01\n" +
+	"\x05error\x18\x04 \x01(\v2\x1e.exoper.common.v1.ErrorDetailsR\x05error\"\x97\x01\n" +
+	"\x15CircuitBreakerRequest\x12=\n" +
+	"\bmetadata\x18\x01 \x01(\v2!.exoper.common.v1.RequestMetadataR\bmetadata\x12!\n" +
+	"\fservice_name\x18\x02 \x01(\tR\vserviceName\x12\x1c\n" +
+	"\toperation\x18\x03 \x01(\tR\toperation\"\xa5\x01\n" +
+	"\x16CircuitBreakerResponse\x120\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x18.exoper.common.v1.StatusR\x06status\x12#\n" +
+	"\rcurrent_state\x18\x02 \x01(\tR\fcurrentState\x124\n" +
+	"\x05error\x18\x03 \x01(\v2\x1e.exoper.common.v1.ErrorDetailsR\x05error\"\x8e\x02\n" +
+	"\x1cCircuitBreakerStatusResponse\x120\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x18.exoper.common.v1.StatusR\x06status\x12#\n" +
+	"\rcurrent_state\x18\x02 \x01(\tR\fcurrentState\x12#\n" +
+	"\rfailure_count\x18\x03 \x01(\x05R\ffailureCount\x12=\n" +
+	"\flast_failure\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vlastFailure\x123\n" +
+	"\atimeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\xbe\x01\n" +
 	"\x15GetSystemInfoResponse\x120\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x18.exoper.common.v1.StatusR\x06status\x12=\n" +
 	"\vsystem_info\x18\x02 \x01(\v2\x1c.exoper.common.v1.SystemInfoR\n" +
@@ -5394,7 +6220,63 @@ const file_pkg_api_proto_gateway_gateway_proto_rawDesc = "" +
 	"\balert_id\x18\x02 \x01(\tR\aalertId\"}\n" +
 	"\x13DeleteAlertResponse\x120\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x18.exoper.common.v1.StatusR\x06status\x124\n" +
-	"\x05error\x18\x02 \x01(\v2\x1e.exoper.common.v1.ErrorDetailsR\x05error*\xa1\x03\n" +
+	"\x05error\x18\x02 \x01(\v2\x1e.exoper.common.v1.ErrorDetailsR\x05error\"\x8b\x02\n" +
+	"\x11BatchRequestProto\x12=\n" +
+	"\bmetadata\x18\x01 \x01(\v2!.exoper.common.v1.RequestMetadataR\bmetadata\x12?\n" +
+	"\brequests\x18\x02 \x03(\v2#.exoper.gateway.v1.AIRequestPayloadR\brequests\x12C\n" +
+	"\aoptions\x18\x03 \x01(\v2).exoper.gateway.v1.BatchProcessingOptionsR\aoptions\x121\n" +
+	"\acontext\x18\x04 \x01(\v2\x17.google.protobuf.StructR\acontext\"\xcd\x02\n" +
+	"\x12BatchResponseProto\x120\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x18.exoper.common.v1.StatusR\x06status\x12?\n" +
+	"\aresults\x18\x02 \x03(\v2%.exoper.gateway.v1.BatchRequestResultR\aresults\x12?\n" +
+	"\vtotal_usage\x18\x03 \x01(\v2\x1e.exoper.common.v1.UsageMetricsR\n" +
+	"totalUsage\x12M\n" +
+	"\x15total_processing_time\x18\x04 \x01(\v2\x19.google.protobuf.DurationR\x13totalProcessingTime\x124\n" +
+	"\x05error\x18\x05 \x01(\v2\x1e.exoper.common.v1.ErrorDetailsR\x05error\"\xfc\x02\n" +
+	"\x16BatchProcessingOptions\x126\n" +
+	"\x17max_concurrent_requests\x18\x01 \x01(\x05R\x15maxConcurrentRequests\x12I\n" +
+	"\x13timeout_per_request\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x11timeoutPerRequest\x12>\n" +
+	"\rtotal_timeout\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\ftotalTimeout\x12\x1b\n" +
+	"\tfail_fast\x18\x04 \x01(\bR\bfailFast\x12%\n" +
+	"\x0epreserve_order\x18\x05 \x01(\bR\rpreserveOrder\x12\x1f\n" +
+	"\vretry_count\x18\x06 \x01(\x05R\n" +
+	"retryCount\x12:\n" +
+	"\vretry_delay\x18\a \x01(\v2\x19.google.protobuf.DurationR\n" +
+	"retryDelay\"\xf9\x02\n" +
+	"\x12BatchRequestResult\x12#\n" +
+	"\rrequest_index\x18\x01 \x01(\x05R\frequestIndex\x120\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x18.exoper.common.v1.StatusR\x06status\x12@\n" +
+	"\bresponse\x18\x03 \x01(\v2$.exoper.gateway.v1.AIResponsePayloadR\bresponse\x12P\n" +
+	"\x11processing_result\x18\x04 \x01(\v2#.exoper.gateway.v1.ProcessingResultR\x10processingResult\x124\n" +
+	"\x05error\x18\x05 \x01(\v2\x1e.exoper.common.v1.ErrorDetailsR\x05error\x12B\n" +
+	"\x0fprocessing_time\x18\x06 \x01(\v2\x19.google.protobuf.DurationR\x0eprocessingTime\"\xd6\x02\n" +
+	"\x12ModelAccessRequest\x12=\n" +
+	"\bmetadata\x18\x01 \x01(\v2!.exoper.common.v1.RequestMetadataR\bmetadata\x12\x1b\n" +
+	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12;\n" +
+	"\bprovider\x18\x03 \x01(\x0e2\x1f.exoper.common.v1.ModelProviderR\bprovider\x12\x1d\n" +
+	"\n" +
+	"model_name\x18\x04 \x01(\tR\tmodelName\x12@\n" +
+	"\frequest_type\x18\x05 \x01(\x0e2\x1d.exoper.common.v1.RequestTypeR\vrequestType\x12F\n" +
+	"\x0esecurity_level\x18\x06 \x01(\x0e2\x1f.exoper.common.v1.SecurityLevelR\rsecurityLevel\"\xc2\x01\n" +
+	"\x13ModelAccessResponse\x120\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x18.exoper.common.v1.StatusR\x06status\x12C\n" +
+	"\vaccess_info\x18\x02 \x01(\v2\".exoper.gateway.v1.ModelAccessInfoR\n" +
+	"accessInfo\x124\n" +
+	"\x05error\x18\x03 \x01(\v2\x1e.exoper.common.v1.ErrorDetailsR\x05error\"\x98\x03\n" +
+	"\x0fModelAccessInfo\x12%\n" +
+	"\x0eaccess_granted\x18\x01 \x01(\bR\raccessGranted\x12!\n" +
+	"\faccess_level\x18\x02 \x01(\tR\vaccessLevel\x128\n" +
+	"\x06limits\x18\x03 \x01(\v2 .exoper.common.v1.ResourceLimitsR\x06limits\x12-\n" +
+	"\x12allowed_operations\x18\x04 \x03(\tR\x11allowedOperations\x12F\n" +
+	"\x11access_expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0faccessExpiresAt\x12@\n" +
+	"\x0faccess_metadata\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x0eaccessMetadata\x12H\n" +
+	"\frestrictions\x18\a \x03(\v2$.exoper.gateway.v1.AccessRestrictionR\frestrictions\"\x82\x01\n" +
+	"\x11AccessRestriction\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x127\n" +
+	"\n" +
+	"parameters\x18\x03 \x01(\v2\x17.google.protobuf.StructR\n" +
+	"parameters*\xa1\x03\n" +
 	"\x0fProcessingStage\x12 \n" +
 	"\x1cPROCESSING_STAGE_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19PROCESSING_STAGE_RECEIVED\x10\x01\x12\"\n" +
@@ -5416,15 +6298,17 @@ const file_pkg_api_proto_gateway_gateway_proto_rawDesc = "" +
 	"\x1bROUTING_DECISION_QUARANTINE\x10\x03\x12\x1d\n" +
 	"\x19ROUTING_DECISION_REDIRECT\x10\x04\x12\x1d\n" +
 	"\x19ROUTING_DECISION_THROTTLE\x10\x05\x12\x1a\n" +
-	"\x16ROUTING_DECISION_CACHE\x10\x062\xed\x04\n" +
+	"\x16ROUTING_DECISION_CACHE\x10\x062\xb6\x06\n" +
 	"\x0eGatewayService\x12k\n" +
-	"\x10ProcessAIRequest\x12*.exoper.gateway.v1.ProcessAIRequestRequest\x1a+.exoper.gateway.v1.ProcessAIRequestResponse\x12j\n" +
-	"\x0fStreamAIRequest\x12).exoper.gateway.v1.StreamAIRequestRequest\x1a*.exoper.gateway.v1.StreamAIRequestResponse0\x01\x12h\n" +
+	"\x10ProcessAIRequest\x12*.exoper.gateway.v1.ProcessAIRequestRequest\x1a+.exoper.gateway.v1.ProcessAIRequestResponse\x12l\n" +
+	"\x0fStreamAIRequest\x12).exoper.gateway.v1.StreamAIRequestRequest\x1a*.exoper.gateway.v1.StreamAIRequestResponse(\x010\x01\x12h\n" +
 	"\x0fValidateRequest\x12).exoper.gateway.v1.ValidateRequestRequest\x1a*.exoper.gateway.v1.ValidateRequestResponse\x12V\n" +
 	"\tGetHealth\x12#.exoper.gateway.v1.GetHealthRequest\x1a$.exoper.gateway.v1.GetHealthResponse\x12Y\n" +
 	"\n" +
 	"GetMetrics\x12$.exoper.gateway.v1.GetMetricsRequest\x1a%.exoper.gateway.v1.GetMetricsResponse\x12e\n" +
-	"\x0eGetRoutingInfo\x12(.exoper.gateway.v1.GetRoutingInfoRequest\x1a).exoper.gateway.v1.GetRoutingInfoResponse2\xa7\x04\n" +
+	"\x0eGetRoutingInfo\x12(.exoper.gateway.v1.GetRoutingInfoRequest\x1a).exoper.gateway.v1.GetRoutingInfoResponse\x12b\n" +
+	"\x13ProcessBatchRequest\x12$.exoper.gateway.v1.BatchRequestProto\x1a%.exoper.gateway.v1.BatchResponseProto\x12a\n" +
+	"\x10CheckModelAccess\x12%.exoper.gateway.v1.ModelAccessRequest\x1a&.exoper.gateway.v1.ModelAccessResponse2\xa7\x04\n" +
 	"\x18GatewayManagementService\x12k\n" +
 	"\x10GetConfiguration\x12*.exoper.gateway.v1.GetConfigurationRequest\x1a+.exoper.gateway.v1.GetConfigurationResponse\x12t\n" +
 	"\x13UpdateConfiguration\x12-.exoper.gateway.v1.UpdateConfigurationRequest\x1a..exoper.gateway.v1.UpdateConfigurationResponse\x12_\n" +
@@ -5451,162 +6335,173 @@ func file_pkg_api_proto_gateway_gateway_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_api_proto_gateway_gateway_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_pkg_api_proto_gateway_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 64)
+var file_pkg_api_proto_gateway_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 75)
 var file_pkg_api_proto_gateway_gateway_proto_goTypes = []any{
-	(ProcessingStage)(0),                // 0: exoper.gateway.v1.ProcessingStage
-	(RoutingDecision)(0),                // 1: exoper.gateway.v1.RoutingDecision
-	(*ProcessAIRequestRequest)(nil),     // 2: exoper.gateway.v1.ProcessAIRequestRequest
-	(*ProcessAIRequestResponse)(nil),    // 3: exoper.gateway.v1.ProcessAIRequestResponse
-	(*AIRequestPayload)(nil),            // 4: exoper.gateway.v1.AIRequestPayload
-	(*RequestContent)(nil),              // 5: exoper.gateway.v1.RequestContent
-	(*ChatMessage)(nil),                 // 6: exoper.gateway.v1.ChatMessage
-	(*FunctionDefinition)(nil),          // 7: exoper.gateway.v1.FunctionDefinition
-	(*FunctionCall)(nil),                // 8: exoper.gateway.v1.FunctionCall
-	(*ToolDefinition)(nil),              // 9: exoper.gateway.v1.ToolDefinition
-	(*ToolCall)(nil),                    // 10: exoper.gateway.v1.ToolCall
-	(*ResponseFormat)(nil),              // 11: exoper.gateway.v1.ResponseFormat
-	(*RequestParameters)(nil),           // 12: exoper.gateway.v1.RequestParameters
-	(*ProcessingOptions)(nil),           // 13: exoper.gateway.v1.ProcessingOptions
-	(*AIResponsePayload)(nil),           // 14: exoper.gateway.v1.AIResponsePayload
-	(*Choice)(nil),                      // 15: exoper.gateway.v1.Choice
-	(*Embedding)(nil),                   // 16: exoper.gateway.v1.Embedding
-	(*LogprobsResult)(nil),              // 17: exoper.gateway.v1.LogprobsResult
-	(*ProcessingResult)(nil),            // 18: exoper.gateway.v1.ProcessingResult
-	(*StageResult)(nil),                 // 19: exoper.gateway.v1.StageResult
-	(*EnrichmentResult)(nil),            // 20: exoper.gateway.v1.EnrichmentResult
-	(*StreamAIRequestRequest)(nil),      // 21: exoper.gateway.v1.StreamAIRequestRequest
-	(*StreamAIRequestResponse)(nil),     // 22: exoper.gateway.v1.StreamAIRequestResponse
-	(*StreamingOptions)(nil),            // 23: exoper.gateway.v1.StreamingOptions
-	(*StreamChunk)(nil),                 // 24: exoper.gateway.v1.StreamChunk
-	(*StreamComplete)(nil),              // 25: exoper.gateway.v1.StreamComplete
-	(*StreamError)(nil),                 // 26: exoper.gateway.v1.StreamError
-	(*StreamMetadata)(nil),              // 27: exoper.gateway.v1.StreamMetadata
-	(*GetHealthRequest)(nil),            // 28: exoper.gateway.v1.GetHealthRequest
-	(*GetHealthResponse)(nil),           // 29: exoper.gateway.v1.GetHealthResponse
-	(*ServiceHealth)(nil),               // 30: exoper.gateway.v1.ServiceHealth
-	(*HealthCheck)(nil),                 // 31: exoper.gateway.v1.HealthCheck
-	(*GetMetricsRequest)(nil),           // 32: exoper.gateway.v1.GetMetricsRequest
-	(*GetMetricsResponse)(nil),          // 33: exoper.gateway.v1.GetMetricsResponse
-	(*MetricData)(nil),                  // 34: exoper.gateway.v1.MetricData
-	(*MetricPoint)(nil),                 // 35: exoper.gateway.v1.MetricPoint
-	(*GetConfigurationRequest)(nil),     // 36: exoper.gateway.v1.GetConfigurationRequest
-	(*GetConfigurationResponse)(nil),    // 37: exoper.gateway.v1.GetConfigurationResponse
-	(*UpdateConfigurationRequest)(nil),  // 38: exoper.gateway.v1.UpdateConfigurationRequest
-	(*UpdateConfigurationResponse)(nil), // 39: exoper.gateway.v1.UpdateConfigurationResponse
-	(*ConfigurationResult)(nil),         // 40: exoper.gateway.v1.ConfigurationResult
-	(*ValidateRequestRequest)(nil),      // 41: exoper.gateway.v1.ValidateRequestRequest
-	(*ValidateRequestResponse)(nil),     // 42: exoper.gateway.v1.ValidateRequestResponse
-	(*ValidationResult)(nil),            // 43: exoper.gateway.v1.ValidationResult
-	(*ValidationError)(nil),             // 44: exoper.gateway.v1.ValidationError
-	(*ValidationWarning)(nil),           // 45: exoper.gateway.v1.ValidationWarning
-	(*GetRoutingInfoRequest)(nil),       // 46: exoper.gateway.v1.GetRoutingInfoRequest
-	(*GetRoutingInfoResponse)(nil),      // 47: exoper.gateway.v1.GetRoutingInfoResponse
-	(*RoutingInfo)(nil),                 // 48: exoper.gateway.v1.RoutingInfo
-	(*GetAuditLogsRequest)(nil),         // 49: exoper.gateway.v1.GetAuditLogsRequest
-	(*GetAuditLogsResponse)(nil),        // 50: exoper.gateway.v1.GetAuditLogsResponse
-	(*GetSystemInfoResponse)(nil),       // 51: exoper.gateway.v1.GetSystemInfoResponse
-	(*ReloadConfigurationRequest)(nil),  // 52: exoper.gateway.v1.ReloadConfigurationRequest
-	(*ReloadConfigurationResponse)(nil), // 53: exoper.gateway.v1.ReloadConfigurationResponse
-	(*GetRealTimeMetricsRequest)(nil),   // 54: exoper.gateway.v1.GetRealTimeMetricsRequest
-	(*GetAlertsRequest)(nil),            // 55: exoper.gateway.v1.GetAlertsRequest
-	(*GetAlertsResponse)(nil),           // 56: exoper.gateway.v1.GetAlertsResponse
-	(*AlertInfo)(nil),                   // 57: exoper.gateway.v1.AlertInfo
-	(*CreateAlertRequest)(nil),          // 58: exoper.gateway.v1.CreateAlertRequest
-	(*CreateAlertResponse)(nil),         // 59: exoper.gateway.v1.CreateAlertResponse
-	(*UpdateAlertRequest)(nil),          // 60: exoper.gateway.v1.UpdateAlertRequest
-	(*UpdateAlertResponse)(nil),         // 61: exoper.gateway.v1.UpdateAlertResponse
-	(*DeleteAlertRequest)(nil),          // 62: exoper.gateway.v1.DeleteAlertRequest
-	(*DeleteAlertResponse)(nil),         // 63: exoper.gateway.v1.DeleteAlertResponse
-	nil,                                 // 64: exoper.gateway.v1.MetricData.LabelsEntry
-	nil,                                 // 65: exoper.gateway.v1.MetricPoint.TagsEntry
-	(*common.RequestMetadata)(nil),      // 66: exoper.common.v1.RequestMetadata
-	(*structpb.Struct)(nil),             // 67: google.protobuf.Struct
-	(common.Status)(0),                  // 68: exoper.common.v1.Status
-	(*common.ErrorDetails)(nil),         // 69: exoper.common.v1.ErrorDetails
-	(*durationpb.Duration)(nil),         // 70: google.protobuf.Duration
-	(common.RequestType)(0),             // 71: exoper.common.v1.RequestType
-	(common.ModelProvider)(0),           // 72: exoper.common.v1.ModelProvider
-	(common.SecurityLevel)(0),           // 73: exoper.common.v1.SecurityLevel
-	(common.ContentType)(0),             // 74: exoper.common.v1.ContentType
-	(*anypb.Any)(nil),                   // 75: google.protobuf.Any
-	(*common.UsageMetrics)(nil),         // 76: exoper.common.v1.UsageMetrics
-	(*common.SecurityAnalysis)(nil),     // 77: exoper.common.v1.SecurityAnalysis
-	(*common.ComplianceReport)(nil),     // 78: exoper.common.v1.ComplianceReport
-	(*common.PerformanceMetrics)(nil),   // 79: exoper.common.v1.PerformanceMetrics
-	(*timestamppb.Timestamp)(nil),       // 80: google.protobuf.Timestamp
-	(*common.HealthStatus)(nil),         // 81: exoper.common.v1.HealthStatus
-	(*common.Filter)(nil),               // 82: exoper.common.v1.Filter
-	(*common.ConfigurationValue)(nil),   // 83: exoper.common.v1.ConfigurationValue
-	(common.Severity)(0),                // 84: exoper.common.v1.Severity
-	(*common.ResourceLimits)(nil),       // 85: exoper.common.v1.ResourceLimits
-	(*common.Pagination)(nil),           // 86: exoper.common.v1.Pagination
-	(*common.SortOrder)(nil),            // 87: exoper.common.v1.SortOrder
-	(*common.AuditEvent)(nil),           // 88: exoper.common.v1.AuditEvent
-	(*common.SystemInfo)(nil),           // 89: exoper.common.v1.SystemInfo
-	(*emptypb.Empty)(nil),               // 90: google.protobuf.Empty
+	(ProcessingStage)(0),                 // 0: exoper.gateway.v1.ProcessingStage
+	(RoutingDecision)(0),                 // 1: exoper.gateway.v1.RoutingDecision
+	(*ProcessAIRequestRequest)(nil),      // 2: exoper.gateway.v1.ProcessAIRequestRequest
+	(*ProcessAIRequestResponse)(nil),     // 3: exoper.gateway.v1.ProcessAIRequestResponse
+	(*AIRequestPayload)(nil),             // 4: exoper.gateway.v1.AIRequestPayload
+	(*RequestContent)(nil),               // 5: exoper.gateway.v1.RequestContent
+	(*ChatMessage)(nil),                  // 6: exoper.gateway.v1.ChatMessage
+	(*FunctionDefinition)(nil),           // 7: exoper.gateway.v1.FunctionDefinition
+	(*FunctionCall)(nil),                 // 8: exoper.gateway.v1.FunctionCall
+	(*ToolDefinition)(nil),               // 9: exoper.gateway.v1.ToolDefinition
+	(*ToolCall)(nil),                     // 10: exoper.gateway.v1.ToolCall
+	(*ResponseFormat)(nil),               // 11: exoper.gateway.v1.ResponseFormat
+	(*RequestParameters)(nil),            // 12: exoper.gateway.v1.RequestParameters
+	(*ProcessingOptions)(nil),            // 13: exoper.gateway.v1.ProcessingOptions
+	(*AIResponsePayload)(nil),            // 14: exoper.gateway.v1.AIResponsePayload
+	(*Choice)(nil),                       // 15: exoper.gateway.v1.Choice
+	(*Embedding)(nil),                    // 16: exoper.gateway.v1.Embedding
+	(*LogprobsResult)(nil),               // 17: exoper.gateway.v1.LogprobsResult
+	(*ProcessingResult)(nil),             // 18: exoper.gateway.v1.ProcessingResult
+	(*StageResult)(nil),                  // 19: exoper.gateway.v1.StageResult
+	(*EnrichmentResult)(nil),             // 20: exoper.gateway.v1.EnrichmentResult
+	(*StreamAIRequestRequest)(nil),       // 21: exoper.gateway.v1.StreamAIRequestRequest
+	(*StreamAIRequestResponse)(nil),      // 22: exoper.gateway.v1.StreamAIRequestResponse
+	(*StreamingOptions)(nil),             // 23: exoper.gateway.v1.StreamingOptions
+	(*StreamChunk)(nil),                  // 24: exoper.gateway.v1.StreamChunk
+	(*StreamComplete)(nil),               // 25: exoper.gateway.v1.StreamComplete
+	(*StreamError)(nil),                  // 26: exoper.gateway.v1.StreamError
+	(*StreamMetadata)(nil),               // 27: exoper.gateway.v1.StreamMetadata
+	(*GetHealthRequest)(nil),             // 28: exoper.gateway.v1.GetHealthRequest
+	(*GetHealthResponse)(nil),            // 29: exoper.gateway.v1.GetHealthResponse
+	(*ServiceHealth)(nil),                // 30: exoper.gateway.v1.ServiceHealth
+	(*HealthCheck)(nil),                  // 31: exoper.gateway.v1.HealthCheck
+	(*GetMetricsRequest)(nil),            // 32: exoper.gateway.v1.GetMetricsRequest
+	(*GetMetricsResponse)(nil),           // 33: exoper.gateway.v1.GetMetricsResponse
+	(*MetricData)(nil),                   // 34: exoper.gateway.v1.MetricData
+	(*MetricPoint)(nil),                  // 35: exoper.gateway.v1.MetricPoint
+	(*GetConfigurationRequest)(nil),      // 36: exoper.gateway.v1.GetConfigurationRequest
+	(*GetConfigurationResponse)(nil),     // 37: exoper.gateway.v1.GetConfigurationResponse
+	(*UpdateConfigurationRequest)(nil),   // 38: exoper.gateway.v1.UpdateConfigurationRequest
+	(*UpdateConfigurationResponse)(nil),  // 39: exoper.gateway.v1.UpdateConfigurationResponse
+	(*ConfigurationResult)(nil),          // 40: exoper.gateway.v1.ConfigurationResult
+	(*ValidateRequestRequest)(nil),       // 41: exoper.gateway.v1.ValidateRequestRequest
+	(*ValidateRequestResponse)(nil),      // 42: exoper.gateway.v1.ValidateRequestResponse
+	(*ValidationResult)(nil),             // 43: exoper.gateway.v1.ValidationResult
+	(*ValidationError)(nil),              // 44: exoper.gateway.v1.ValidationError
+	(*ValidationWarning)(nil),            // 45: exoper.gateway.v1.ValidationWarning
+	(*GetRoutingInfoRequest)(nil),        // 46: exoper.gateway.v1.GetRoutingInfoRequest
+	(*GetRoutingInfoResponse)(nil),       // 47: exoper.gateway.v1.GetRoutingInfoResponse
+	(*RoutingInfo)(nil),                  // 48: exoper.gateway.v1.RoutingInfo
+	(*GetAuditLogsRequest)(nil),          // 49: exoper.gateway.v1.GetAuditLogsRequest
+	(*GetAuditLogsResponse)(nil),         // 50: exoper.gateway.v1.GetAuditLogsResponse
+	(*CircuitBreakerRequest)(nil),        // 51: exoper.gateway.v1.CircuitBreakerRequest
+	(*CircuitBreakerResponse)(nil),       // 52: exoper.gateway.v1.CircuitBreakerResponse
+	(*CircuitBreakerStatusResponse)(nil), // 53: exoper.gateway.v1.CircuitBreakerStatusResponse
+	(*GetSystemInfoResponse)(nil),        // 54: exoper.gateway.v1.GetSystemInfoResponse
+	(*ReloadConfigurationRequest)(nil),   // 55: exoper.gateway.v1.ReloadConfigurationRequest
+	(*ReloadConfigurationResponse)(nil),  // 56: exoper.gateway.v1.ReloadConfigurationResponse
+	(*GetRealTimeMetricsRequest)(nil),    // 57: exoper.gateway.v1.GetRealTimeMetricsRequest
+	(*GetAlertsRequest)(nil),             // 58: exoper.gateway.v1.GetAlertsRequest
+	(*GetAlertsResponse)(nil),            // 59: exoper.gateway.v1.GetAlertsResponse
+	(*AlertInfo)(nil),                    // 60: exoper.gateway.v1.AlertInfo
+	(*CreateAlertRequest)(nil),           // 61: exoper.gateway.v1.CreateAlertRequest
+	(*CreateAlertResponse)(nil),          // 62: exoper.gateway.v1.CreateAlertResponse
+	(*UpdateAlertRequest)(nil),           // 63: exoper.gateway.v1.UpdateAlertRequest
+	(*UpdateAlertResponse)(nil),          // 64: exoper.gateway.v1.UpdateAlertResponse
+	(*DeleteAlertRequest)(nil),           // 65: exoper.gateway.v1.DeleteAlertRequest
+	(*DeleteAlertResponse)(nil),          // 66: exoper.gateway.v1.DeleteAlertResponse
+	(*BatchRequestProto)(nil),            // 67: exoper.gateway.v1.BatchRequestProto
+	(*BatchResponseProto)(nil),           // 68: exoper.gateway.v1.BatchResponseProto
+	(*BatchProcessingOptions)(nil),       // 69: exoper.gateway.v1.BatchProcessingOptions
+	(*BatchRequestResult)(nil),           // 70: exoper.gateway.v1.BatchRequestResult
+	(*ModelAccessRequest)(nil),           // 71: exoper.gateway.v1.ModelAccessRequest
+	(*ModelAccessResponse)(nil),          // 72: exoper.gateway.v1.ModelAccessResponse
+	(*ModelAccessInfo)(nil),              // 73: exoper.gateway.v1.ModelAccessInfo
+	(*AccessRestriction)(nil),            // 74: exoper.gateway.v1.AccessRestriction
+	nil,                                  // 75: exoper.gateway.v1.MetricData.LabelsEntry
+	nil,                                  // 76: exoper.gateway.v1.MetricPoint.TagsEntry
+	(*common.RequestMetadata)(nil),       // 77: exoper.common.v1.RequestMetadata
+	(*structpb.Struct)(nil),              // 78: google.protobuf.Struct
+	(common.Status)(0),                   // 79: exoper.common.v1.Status
+	(*common.ErrorDetails)(nil),          // 80: exoper.common.v1.ErrorDetails
+	(*durationpb.Duration)(nil),          // 81: google.protobuf.Duration
+	(common.RequestType)(0),              // 82: exoper.common.v1.RequestType
+	(common.ModelProvider)(0),            // 83: exoper.common.v1.ModelProvider
+	(common.SecurityLevel)(0),            // 84: exoper.common.v1.SecurityLevel
+	(common.ContentType)(0),              // 85: exoper.common.v1.ContentType
+	(*anypb.Any)(nil),                    // 86: google.protobuf.Any
+	(*common.UsageMetrics)(nil),          // 87: exoper.common.v1.UsageMetrics
+	(*common.SecurityAnalysis)(nil),      // 88: exoper.common.v1.SecurityAnalysis
+	(*common.ComplianceReport)(nil),      // 89: exoper.common.v1.ComplianceReport
+	(*common.PerformanceMetrics)(nil),    // 90: exoper.common.v1.PerformanceMetrics
+	(*timestamppb.Timestamp)(nil),        // 91: google.protobuf.Timestamp
+	(*common.HealthStatus)(nil),          // 92: exoper.common.v1.HealthStatus
+	(*common.Filter)(nil),                // 93: exoper.common.v1.Filter
+	(*common.ConfigurationValue)(nil),    // 94: exoper.common.v1.ConfigurationValue
+	(common.Severity)(0),                 // 95: exoper.common.v1.Severity
+	(*common.ResourceLimits)(nil),        // 96: exoper.common.v1.ResourceLimits
+	(*common.Pagination)(nil),            // 97: exoper.common.v1.Pagination
+	(*common.SortOrder)(nil),             // 98: exoper.common.v1.SortOrder
+	(*common.AuditEvent)(nil),            // 99: exoper.common.v1.AuditEvent
+	(*common.SystemInfo)(nil),            // 100: exoper.common.v1.SystemInfo
+	(*emptypb.Empty)(nil),                // 101: google.protobuf.Empty
 }
 var file_pkg_api_proto_gateway_gateway_proto_depIdxs = []int32{
-	66,  // 0: exoper.gateway.v1.ProcessAIRequestRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	77,  // 0: exoper.gateway.v1.ProcessAIRequestRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
 	4,   // 1: exoper.gateway.v1.ProcessAIRequestRequest.payload:type_name -> exoper.gateway.v1.AIRequestPayload
 	13,  // 2: exoper.gateway.v1.ProcessAIRequestRequest.options:type_name -> exoper.gateway.v1.ProcessingOptions
-	67,  // 3: exoper.gateway.v1.ProcessAIRequestRequest.context:type_name -> google.protobuf.Struct
-	68,  // 4: exoper.gateway.v1.ProcessAIRequestResponse.status:type_name -> exoper.common.v1.Status
+	78,  // 3: exoper.gateway.v1.ProcessAIRequestRequest.context:type_name -> google.protobuf.Struct
+	79,  // 4: exoper.gateway.v1.ProcessAIRequestResponse.status:type_name -> exoper.common.v1.Status
 	14,  // 5: exoper.gateway.v1.ProcessAIRequestResponse.response:type_name -> exoper.gateway.v1.AIResponsePayload
 	18,  // 6: exoper.gateway.v1.ProcessAIRequestResponse.processing_result:type_name -> exoper.gateway.v1.ProcessingResult
-	69,  // 7: exoper.gateway.v1.ProcessAIRequestResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	70,  // 8: exoper.gateway.v1.ProcessAIRequestResponse.total_processing_time:type_name -> google.protobuf.Duration
-	71,  // 9: exoper.gateway.v1.AIRequestPayload.type:type_name -> exoper.common.v1.RequestType
-	72,  // 10: exoper.gateway.v1.AIRequestPayload.provider:type_name -> exoper.common.v1.ModelProvider
-	73,  // 11: exoper.gateway.v1.AIRequestPayload.security_level:type_name -> exoper.common.v1.SecurityLevel
-	74,  // 12: exoper.gateway.v1.AIRequestPayload.content_type:type_name -> exoper.common.v1.ContentType
+	80,  // 7: exoper.gateway.v1.ProcessAIRequestResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	81,  // 8: exoper.gateway.v1.ProcessAIRequestResponse.total_processing_time:type_name -> google.protobuf.Duration
+	82,  // 9: exoper.gateway.v1.AIRequestPayload.type:type_name -> exoper.common.v1.RequestType
+	83,  // 10: exoper.gateway.v1.AIRequestPayload.provider:type_name -> exoper.common.v1.ModelProvider
+	84,  // 11: exoper.gateway.v1.AIRequestPayload.security_level:type_name -> exoper.common.v1.SecurityLevel
+	85,  // 12: exoper.gateway.v1.AIRequestPayload.content_type:type_name -> exoper.common.v1.ContentType
 	5,   // 13: exoper.gateway.v1.AIRequestPayload.content:type_name -> exoper.gateway.v1.RequestContent
 	12,  // 14: exoper.gateway.v1.AIRequestPayload.parameters:type_name -> exoper.gateway.v1.RequestParameters
-	67,  // 15: exoper.gateway.v1.AIRequestPayload.custom_parameters:type_name -> google.protobuf.Struct
+	78,  // 15: exoper.gateway.v1.AIRequestPayload.custom_parameters:type_name -> google.protobuf.Struct
 	6,   // 16: exoper.gateway.v1.RequestContent.messages:type_name -> exoper.gateway.v1.ChatMessage
 	7,   // 17: exoper.gateway.v1.RequestContent.functions:type_name -> exoper.gateway.v1.FunctionDefinition
 	9,   // 18: exoper.gateway.v1.RequestContent.tools:type_name -> exoper.gateway.v1.ToolDefinition
 	11,  // 19: exoper.gateway.v1.RequestContent.response_format:type_name -> exoper.gateway.v1.ResponseFormat
-	67,  // 20: exoper.gateway.v1.RequestContent.attachments:type_name -> google.protobuf.Struct
+	78,  // 20: exoper.gateway.v1.RequestContent.attachments:type_name -> google.protobuf.Struct
 	8,   // 21: exoper.gateway.v1.ChatMessage.function_call:type_name -> exoper.gateway.v1.FunctionCall
 	10,  // 22: exoper.gateway.v1.ChatMessage.tool_calls:type_name -> exoper.gateway.v1.ToolCall
-	67,  // 23: exoper.gateway.v1.ChatMessage.metadata:type_name -> google.protobuf.Struct
-	67,  // 24: exoper.gateway.v1.FunctionDefinition.parameters:type_name -> google.protobuf.Struct
+	78,  // 23: exoper.gateway.v1.ChatMessage.metadata:type_name -> google.protobuf.Struct
+	78,  // 24: exoper.gateway.v1.FunctionDefinition.parameters:type_name -> google.protobuf.Struct
 	7,   // 25: exoper.gateway.v1.ToolDefinition.function:type_name -> exoper.gateway.v1.FunctionDefinition
-	67,  // 26: exoper.gateway.v1.ToolDefinition.metadata:type_name -> google.protobuf.Struct
+	78,  // 26: exoper.gateway.v1.ToolDefinition.metadata:type_name -> google.protobuf.Struct
 	8,   // 27: exoper.gateway.v1.ToolCall.function:type_name -> exoper.gateway.v1.FunctionCall
-	67,  // 28: exoper.gateway.v1.ResponseFormat.schema:type_name -> google.protobuf.Struct
-	75,  // 29: exoper.gateway.v1.RequestParameters.function_call:type_name -> google.protobuf.Any
-	75,  // 30: exoper.gateway.v1.RequestParameters.tool_choice:type_name -> google.protobuf.Any
-	70,  // 31: exoper.gateway.v1.ProcessingOptions.timeout:type_name -> google.protobuf.Duration
-	70,  // 32: exoper.gateway.v1.ProcessingOptions.retry_delay:type_name -> google.protobuf.Duration
-	67,  // 33: exoper.gateway.v1.ProcessingOptions.custom_options:type_name -> google.protobuf.Struct
+	78,  // 28: exoper.gateway.v1.ResponseFormat.schema:type_name -> google.protobuf.Struct
+	86,  // 29: exoper.gateway.v1.RequestParameters.function_call:type_name -> google.protobuf.Any
+	86,  // 30: exoper.gateway.v1.RequestParameters.tool_choice:type_name -> google.protobuf.Any
+	81,  // 31: exoper.gateway.v1.ProcessingOptions.timeout:type_name -> google.protobuf.Duration
+	81,  // 32: exoper.gateway.v1.ProcessingOptions.retry_delay:type_name -> google.protobuf.Duration
+	78,  // 33: exoper.gateway.v1.ProcessingOptions.custom_options:type_name -> google.protobuf.Struct
 	15,  // 34: exoper.gateway.v1.AIResponsePayload.choices:type_name -> exoper.gateway.v1.Choice
 	16,  // 35: exoper.gateway.v1.AIResponsePayload.embeddings:type_name -> exoper.gateway.v1.Embedding
-	76,  // 36: exoper.gateway.v1.AIResponsePayload.usage:type_name -> exoper.common.v1.UsageMetrics
-	67,  // 37: exoper.gateway.v1.AIResponsePayload.custom_data:type_name -> google.protobuf.Struct
+	87,  // 36: exoper.gateway.v1.AIResponsePayload.usage:type_name -> exoper.common.v1.UsageMetrics
+	78,  // 37: exoper.gateway.v1.AIResponsePayload.custom_data:type_name -> google.protobuf.Struct
 	6,   // 38: exoper.gateway.v1.Choice.message:type_name -> exoper.gateway.v1.ChatMessage
 	6,   // 39: exoper.gateway.v1.Choice.delta:type_name -> exoper.gateway.v1.ChatMessage
 	17,  // 40: exoper.gateway.v1.Choice.logprobs:type_name -> exoper.gateway.v1.LogprobsResult
-	67,  // 41: exoper.gateway.v1.Choice.metadata:type_name -> google.protobuf.Struct
-	67,  // 42: exoper.gateway.v1.LogprobsResult.top_logprobs:type_name -> google.protobuf.Struct
+	78,  // 41: exoper.gateway.v1.Choice.metadata:type_name -> google.protobuf.Struct
+	78,  // 42: exoper.gateway.v1.LogprobsResult.top_logprobs:type_name -> google.protobuf.Struct
 	0,   // 43: exoper.gateway.v1.ProcessingResult.final_stage:type_name -> exoper.gateway.v1.ProcessingStage
 	19,  // 44: exoper.gateway.v1.ProcessingResult.stage_results:type_name -> exoper.gateway.v1.StageResult
 	1,   // 45: exoper.gateway.v1.ProcessingResult.routing_decision:type_name -> exoper.gateway.v1.RoutingDecision
-	77,  // 46: exoper.gateway.v1.ProcessingResult.security_analysis:type_name -> exoper.common.v1.SecurityAnalysis
-	78,  // 47: exoper.gateway.v1.ProcessingResult.compliance_report:type_name -> exoper.common.v1.ComplianceReport
-	79,  // 48: exoper.gateway.v1.ProcessingResult.performance_metrics:type_name -> exoper.common.v1.PerformanceMetrics
+	88,  // 46: exoper.gateway.v1.ProcessingResult.security_analysis:type_name -> exoper.common.v1.SecurityAnalysis
+	89,  // 47: exoper.gateway.v1.ProcessingResult.compliance_report:type_name -> exoper.common.v1.ComplianceReport
+	90,  // 48: exoper.gateway.v1.ProcessingResult.performance_metrics:type_name -> exoper.common.v1.PerformanceMetrics
 	20,  // 49: exoper.gateway.v1.ProcessingResult.enrichments:type_name -> exoper.gateway.v1.EnrichmentResult
-	67,  // 50: exoper.gateway.v1.ProcessingResult.metadata:type_name -> google.protobuf.Struct
+	78,  // 50: exoper.gateway.v1.ProcessingResult.metadata:type_name -> google.protobuf.Struct
 	0,   // 51: exoper.gateway.v1.StageResult.stage:type_name -> exoper.gateway.v1.ProcessingStage
-	68,  // 52: exoper.gateway.v1.StageResult.status:type_name -> exoper.common.v1.Status
-	70,  // 53: exoper.gateway.v1.StageResult.duration:type_name -> google.protobuf.Duration
-	67,  // 54: exoper.gateway.v1.StageResult.data:type_name -> google.protobuf.Struct
-	69,  // 55: exoper.gateway.v1.StageResult.error:type_name -> exoper.common.v1.ErrorDetails
-	68,  // 56: exoper.gateway.v1.EnrichmentResult.status:type_name -> exoper.common.v1.Status
-	67,  // 57: exoper.gateway.v1.EnrichmentResult.enriched_data:type_name -> google.protobuf.Struct
-	70,  // 58: exoper.gateway.v1.EnrichmentResult.processing_time:type_name -> google.protobuf.Duration
-	69,  // 59: exoper.gateway.v1.EnrichmentResult.error:type_name -> exoper.common.v1.ErrorDetails
-	66,  // 60: exoper.gateway.v1.StreamAIRequestRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	79,  // 52: exoper.gateway.v1.StageResult.status:type_name -> exoper.common.v1.Status
+	81,  // 53: exoper.gateway.v1.StageResult.duration:type_name -> google.protobuf.Duration
+	78,  // 54: exoper.gateway.v1.StageResult.data:type_name -> google.protobuf.Struct
+	80,  // 55: exoper.gateway.v1.StageResult.error:type_name -> exoper.common.v1.ErrorDetails
+	79,  // 56: exoper.gateway.v1.EnrichmentResult.status:type_name -> exoper.common.v1.Status
+	78,  // 57: exoper.gateway.v1.EnrichmentResult.enriched_data:type_name -> google.protobuf.Struct
+	81,  // 58: exoper.gateway.v1.EnrichmentResult.processing_time:type_name -> google.protobuf.Duration
+	80,  // 59: exoper.gateway.v1.EnrichmentResult.error:type_name -> exoper.common.v1.ErrorDetails
+	77,  // 60: exoper.gateway.v1.StreamAIRequestRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
 	4,   // 61: exoper.gateway.v1.StreamAIRequestRequest.payload:type_name -> exoper.gateway.v1.AIRequestPayload
 	13,  // 62: exoper.gateway.v1.StreamAIRequestRequest.options:type_name -> exoper.gateway.v1.ProcessingOptions
 	23,  // 63: exoper.gateway.v1.StreamAIRequestRequest.streaming_options:type_name -> exoper.gateway.v1.StreamingOptions
@@ -5614,163 +6509,202 @@ var file_pkg_api_proto_gateway_gateway_proto_depIdxs = []int32{
 	25,  // 65: exoper.gateway.v1.StreamAIRequestResponse.complete:type_name -> exoper.gateway.v1.StreamComplete
 	26,  // 66: exoper.gateway.v1.StreamAIRequestResponse.error:type_name -> exoper.gateway.v1.StreamError
 	27,  // 67: exoper.gateway.v1.StreamAIRequestResponse.metadata:type_name -> exoper.gateway.v1.StreamMetadata
-	80,  // 68: exoper.gateway.v1.StreamAIRequestResponse.timestamp:type_name -> google.protobuf.Timestamp
-	70,  // 69: exoper.gateway.v1.StreamingOptions.chunk_interval:type_name -> google.protobuf.Duration
+	91,  // 68: exoper.gateway.v1.StreamAIRequestResponse.timestamp:type_name -> google.protobuf.Timestamp
+	81,  // 69: exoper.gateway.v1.StreamingOptions.chunk_interval:type_name -> google.protobuf.Duration
 	15,  // 70: exoper.gateway.v1.StreamChunk.choices:type_name -> exoper.gateway.v1.Choice
-	76,  // 71: exoper.gateway.v1.StreamChunk.usage:type_name -> exoper.common.v1.UsageMetrics
+	87,  // 71: exoper.gateway.v1.StreamChunk.usage:type_name -> exoper.common.v1.UsageMetrics
 	14,  // 72: exoper.gateway.v1.StreamComplete.final_response:type_name -> exoper.gateway.v1.AIResponsePayload
 	18,  // 73: exoper.gateway.v1.StreamComplete.processing_result:type_name -> exoper.gateway.v1.ProcessingResult
-	76,  // 74: exoper.gateway.v1.StreamComplete.total_usage:type_name -> exoper.common.v1.UsageMetrics
-	70,  // 75: exoper.gateway.v1.StreamComplete.total_duration:type_name -> google.protobuf.Duration
-	69,  // 76: exoper.gateway.v1.StreamError.error:type_name -> exoper.common.v1.ErrorDetails
-	70,  // 77: exoper.gateway.v1.StreamError.retry_after:type_name -> google.protobuf.Duration
-	68,  // 78: exoper.gateway.v1.StreamMetadata.status:type_name -> exoper.common.v1.Status
+	87,  // 74: exoper.gateway.v1.StreamComplete.total_usage:type_name -> exoper.common.v1.UsageMetrics
+	81,  // 75: exoper.gateway.v1.StreamComplete.total_duration:type_name -> google.protobuf.Duration
+	80,  // 76: exoper.gateway.v1.StreamError.error:type_name -> exoper.common.v1.ErrorDetails
+	81,  // 77: exoper.gateway.v1.StreamError.retry_after:type_name -> google.protobuf.Duration
+	79,  // 78: exoper.gateway.v1.StreamMetadata.status:type_name -> exoper.common.v1.Status
 	0,   // 79: exoper.gateway.v1.StreamMetadata.current_stage:type_name -> exoper.gateway.v1.ProcessingStage
-	79,  // 80: exoper.gateway.v1.StreamMetadata.performance:type_name -> exoper.common.v1.PerformanceMetrics
-	67,  // 81: exoper.gateway.v1.StreamMetadata.custom_metadata:type_name -> google.protobuf.Struct
-	66,  // 82: exoper.gateway.v1.GetHealthRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	68,  // 83: exoper.gateway.v1.GetHealthResponse.status:type_name -> exoper.common.v1.Status
-	81,  // 84: exoper.gateway.v1.GetHealthResponse.health_status:type_name -> exoper.common.v1.HealthStatus
+	90,  // 80: exoper.gateway.v1.StreamMetadata.performance:type_name -> exoper.common.v1.PerformanceMetrics
+	78,  // 81: exoper.gateway.v1.StreamMetadata.custom_metadata:type_name -> google.protobuf.Struct
+	77,  // 82: exoper.gateway.v1.GetHealthRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	79,  // 83: exoper.gateway.v1.GetHealthResponse.status:type_name -> exoper.common.v1.Status
+	92,  // 84: exoper.gateway.v1.GetHealthResponse.health_status:type_name -> exoper.common.v1.HealthStatus
 	30,  // 85: exoper.gateway.v1.GetHealthResponse.service_health:type_name -> exoper.gateway.v1.ServiceHealth
-	79,  // 86: exoper.gateway.v1.GetHealthResponse.performance_metrics:type_name -> exoper.common.v1.PerformanceMetrics
-	80,  // 87: exoper.gateway.v1.GetHealthResponse.last_updated:type_name -> google.protobuf.Timestamp
-	68,  // 88: exoper.gateway.v1.ServiceHealth.status:type_name -> exoper.common.v1.Status
-	70,  // 89: exoper.gateway.v1.ServiceHealth.response_time:type_name -> google.protobuf.Duration
-	80,  // 90: exoper.gateway.v1.ServiceHealth.last_check:type_name -> google.protobuf.Timestamp
+	90,  // 86: exoper.gateway.v1.GetHealthResponse.performance_metrics:type_name -> exoper.common.v1.PerformanceMetrics
+	91,  // 87: exoper.gateway.v1.GetHealthResponse.last_updated:type_name -> google.protobuf.Timestamp
+	79,  // 88: exoper.gateway.v1.ServiceHealth.status:type_name -> exoper.common.v1.Status
+	81,  // 89: exoper.gateway.v1.ServiceHealth.response_time:type_name -> google.protobuf.Duration
+	91,  // 90: exoper.gateway.v1.ServiceHealth.last_check:type_name -> google.protobuf.Timestamp
 	31,  // 91: exoper.gateway.v1.ServiceHealth.checks:type_name -> exoper.gateway.v1.HealthCheck
-	67,  // 92: exoper.gateway.v1.ServiceHealth.metadata:type_name -> google.protobuf.Struct
-	68,  // 93: exoper.gateway.v1.HealthCheck.status:type_name -> exoper.common.v1.Status
-	70,  // 94: exoper.gateway.v1.HealthCheck.duration:type_name -> google.protobuf.Duration
-	67,  // 95: exoper.gateway.v1.HealthCheck.details:type_name -> google.protobuf.Struct
-	66,  // 96: exoper.gateway.v1.GetMetricsRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	80,  // 97: exoper.gateway.v1.GetMetricsRequest.start_time:type_name -> google.protobuf.Timestamp
-	80,  // 98: exoper.gateway.v1.GetMetricsRequest.end_time:type_name -> google.protobuf.Timestamp
-	82,  // 99: exoper.gateway.v1.GetMetricsRequest.filters:type_name -> exoper.common.v1.Filter
-	68,  // 100: exoper.gateway.v1.GetMetricsResponse.status:type_name -> exoper.common.v1.Status
+	78,  // 92: exoper.gateway.v1.ServiceHealth.metadata:type_name -> google.protobuf.Struct
+	79,  // 93: exoper.gateway.v1.HealthCheck.status:type_name -> exoper.common.v1.Status
+	81,  // 94: exoper.gateway.v1.HealthCheck.duration:type_name -> google.protobuf.Duration
+	78,  // 95: exoper.gateway.v1.HealthCheck.details:type_name -> google.protobuf.Struct
+	77,  // 96: exoper.gateway.v1.GetMetricsRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	91,  // 97: exoper.gateway.v1.GetMetricsRequest.start_time:type_name -> google.protobuf.Timestamp
+	91,  // 98: exoper.gateway.v1.GetMetricsRequest.end_time:type_name -> google.protobuf.Timestamp
+	93,  // 99: exoper.gateway.v1.GetMetricsRequest.filters:type_name -> exoper.common.v1.Filter
+	79,  // 100: exoper.gateway.v1.GetMetricsResponse.status:type_name -> exoper.common.v1.Status
 	34,  // 101: exoper.gateway.v1.GetMetricsResponse.metrics:type_name -> exoper.gateway.v1.MetricData
-	80,  // 102: exoper.gateway.v1.GetMetricsResponse.generated_at:type_name -> google.protobuf.Timestamp
-	69,  // 103: exoper.gateway.v1.GetMetricsResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	91,  // 102: exoper.gateway.v1.GetMetricsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	80,  // 103: exoper.gateway.v1.GetMetricsResponse.error:type_name -> exoper.common.v1.ErrorDetails
 	35,  // 104: exoper.gateway.v1.MetricData.points:type_name -> exoper.gateway.v1.MetricPoint
-	64,  // 105: exoper.gateway.v1.MetricData.labels:type_name -> exoper.gateway.v1.MetricData.LabelsEntry
-	80,  // 106: exoper.gateway.v1.MetricPoint.timestamp:type_name -> google.protobuf.Timestamp
-	65,  // 107: exoper.gateway.v1.MetricPoint.tags:type_name -> exoper.gateway.v1.MetricPoint.TagsEntry
-	66,  // 108: exoper.gateway.v1.GetConfigurationRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	68,  // 109: exoper.gateway.v1.GetConfigurationResponse.status:type_name -> exoper.common.v1.Status
-	83,  // 110: exoper.gateway.v1.GetConfigurationResponse.configurations:type_name -> exoper.common.v1.ConfigurationValue
-	80,  // 111: exoper.gateway.v1.GetConfigurationResponse.last_updated:type_name -> google.protobuf.Timestamp
-	69,  // 112: exoper.gateway.v1.GetConfigurationResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	66,  // 113: exoper.gateway.v1.UpdateConfigurationRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	83,  // 114: exoper.gateway.v1.UpdateConfigurationRequest.configurations:type_name -> exoper.common.v1.ConfigurationValue
-	68,  // 115: exoper.gateway.v1.UpdateConfigurationResponse.status:type_name -> exoper.common.v1.Status
+	75,  // 105: exoper.gateway.v1.MetricData.labels:type_name -> exoper.gateway.v1.MetricData.LabelsEntry
+	91,  // 106: exoper.gateway.v1.MetricPoint.timestamp:type_name -> google.protobuf.Timestamp
+	76,  // 107: exoper.gateway.v1.MetricPoint.tags:type_name -> exoper.gateway.v1.MetricPoint.TagsEntry
+	77,  // 108: exoper.gateway.v1.GetConfigurationRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	79,  // 109: exoper.gateway.v1.GetConfigurationResponse.status:type_name -> exoper.common.v1.Status
+	94,  // 110: exoper.gateway.v1.GetConfigurationResponse.configurations:type_name -> exoper.common.v1.ConfigurationValue
+	91,  // 111: exoper.gateway.v1.GetConfigurationResponse.last_updated:type_name -> google.protobuf.Timestamp
+	80,  // 112: exoper.gateway.v1.GetConfigurationResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	77,  // 113: exoper.gateway.v1.UpdateConfigurationRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	94,  // 114: exoper.gateway.v1.UpdateConfigurationRequest.configurations:type_name -> exoper.common.v1.ConfigurationValue
+	79,  // 115: exoper.gateway.v1.UpdateConfigurationResponse.status:type_name -> exoper.common.v1.Status
 	40,  // 116: exoper.gateway.v1.UpdateConfigurationResponse.results:type_name -> exoper.gateway.v1.ConfigurationResult
-	69,  // 117: exoper.gateway.v1.UpdateConfigurationResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	68,  // 118: exoper.gateway.v1.ConfigurationResult.status:type_name -> exoper.common.v1.Status
-	80,  // 119: exoper.gateway.v1.ConfigurationResult.updated_at:type_name -> google.protobuf.Timestamp
-	66,  // 120: exoper.gateway.v1.ValidateRequestRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	80,  // 117: exoper.gateway.v1.UpdateConfigurationResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	79,  // 118: exoper.gateway.v1.ConfigurationResult.status:type_name -> exoper.common.v1.Status
+	91,  // 119: exoper.gateway.v1.ConfigurationResult.updated_at:type_name -> google.protobuf.Timestamp
+	77,  // 120: exoper.gateway.v1.ValidateRequestRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
 	4,   // 121: exoper.gateway.v1.ValidateRequestRequest.payload:type_name -> exoper.gateway.v1.AIRequestPayload
-	68,  // 122: exoper.gateway.v1.ValidateRequestResponse.status:type_name -> exoper.common.v1.Status
+	79,  // 122: exoper.gateway.v1.ValidateRequestResponse.status:type_name -> exoper.common.v1.Status
 	43,  // 123: exoper.gateway.v1.ValidateRequestResponse.result:type_name -> exoper.gateway.v1.ValidationResult
-	69,  // 124: exoper.gateway.v1.ValidateRequestResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	80,  // 124: exoper.gateway.v1.ValidateRequestResponse.error:type_name -> exoper.common.v1.ErrorDetails
 	44,  // 125: exoper.gateway.v1.ValidationResult.errors:type_name -> exoper.gateway.v1.ValidationError
 	45,  // 126: exoper.gateway.v1.ValidationResult.warnings:type_name -> exoper.gateway.v1.ValidationWarning
-	67,  // 127: exoper.gateway.v1.ValidationResult.suggestions:type_name -> google.protobuf.Struct
-	80,  // 128: exoper.gateway.v1.ValidationResult.validated_at:type_name -> google.protobuf.Timestamp
-	84,  // 129: exoper.gateway.v1.ValidationError.severity:type_name -> exoper.common.v1.Severity
-	67,  // 130: exoper.gateway.v1.ValidationError.context:type_name -> google.protobuf.Struct
-	66,  // 131: exoper.gateway.v1.GetRoutingInfoRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	72,  // 132: exoper.gateway.v1.GetRoutingInfoRequest.provider:type_name -> exoper.common.v1.ModelProvider
-	71,  // 133: exoper.gateway.v1.GetRoutingInfoRequest.request_type:type_name -> exoper.common.v1.RequestType
-	68,  // 134: exoper.gateway.v1.GetRoutingInfoResponse.status:type_name -> exoper.common.v1.Status
+	78,  // 127: exoper.gateway.v1.ValidationResult.suggestions:type_name -> google.protobuf.Struct
+	91,  // 128: exoper.gateway.v1.ValidationResult.validated_at:type_name -> google.protobuf.Timestamp
+	95,  // 129: exoper.gateway.v1.ValidationError.severity:type_name -> exoper.common.v1.Severity
+	78,  // 130: exoper.gateway.v1.ValidationError.context:type_name -> google.protobuf.Struct
+	77,  // 131: exoper.gateway.v1.GetRoutingInfoRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	83,  // 132: exoper.gateway.v1.GetRoutingInfoRequest.provider:type_name -> exoper.common.v1.ModelProvider
+	82,  // 133: exoper.gateway.v1.GetRoutingInfoRequest.request_type:type_name -> exoper.common.v1.RequestType
+	79,  // 134: exoper.gateway.v1.GetRoutingInfoResponse.status:type_name -> exoper.common.v1.Status
 	48,  // 135: exoper.gateway.v1.GetRoutingInfoResponse.routing_info:type_name -> exoper.gateway.v1.RoutingInfo
-	69,  // 136: exoper.gateway.v1.GetRoutingInfoResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	67,  // 137: exoper.gateway.v1.RoutingInfo.routing_metadata:type_name -> google.protobuf.Struct
-	85,  // 138: exoper.gateway.v1.RoutingInfo.limits:type_name -> exoper.common.v1.ResourceLimits
-	70,  // 139: exoper.gateway.v1.RoutingInfo.timeout:type_name -> google.protobuf.Duration
-	66,  // 140: exoper.gateway.v1.GetAuditLogsRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	80,  // 141: exoper.gateway.v1.GetAuditLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	80,  // 142: exoper.gateway.v1.GetAuditLogsRequest.end_time:type_name -> google.protobuf.Timestamp
-	82,  // 143: exoper.gateway.v1.GetAuditLogsRequest.filters:type_name -> exoper.common.v1.Filter
-	86,  // 144: exoper.gateway.v1.GetAuditLogsRequest.pagination:type_name -> exoper.common.v1.Pagination
-	87,  // 145: exoper.gateway.v1.GetAuditLogsRequest.sort_orders:type_name -> exoper.common.v1.SortOrder
-	68,  // 146: exoper.gateway.v1.GetAuditLogsResponse.status:type_name -> exoper.common.v1.Status
-	88,  // 147: exoper.gateway.v1.GetAuditLogsResponse.audit_events:type_name -> exoper.common.v1.AuditEvent
-	86,  // 148: exoper.gateway.v1.GetAuditLogsResponse.pagination:type_name -> exoper.common.v1.Pagination
-	69,  // 149: exoper.gateway.v1.GetAuditLogsResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	68,  // 150: exoper.gateway.v1.GetSystemInfoResponse.status:type_name -> exoper.common.v1.Status
-	89,  // 151: exoper.gateway.v1.GetSystemInfoResponse.system_info:type_name -> exoper.common.v1.SystemInfo
-	69,  // 152: exoper.gateway.v1.GetSystemInfoResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	66,  // 153: exoper.gateway.v1.ReloadConfigurationRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	68,  // 154: exoper.gateway.v1.ReloadConfigurationResponse.status:type_name -> exoper.common.v1.Status
-	80,  // 155: exoper.gateway.v1.ReloadConfigurationResponse.reloaded_at:type_name -> google.protobuf.Timestamp
-	69,  // 156: exoper.gateway.v1.ReloadConfigurationResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	66,  // 157: exoper.gateway.v1.GetRealTimeMetricsRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	70,  // 158: exoper.gateway.v1.GetRealTimeMetricsRequest.interval:type_name -> google.protobuf.Duration
-	82,  // 159: exoper.gateway.v1.GetRealTimeMetricsRequest.filters:type_name -> exoper.common.v1.Filter
-	66,  // 160: exoper.gateway.v1.GetAlertsRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	86,  // 161: exoper.gateway.v1.GetAlertsRequest.pagination:type_name -> exoper.common.v1.Pagination
-	82,  // 162: exoper.gateway.v1.GetAlertsRequest.filters:type_name -> exoper.common.v1.Filter
-	68,  // 163: exoper.gateway.v1.GetAlertsResponse.status:type_name -> exoper.common.v1.Status
-	57,  // 164: exoper.gateway.v1.GetAlertsResponse.alerts:type_name -> exoper.gateway.v1.AlertInfo
-	86,  // 165: exoper.gateway.v1.GetAlertsResponse.pagination:type_name -> exoper.common.v1.Pagination
-	69,  // 166: exoper.gateway.v1.GetAlertsResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	84,  // 167: exoper.gateway.v1.AlertInfo.severity:type_name -> exoper.common.v1.Severity
-	68,  // 168: exoper.gateway.v1.AlertInfo.status:type_name -> exoper.common.v1.Status
-	80,  // 169: exoper.gateway.v1.AlertInfo.triggered_at:type_name -> google.protobuf.Timestamp
-	80,  // 170: exoper.gateway.v1.AlertInfo.resolved_at:type_name -> google.protobuf.Timestamp
-	67,  // 171: exoper.gateway.v1.AlertInfo.conditions:type_name -> google.protobuf.Struct
-	67,  // 172: exoper.gateway.v1.AlertInfo.metadata:type_name -> google.protobuf.Struct
-	66,  // 173: exoper.gateway.v1.CreateAlertRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	84,  // 174: exoper.gateway.v1.CreateAlertRequest.severity:type_name -> exoper.common.v1.Severity
-	67,  // 175: exoper.gateway.v1.CreateAlertRequest.conditions:type_name -> google.protobuf.Struct
-	67,  // 176: exoper.gateway.v1.CreateAlertRequest.actions:type_name -> google.protobuf.Struct
-	68,  // 177: exoper.gateway.v1.CreateAlertResponse.status:type_name -> exoper.common.v1.Status
-	69,  // 178: exoper.gateway.v1.CreateAlertResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	66,  // 179: exoper.gateway.v1.UpdateAlertRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	84,  // 180: exoper.gateway.v1.UpdateAlertRequest.severity:type_name -> exoper.common.v1.Severity
-	67,  // 181: exoper.gateway.v1.UpdateAlertRequest.conditions:type_name -> google.protobuf.Struct
-	67,  // 182: exoper.gateway.v1.UpdateAlertRequest.actions:type_name -> google.protobuf.Struct
-	68,  // 183: exoper.gateway.v1.UpdateAlertResponse.status:type_name -> exoper.common.v1.Status
-	69,  // 184: exoper.gateway.v1.UpdateAlertResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	66,  // 185: exoper.gateway.v1.DeleteAlertRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
-	68,  // 186: exoper.gateway.v1.DeleteAlertResponse.status:type_name -> exoper.common.v1.Status
-	69,  // 187: exoper.gateway.v1.DeleteAlertResponse.error:type_name -> exoper.common.v1.ErrorDetails
-	2,   // 188: exoper.gateway.v1.GatewayService.ProcessAIRequest:input_type -> exoper.gateway.v1.ProcessAIRequestRequest
-	21,  // 189: exoper.gateway.v1.GatewayService.StreamAIRequest:input_type -> exoper.gateway.v1.StreamAIRequestRequest
-	41,  // 190: exoper.gateway.v1.GatewayService.ValidateRequest:input_type -> exoper.gateway.v1.ValidateRequestRequest
-	28,  // 191: exoper.gateway.v1.GatewayService.GetHealth:input_type -> exoper.gateway.v1.GetHealthRequest
-	32,  // 192: exoper.gateway.v1.GatewayService.GetMetrics:input_type -> exoper.gateway.v1.GetMetricsRequest
-	46,  // 193: exoper.gateway.v1.GatewayService.GetRoutingInfo:input_type -> exoper.gateway.v1.GetRoutingInfoRequest
-	36,  // 194: exoper.gateway.v1.GatewayManagementService.GetConfiguration:input_type -> exoper.gateway.v1.GetConfigurationRequest
-	38,  // 195: exoper.gateway.v1.GatewayManagementService.UpdateConfiguration:input_type -> exoper.gateway.v1.UpdateConfigurationRequest
-	49,  // 196: exoper.gateway.v1.GatewayManagementService.GetAuditLogs:input_type -> exoper.gateway.v1.GetAuditLogsRequest
-	90,  // 197: exoper.gateway.v1.GatewayManagementService.GetSystemInfo:input_type -> google.protobuf.Empty
-	52,  // 198: exoper.gateway.v1.GatewayManagementService.ReloadConfiguration:input_type -> exoper.gateway.v1.ReloadConfigurationRequest
-	54,  // 199: exoper.gateway.v1.GatewayMonitoringService.GetRealTimeMetrics:input_type -> exoper.gateway.v1.GetRealTimeMetricsRequest
-	55,  // 200: exoper.gateway.v1.GatewayMonitoringService.GetAlerts:input_type -> exoper.gateway.v1.GetAlertsRequest
-	58,  // 201: exoper.gateway.v1.GatewayMonitoringService.CreateAlert:input_type -> exoper.gateway.v1.CreateAlertRequest
-	60,  // 202: exoper.gateway.v1.GatewayMonitoringService.UpdateAlert:input_type -> exoper.gateway.v1.UpdateAlertRequest
-	62,  // 203: exoper.gateway.v1.GatewayMonitoringService.DeleteAlert:input_type -> exoper.gateway.v1.DeleteAlertRequest
-	3,   // 204: exoper.gateway.v1.GatewayService.ProcessAIRequest:output_type -> exoper.gateway.v1.ProcessAIRequestResponse
-	22,  // 205: exoper.gateway.v1.GatewayService.StreamAIRequest:output_type -> exoper.gateway.v1.StreamAIRequestResponse
-	42,  // 206: exoper.gateway.v1.GatewayService.ValidateRequest:output_type -> exoper.gateway.v1.ValidateRequestResponse
-	29,  // 207: exoper.gateway.v1.GatewayService.GetHealth:output_type -> exoper.gateway.v1.GetHealthResponse
-	33,  // 208: exoper.gateway.v1.GatewayService.GetMetrics:output_type -> exoper.gateway.v1.GetMetricsResponse
-	47,  // 209: exoper.gateway.v1.GatewayService.GetRoutingInfo:output_type -> exoper.gateway.v1.GetRoutingInfoResponse
-	37,  // 210: exoper.gateway.v1.GatewayManagementService.GetConfiguration:output_type -> exoper.gateway.v1.GetConfigurationResponse
-	39,  // 211: exoper.gateway.v1.GatewayManagementService.UpdateConfiguration:output_type -> exoper.gateway.v1.UpdateConfigurationResponse
-	50,  // 212: exoper.gateway.v1.GatewayManagementService.GetAuditLogs:output_type -> exoper.gateway.v1.GetAuditLogsResponse
-	51,  // 213: exoper.gateway.v1.GatewayManagementService.GetSystemInfo:output_type -> exoper.gateway.v1.GetSystemInfoResponse
-	53,  // 214: exoper.gateway.v1.GatewayManagementService.ReloadConfiguration:output_type -> exoper.gateway.v1.ReloadConfigurationResponse
-	34,  // 215: exoper.gateway.v1.GatewayMonitoringService.GetRealTimeMetrics:output_type -> exoper.gateway.v1.MetricData
-	56,  // 216: exoper.gateway.v1.GatewayMonitoringService.GetAlerts:output_type -> exoper.gateway.v1.GetAlertsResponse
-	59,  // 217: exoper.gateway.v1.GatewayMonitoringService.CreateAlert:output_type -> exoper.gateway.v1.CreateAlertResponse
-	61,  // 218: exoper.gateway.v1.GatewayMonitoringService.UpdateAlert:output_type -> exoper.gateway.v1.UpdateAlertResponse
-	63,  // 219: exoper.gateway.v1.GatewayMonitoringService.DeleteAlert:output_type -> exoper.gateway.v1.DeleteAlertResponse
-	204, // [204:220] is the sub-list for method output_type
-	188, // [188:204] is the sub-list for method input_type
-	188, // [188:188] is the sub-list for extension type_name
-	188, // [188:188] is the sub-list for extension extendee
-	0,   // [0:188] is the sub-list for field type_name
+	80,  // 136: exoper.gateway.v1.GetRoutingInfoResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	78,  // 137: exoper.gateway.v1.RoutingInfo.routing_metadata:type_name -> google.protobuf.Struct
+	96,  // 138: exoper.gateway.v1.RoutingInfo.limits:type_name -> exoper.common.v1.ResourceLimits
+	81,  // 139: exoper.gateway.v1.RoutingInfo.timeout:type_name -> google.protobuf.Duration
+	77,  // 140: exoper.gateway.v1.GetAuditLogsRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	91,  // 141: exoper.gateway.v1.GetAuditLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	91,  // 142: exoper.gateway.v1.GetAuditLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	93,  // 143: exoper.gateway.v1.GetAuditLogsRequest.filters:type_name -> exoper.common.v1.Filter
+	97,  // 144: exoper.gateway.v1.GetAuditLogsRequest.pagination:type_name -> exoper.common.v1.Pagination
+	98,  // 145: exoper.gateway.v1.GetAuditLogsRequest.sort_orders:type_name -> exoper.common.v1.SortOrder
+	79,  // 146: exoper.gateway.v1.GetAuditLogsResponse.status:type_name -> exoper.common.v1.Status
+	99,  // 147: exoper.gateway.v1.GetAuditLogsResponse.audit_events:type_name -> exoper.common.v1.AuditEvent
+	97,  // 148: exoper.gateway.v1.GetAuditLogsResponse.pagination:type_name -> exoper.common.v1.Pagination
+	80,  // 149: exoper.gateway.v1.GetAuditLogsResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	77,  // 150: exoper.gateway.v1.CircuitBreakerRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	79,  // 151: exoper.gateway.v1.CircuitBreakerResponse.status:type_name -> exoper.common.v1.Status
+	80,  // 152: exoper.gateway.v1.CircuitBreakerResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	79,  // 153: exoper.gateway.v1.CircuitBreakerStatusResponse.status:type_name -> exoper.common.v1.Status
+	91,  // 154: exoper.gateway.v1.CircuitBreakerStatusResponse.last_failure:type_name -> google.protobuf.Timestamp
+	81,  // 155: exoper.gateway.v1.CircuitBreakerStatusResponse.timeout:type_name -> google.protobuf.Duration
+	79,  // 156: exoper.gateway.v1.GetSystemInfoResponse.status:type_name -> exoper.common.v1.Status
+	100, // 157: exoper.gateway.v1.GetSystemInfoResponse.system_info:type_name -> exoper.common.v1.SystemInfo
+	80,  // 158: exoper.gateway.v1.GetSystemInfoResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	77,  // 159: exoper.gateway.v1.ReloadConfigurationRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	79,  // 160: exoper.gateway.v1.ReloadConfigurationResponse.status:type_name -> exoper.common.v1.Status
+	91,  // 161: exoper.gateway.v1.ReloadConfigurationResponse.reloaded_at:type_name -> google.protobuf.Timestamp
+	80,  // 162: exoper.gateway.v1.ReloadConfigurationResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	77,  // 163: exoper.gateway.v1.GetRealTimeMetricsRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	81,  // 164: exoper.gateway.v1.GetRealTimeMetricsRequest.interval:type_name -> google.protobuf.Duration
+	93,  // 165: exoper.gateway.v1.GetRealTimeMetricsRequest.filters:type_name -> exoper.common.v1.Filter
+	77,  // 166: exoper.gateway.v1.GetAlertsRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	97,  // 167: exoper.gateway.v1.GetAlertsRequest.pagination:type_name -> exoper.common.v1.Pagination
+	93,  // 168: exoper.gateway.v1.GetAlertsRequest.filters:type_name -> exoper.common.v1.Filter
+	79,  // 169: exoper.gateway.v1.GetAlertsResponse.status:type_name -> exoper.common.v1.Status
+	60,  // 170: exoper.gateway.v1.GetAlertsResponse.alerts:type_name -> exoper.gateway.v1.AlertInfo
+	97,  // 171: exoper.gateway.v1.GetAlertsResponse.pagination:type_name -> exoper.common.v1.Pagination
+	80,  // 172: exoper.gateway.v1.GetAlertsResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	95,  // 173: exoper.gateway.v1.AlertInfo.severity:type_name -> exoper.common.v1.Severity
+	79,  // 174: exoper.gateway.v1.AlertInfo.status:type_name -> exoper.common.v1.Status
+	91,  // 175: exoper.gateway.v1.AlertInfo.triggered_at:type_name -> google.protobuf.Timestamp
+	91,  // 176: exoper.gateway.v1.AlertInfo.resolved_at:type_name -> google.protobuf.Timestamp
+	78,  // 177: exoper.gateway.v1.AlertInfo.conditions:type_name -> google.protobuf.Struct
+	78,  // 178: exoper.gateway.v1.AlertInfo.metadata:type_name -> google.protobuf.Struct
+	77,  // 179: exoper.gateway.v1.CreateAlertRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	95,  // 180: exoper.gateway.v1.CreateAlertRequest.severity:type_name -> exoper.common.v1.Severity
+	78,  // 181: exoper.gateway.v1.CreateAlertRequest.conditions:type_name -> google.protobuf.Struct
+	78,  // 182: exoper.gateway.v1.CreateAlertRequest.actions:type_name -> google.protobuf.Struct
+	79,  // 183: exoper.gateway.v1.CreateAlertResponse.status:type_name -> exoper.common.v1.Status
+	80,  // 184: exoper.gateway.v1.CreateAlertResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	77,  // 185: exoper.gateway.v1.UpdateAlertRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	95,  // 186: exoper.gateway.v1.UpdateAlertRequest.severity:type_name -> exoper.common.v1.Severity
+	78,  // 187: exoper.gateway.v1.UpdateAlertRequest.conditions:type_name -> google.protobuf.Struct
+	78,  // 188: exoper.gateway.v1.UpdateAlertRequest.actions:type_name -> google.protobuf.Struct
+	79,  // 189: exoper.gateway.v1.UpdateAlertResponse.status:type_name -> exoper.common.v1.Status
+	80,  // 190: exoper.gateway.v1.UpdateAlertResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	77,  // 191: exoper.gateway.v1.DeleteAlertRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	79,  // 192: exoper.gateway.v1.DeleteAlertResponse.status:type_name -> exoper.common.v1.Status
+	80,  // 193: exoper.gateway.v1.DeleteAlertResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	77,  // 194: exoper.gateway.v1.BatchRequestProto.metadata:type_name -> exoper.common.v1.RequestMetadata
+	4,   // 195: exoper.gateway.v1.BatchRequestProto.requests:type_name -> exoper.gateway.v1.AIRequestPayload
+	69,  // 196: exoper.gateway.v1.BatchRequestProto.options:type_name -> exoper.gateway.v1.BatchProcessingOptions
+	78,  // 197: exoper.gateway.v1.BatchRequestProto.context:type_name -> google.protobuf.Struct
+	79,  // 198: exoper.gateway.v1.BatchResponseProto.status:type_name -> exoper.common.v1.Status
+	70,  // 199: exoper.gateway.v1.BatchResponseProto.results:type_name -> exoper.gateway.v1.BatchRequestResult
+	87,  // 200: exoper.gateway.v1.BatchResponseProto.total_usage:type_name -> exoper.common.v1.UsageMetrics
+	81,  // 201: exoper.gateway.v1.BatchResponseProto.total_processing_time:type_name -> google.protobuf.Duration
+	80,  // 202: exoper.gateway.v1.BatchResponseProto.error:type_name -> exoper.common.v1.ErrorDetails
+	81,  // 203: exoper.gateway.v1.BatchProcessingOptions.timeout_per_request:type_name -> google.protobuf.Duration
+	81,  // 204: exoper.gateway.v1.BatchProcessingOptions.total_timeout:type_name -> google.protobuf.Duration
+	81,  // 205: exoper.gateway.v1.BatchProcessingOptions.retry_delay:type_name -> google.protobuf.Duration
+	79,  // 206: exoper.gateway.v1.BatchRequestResult.status:type_name -> exoper.common.v1.Status
+	14,  // 207: exoper.gateway.v1.BatchRequestResult.response:type_name -> exoper.gateway.v1.AIResponsePayload
+	18,  // 208: exoper.gateway.v1.BatchRequestResult.processing_result:type_name -> exoper.gateway.v1.ProcessingResult
+	80,  // 209: exoper.gateway.v1.BatchRequestResult.error:type_name -> exoper.common.v1.ErrorDetails
+	81,  // 210: exoper.gateway.v1.BatchRequestResult.processing_time:type_name -> google.protobuf.Duration
+	77,  // 211: exoper.gateway.v1.ModelAccessRequest.metadata:type_name -> exoper.common.v1.RequestMetadata
+	83,  // 212: exoper.gateway.v1.ModelAccessRequest.provider:type_name -> exoper.common.v1.ModelProvider
+	82,  // 213: exoper.gateway.v1.ModelAccessRequest.request_type:type_name -> exoper.common.v1.RequestType
+	84,  // 214: exoper.gateway.v1.ModelAccessRequest.security_level:type_name -> exoper.common.v1.SecurityLevel
+	79,  // 215: exoper.gateway.v1.ModelAccessResponse.status:type_name -> exoper.common.v1.Status
+	73,  // 216: exoper.gateway.v1.ModelAccessResponse.access_info:type_name -> exoper.gateway.v1.ModelAccessInfo
+	80,  // 217: exoper.gateway.v1.ModelAccessResponse.error:type_name -> exoper.common.v1.ErrorDetails
+	96,  // 218: exoper.gateway.v1.ModelAccessInfo.limits:type_name -> exoper.common.v1.ResourceLimits
+	91,  // 219: exoper.gateway.v1.ModelAccessInfo.access_expires_at:type_name -> google.protobuf.Timestamp
+	78,  // 220: exoper.gateway.v1.ModelAccessInfo.access_metadata:type_name -> google.protobuf.Struct
+	74,  // 221: exoper.gateway.v1.ModelAccessInfo.restrictions:type_name -> exoper.gateway.v1.AccessRestriction
+	78,  // 222: exoper.gateway.v1.AccessRestriction.parameters:type_name -> google.protobuf.Struct
+	2,   // 223: exoper.gateway.v1.GatewayService.ProcessAIRequest:input_type -> exoper.gateway.v1.ProcessAIRequestRequest
+	21,  // 224: exoper.gateway.v1.GatewayService.StreamAIRequest:input_type -> exoper.gateway.v1.StreamAIRequestRequest
+	41,  // 225: exoper.gateway.v1.GatewayService.ValidateRequest:input_type -> exoper.gateway.v1.ValidateRequestRequest
+	28,  // 226: exoper.gateway.v1.GatewayService.GetHealth:input_type -> exoper.gateway.v1.GetHealthRequest
+	32,  // 227: exoper.gateway.v1.GatewayService.GetMetrics:input_type -> exoper.gateway.v1.GetMetricsRequest
+	46,  // 228: exoper.gateway.v1.GatewayService.GetRoutingInfo:input_type -> exoper.gateway.v1.GetRoutingInfoRequest
+	67,  // 229: exoper.gateway.v1.GatewayService.ProcessBatchRequest:input_type -> exoper.gateway.v1.BatchRequestProto
+	71,  // 230: exoper.gateway.v1.GatewayService.CheckModelAccess:input_type -> exoper.gateway.v1.ModelAccessRequest
+	36,  // 231: exoper.gateway.v1.GatewayManagementService.GetConfiguration:input_type -> exoper.gateway.v1.GetConfigurationRequest
+	38,  // 232: exoper.gateway.v1.GatewayManagementService.UpdateConfiguration:input_type -> exoper.gateway.v1.UpdateConfigurationRequest
+	49,  // 233: exoper.gateway.v1.GatewayManagementService.GetAuditLogs:input_type -> exoper.gateway.v1.GetAuditLogsRequest
+	101, // 234: exoper.gateway.v1.GatewayManagementService.GetSystemInfo:input_type -> google.protobuf.Empty
+	55,  // 235: exoper.gateway.v1.GatewayManagementService.ReloadConfiguration:input_type -> exoper.gateway.v1.ReloadConfigurationRequest
+	57,  // 236: exoper.gateway.v1.GatewayMonitoringService.GetRealTimeMetrics:input_type -> exoper.gateway.v1.GetRealTimeMetricsRequest
+	58,  // 237: exoper.gateway.v1.GatewayMonitoringService.GetAlerts:input_type -> exoper.gateway.v1.GetAlertsRequest
+	61,  // 238: exoper.gateway.v1.GatewayMonitoringService.CreateAlert:input_type -> exoper.gateway.v1.CreateAlertRequest
+	63,  // 239: exoper.gateway.v1.GatewayMonitoringService.UpdateAlert:input_type -> exoper.gateway.v1.UpdateAlertRequest
+	65,  // 240: exoper.gateway.v1.GatewayMonitoringService.DeleteAlert:input_type -> exoper.gateway.v1.DeleteAlertRequest
+	3,   // 241: exoper.gateway.v1.GatewayService.ProcessAIRequest:output_type -> exoper.gateway.v1.ProcessAIRequestResponse
+	22,  // 242: exoper.gateway.v1.GatewayService.StreamAIRequest:output_type -> exoper.gateway.v1.StreamAIRequestResponse
+	42,  // 243: exoper.gateway.v1.GatewayService.ValidateRequest:output_type -> exoper.gateway.v1.ValidateRequestResponse
+	29,  // 244: exoper.gateway.v1.GatewayService.GetHealth:output_type -> exoper.gateway.v1.GetHealthResponse
+	33,  // 245: exoper.gateway.v1.GatewayService.GetMetrics:output_type -> exoper.gateway.v1.GetMetricsResponse
+	47,  // 246: exoper.gateway.v1.GatewayService.GetRoutingInfo:output_type -> exoper.gateway.v1.GetRoutingInfoResponse
+	68,  // 247: exoper.gateway.v1.GatewayService.ProcessBatchRequest:output_type -> exoper.gateway.v1.BatchResponseProto
+	72,  // 248: exoper.gateway.v1.GatewayService.CheckModelAccess:output_type -> exoper.gateway.v1.ModelAccessResponse
+	37,  // 249: exoper.gateway.v1.GatewayManagementService.GetConfiguration:output_type -> exoper.gateway.v1.GetConfigurationResponse
+	39,  // 250: exoper.gateway.v1.GatewayManagementService.UpdateConfiguration:output_type -> exoper.gateway.v1.UpdateConfigurationResponse
+	50,  // 251: exoper.gateway.v1.GatewayManagementService.GetAuditLogs:output_type -> exoper.gateway.v1.GetAuditLogsResponse
+	54,  // 252: exoper.gateway.v1.GatewayManagementService.GetSystemInfo:output_type -> exoper.gateway.v1.GetSystemInfoResponse
+	56,  // 253: exoper.gateway.v1.GatewayManagementService.ReloadConfiguration:output_type -> exoper.gateway.v1.ReloadConfigurationResponse
+	34,  // 254: exoper.gateway.v1.GatewayMonitoringService.GetRealTimeMetrics:output_type -> exoper.gateway.v1.MetricData
+	59,  // 255: exoper.gateway.v1.GatewayMonitoringService.GetAlerts:output_type -> exoper.gateway.v1.GetAlertsResponse
+	62,  // 256: exoper.gateway.v1.GatewayMonitoringService.CreateAlert:output_type -> exoper.gateway.v1.CreateAlertResponse
+	64,  // 257: exoper.gateway.v1.GatewayMonitoringService.UpdateAlert:output_type -> exoper.gateway.v1.UpdateAlertResponse
+	66,  // 258: exoper.gateway.v1.GatewayMonitoringService.DeleteAlert:output_type -> exoper.gateway.v1.DeleteAlertResponse
+	241, // [241:259] is the sub-list for method output_type
+	223, // [223:241] is the sub-list for method input_type
+	223, // [223:223] is the sub-list for extension type_name
+	223, // [223:223] is the sub-list for extension extendee
+	0,   // [0:223] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_proto_gateway_gateway_proto_init() }
@@ -5790,7 +6724,7 @@ func file_pkg_api_proto_gateway_gateway_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_api_proto_gateway_gateway_proto_rawDesc), len(file_pkg_api_proto_gateway_gateway_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   64,
+			NumMessages:   75,
 			NumExtensions: 0,
 			NumServices:   3,
 		},

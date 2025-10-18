@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -126,6 +125,8 @@ type SecurityConfig struct {
 	EncryptionKey       string        `yaml:"encryption_key" mapstructure:"encryption_key"`
 	JWTSecret           string        `yaml:"jwt_secret" mapstructure:"jwt_secret"`
 	JWTExpiration       time.Duration `yaml:"jwt_expiration" mapstructure:"jwt_expiration"`
+	JWTIssuer           string        `yaml:"jwt_issuer" mapstructure:"jwt_issuer"`
+	JWTAudience         string        `yaml:"jwt_audience" mapstructure:"jwt_audience"`
 	APIKeyLength        int           `yaml:"api_key_length" mapstructure:"api_key_length"`
 	PasswordMinLength   int           `yaml:"password_min_length" mapstructure:"password_min_length"`
 	PasswordComplexity  bool          `yaml:"password_complexity" mapstructure:"password_complexity"`
@@ -138,6 +139,10 @@ type SecurityConfig struct {
 	AllowedOrigins      []string      `yaml:"allowed_origins" mapstructure:"allowed_origins"`
 	CSPPolicy           string        `yaml:"csp_policy" mapstructure:"csp_policy"`
 	HSTSMaxAge          int           `yaml:"hsts_max_age" mapstructure:"hsts_max_age"`
+	MTLSRequired        bool          `yaml:"mtls_required" mapstructure:"mtls_required"`
+	MTLSClientAuth      string        `yaml:"mtls_client_auth" mapstructure:"mtls_client_auth"`
+	MTLSRootCAPath      string        `yaml:"mtls_root_ca_path" mapstructure:"mtls_root_ca_path"`
+	MTLSIntermediateCAPath string     `yaml:"mtls_intermediate_ca_path" mapstructure:"mtls_intermediate_ca_path"`
 }
 
 type ComplianceConfig struct {
