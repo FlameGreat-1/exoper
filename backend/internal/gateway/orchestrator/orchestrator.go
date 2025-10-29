@@ -13,14 +13,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
-	commonpb "flamo/backend/pkg/api/proto/common"
-	authpb "flamo/backend/pkg/api/proto/auth"
-	gatewaypb "flamo/backend/pkg/api/proto/gateway"
-	"flamo/backend/pkg/api/proto/models/tenant"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/utils"
+	commonpb "exoper/backend/pkg/api/proto/common"
+	authpb "exoper/backend/pkg/api/proto/auth"
+	gatewaypb "exoper/backend/pkg/api/proto/gateway"
+	"exoper/backend/pkg/api/proto/models/tenant"
 )
 
 type Orchestrator struct {

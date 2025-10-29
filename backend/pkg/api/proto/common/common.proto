@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package exoper.common.v1;
 
-option go_package = "flamo/backend/pkg/api/proto/common";
+option go_package = "exoper/backend/pkg/api/proto/common";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";

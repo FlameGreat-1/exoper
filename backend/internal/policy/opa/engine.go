@@ -8,13 +8,13 @@ import (
 
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
-	"flamo/backend/pkg/api/models/policy"
-	v1 "flamo/backend/pkg/api/policy/v1"
-	"flamo/backend/internal/policy/storage"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/utils"
+	"exoper/backend/pkg/api/models/policy"
+	v1 "exoper/backend/pkg/api/policy/v1"
+	"exoper/backend/internal/policy/storage"
 )
 
 type Engine struct {

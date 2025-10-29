@@ -11,12 +11,12 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
-	"flamo/backend/internal/auth/service"
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/metrics"
-	authpb "flamo/backend/pkg/api/proto/auth"
+	"exoper/backend/internal/auth/service"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/metrics"
+	authpb "exoper/backend/pkg/api/proto/auth"
 )
 
 type Server struct {

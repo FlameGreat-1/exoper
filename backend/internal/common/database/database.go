@@ -18,7 +18,7 @@ import (
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/common/config"
+	"exoper/backend/internal/common/config"
 )
 
 type Database struct {

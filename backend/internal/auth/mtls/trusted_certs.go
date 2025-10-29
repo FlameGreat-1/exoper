@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/common/errors"
+	"exoper/backend/internal/common/errors"
 )
 
 type TrustedCertificateRequest struct {

@@ -9,10 +9,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
-	authpb "flamo/backend/pkg/api/proto/auth"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/errors"
+	authpb "exoper/backend/pkg/api/proto/auth"
 )
 
 type JWTProvider struct {

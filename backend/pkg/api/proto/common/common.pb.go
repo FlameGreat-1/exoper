@@ -5079,7 +5079,7 @@ const file_pkg_api_proto_common_common_proto_rawDesc = "" +
 	"\x13DATA_RESIDENCY_APAC\x10\x03\x12\x19\n" +
 	"\x15DATA_RESIDENCY_CANADA\x10\x04\x12\x15\n" +
 	"\x11DATA_RESIDENCY_UK\x10\x05\x12\x1c\n" +
-	"\x18DATA_RESIDENCY_AUSTRALIA\x10\x06B$Z\"flamo/backend/pkg/api/proto/commonb\x06proto3"
+	"\x18DATA_RESIDENCY_AUSTRALIA\x10\x06B$Z\"exoper/backend/pkg/api/proto/commonb\x06proto3"
 
 var (
 	file_pkg_api_proto_common_common_proto_rawDescOnce sync.Once

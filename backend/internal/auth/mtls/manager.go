@@ -17,9 +17,9 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/errors"
 )
 
 type CertificateStatus string

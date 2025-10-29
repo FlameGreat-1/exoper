@@ -7,8 +7,8 @@
 package gateway
 
 import (
-	_ "flamo/backend/pkg/api/proto/auth"
-	common "flamo/backend/pkg/api/proto/common"
+	_ "exoper/backend/pkg/api/proto/auth"
+	common "exoper/backend/pkg/api/proto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -6320,7 +6320,7 @@ const file_pkg_api_proto_gateway_gateway_proto_rawDesc = "" +
 	"\tGetAlerts\x12#.exoper.gateway.v1.GetAlertsRequest\x1a$.exoper.gateway.v1.GetAlertsResponse\x12\\\n" +
 	"\vCreateAlert\x12%.exoper.gateway.v1.CreateAlertRequest\x1a&.exoper.gateway.v1.CreateAlertResponse\x12\\\n" +
 	"\vUpdateAlert\x12%.exoper.gateway.v1.UpdateAlertRequest\x1a&.exoper.gateway.v1.UpdateAlertResponse\x12\\\n" +
-	"\vDeleteAlert\x12%.exoper.gateway.v1.DeleteAlertRequest\x1a&.exoper.gateway.v1.DeleteAlertResponseB%Z#flamo/backend/pkg/api/proto/gatewayb\x06proto3"
+	"\vDeleteAlert\x12%.exoper.gateway.v1.DeleteAlertRequest\x1a&.exoper.gateway.v1.DeleteAlertResponseB%Z#exoper/backend/pkg/api/proto/gatewayb\x06proto3"
 
 var (
 	file_pkg_api_proto_gateway_gateway_proto_rawDescOnce sync.Once

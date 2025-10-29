@@ -14,14 +14,14 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
-	commonpb "flamo/backend/pkg/api/proto/common"
-	authpb "flamo/backend/pkg/api/proto/auth"
-	"flamo/backend/pkg/api/proto/models/request"
-	"flamo/backend/pkg/api/proto/models/response"
-	"flamo/backend/pkg/api/proto/models/tenant"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/utils"
+	commonpb "exoper/backend/pkg/api/proto/common"
+	authpb "exoper/backend/pkg/api/proto/auth"
+	"exoper/backend/pkg/api/proto/models/request"
+	"exoper/backend/pkg/api/proto/models/response"
+	"exoper/backend/pkg/api/proto/models/tenant"
 )
 
 type MiddlewareManager struct {

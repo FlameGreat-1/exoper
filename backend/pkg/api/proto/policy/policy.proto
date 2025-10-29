@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package policy;
 
-option go_package = "flamo/backend/pkg/api/proto/policy";
+option go_package = "exoper/backend/pkg/api/proto/policy";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";

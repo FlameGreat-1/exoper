@@ -5,7 +5,7 @@
 **CURRENT IMPLEMENTATION:**
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    FLAMO AI PLATFORM                        │
+│                    exoper AI PLATFORM                        │
 │                  (Modular Monolith)                        │
 ├─────────────────────────────────────────────────────────────┤
 │  Feature #3: API Gateway/Orchestrator (CURRENT)            │

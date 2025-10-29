@@ -12,16 +12,16 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/metrics"
-	"flamo/backend/internal/policy/handlers"
-	"flamo/backend/internal/policy/opa"
-	"flamo/backend/internal/policy/repository"
-	"flamo/backend/internal/policy/service"
-	"flamo/backend/internal/policy/storage"
-	v1 "flamo/backend/pkg/api/policy/v1"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/metrics"
+	"exoper/backend/internal/policy/handlers"
+	"exoper/backend/internal/policy/opa"
+	"exoper/backend/internal/policy/repository"
+	"exoper/backend/internal/policy/service"
+	"exoper/backend/internal/policy/storage"
+	v1 "exoper/backend/pkg/api/policy/v1"
 )
 
 const (
@@ -336,7 +336,7 @@ func initializeMetrics(cfg *config.Config, logger *zap.Logger) (*metrics.Metrics
 		Enabled:   cfg.Monitoring.EnableMetrics,
 		Address:   fmt.Sprintf(":%d", cfg.Monitoring.MetricsPort),
 		Path:      "/metrics",
-		Namespace: "flamo_policy",
+		Namespace: "exoper_policy",
 		Subsystem: "service",
 	}
 

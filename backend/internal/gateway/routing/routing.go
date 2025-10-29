@@ -17,9 +17,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/utils"
 )
 
 type Router struct {

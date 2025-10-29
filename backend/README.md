@@ -24,7 +24,7 @@ make dev-setup
 
 
 # Navigate to your project
-cd ~/flamo/backend
+cd ~/exoper/backend
 
 # Start OPA
 docker run --rm -d -p 8181:8181 --name opa-server \

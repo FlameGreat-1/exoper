@@ -8,15 +8,15 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/auth/mtls"
-	"flamo/backend/internal/auth/providers"
-	"flamo/backend/internal/auth/tokens"
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
-	authpb "flamo/backend/pkg/api/proto/auth"
-	"flamo/backend/pkg/api/proto/models/tenant"
+	"exoper/backend/internal/auth/mtls"
+	"exoper/backend/internal/auth/providers"
+	"exoper/backend/internal/auth/tokens"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/utils"
+	authpb "exoper/backend/pkg/api/proto/auth"
+	"exoper/backend/pkg/api/proto/models/tenant"
 )
 
 type AuthService struct {

@@ -18,15 +18,15 @@ import (
     "google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
-	"flamo/backend/internal/gateway/orchestrator"
-	commonpb "flamo/backend/pkg/api/proto/common"
-	gatewaypb "flamo/backend/pkg/api/proto/gateway"
-	"flamo/backend/pkg/api/proto/models/request"
-	"flamo/backend/pkg/api/proto/models/response"
-	"flamo/backend/pkg/api/proto/models/tenant"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/utils"
+	"exoper/backend/internal/gateway/orchestrator"
+	commonpb "exoper/backend/pkg/api/proto/common"
+	gatewaypb "exoper/backend/pkg/api/proto/gateway"
+	"exoper/backend/pkg/api/proto/models/request"
+	"exoper/backend/pkg/api/proto/models/response"
+	"exoper/backend/pkg/api/proto/models/tenant"
 )
 
 type HTTPHandler struct {

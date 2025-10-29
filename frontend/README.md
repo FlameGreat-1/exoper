@@ -228,4 +228,3 @@ const Services3 = () => {
 
 
 
-go build -o bin/gateway ./cmd/gateway

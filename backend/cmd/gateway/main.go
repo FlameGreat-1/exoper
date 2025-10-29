@@ -15,15 +15,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/gateway/server"
-	"flamo/backend/internal/gateway/orchestrator"
-	"flamo/backend/internal/gateway/handlers"
-	"flamo/backend/internal/gateway/middleware"
-	"flamo/backend/internal/gateway/routing"
-	authpb "flamo/backend/pkg/api/proto/auth"
-	gatewaypb "flamo/backend/pkg/api/proto/gateway"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/gateway/server"
+	"exoper/backend/internal/gateway/orchestrator"
+	"exoper/backend/internal/gateway/handlers"
+	"exoper/backend/internal/gateway/middleware"
+	"exoper/backend/internal/gateway/routing"
+	authpb "exoper/backend/pkg/api/proto/auth"
+	gatewaypb "exoper/backend/pkg/api/proto/gateway"
 )
 
 const (

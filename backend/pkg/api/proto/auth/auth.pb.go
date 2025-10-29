@@ -7,7 +7,7 @@
 package auth
 
 import (
-	common "flamo/backend/pkg/api/proto/common"
+	common "exoper/backend/pkg/api/proto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
@@ -5475,7 +5475,7 @@ const file_pkg_api_proto_auth_auth_proto_rawDesc = "" +
 	"\x0fValidateSession\x12&.exoper.auth.v1.ValidateSessionRequest\x1a'.exoper.auth.v1.ValidateSessionResponse\x12\\\n" +
 	"\rRevokeSession\x12$.exoper.auth.v1.RevokeSessionRequest\x1a%.exoper.auth.v1.RevokeSessionResponse\x12Y\n" +
 	"\fListSessions\x12#.exoper.auth.v1.ListSessionsRequest\x1a$.exoper.auth.v1.ListSessionsResponse\x12\\\n" +
-	"\rExtendSession\x12$.exoper.auth.v1.ExtendSessionRequest\x1a%.exoper.auth.v1.ExtendSessionResponseB\"Z flamo/backend/pkg/api/proto/authb\x06proto3"
+	"\rExtendSession\x12$.exoper.auth.v1.ExtendSessionRequest\x1a%.exoper.auth.v1.ExtendSessionResponseB\"Z exoper/backend/pkg/api/proto/authb\x06proto3"
 
 var (
 	file_pkg_api_proto_auth_auth_proto_rawDescOnce sync.Once

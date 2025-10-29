@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"flamo/backend/pkg/api/models/policy"
+	"exoper/backend/pkg/api/models/policy"
 )
 
 type PolicyService interface {

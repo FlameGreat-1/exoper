@@ -11,11 +11,11 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"flamo/backend/internal/auth/service"
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils" 
-	authpb "flamo/backend/pkg/api/proto/auth"
+	"exoper/backend/internal/auth/service"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/utils" 
+	authpb "exoper/backend/pkg/api/proto/auth"
 )
 
 type AuthMiddleware struct {

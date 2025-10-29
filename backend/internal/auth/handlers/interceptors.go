@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/metrics"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/metrics"
 )
 
 type LoggingInterceptor struct {

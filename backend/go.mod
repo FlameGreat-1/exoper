@@ -1,4 +1,4 @@
-module flamo/backend
+module exoper/backend
 
 go 1.23.0
 

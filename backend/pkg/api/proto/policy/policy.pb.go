@@ -4318,7 +4318,7 @@ const file_pkg_api_proto_policy_policy_proto_rawDesc = "" +
 	"\x0eCreateTemplate\x12\x1d.policy.CreateTemplateRequest\x1a\x1e.policy.CreateTemplateResponse\x12F\n" +
 	"\vGetTemplate\x12\x1a.policy.GetTemplateRequest\x1a\x1b.policy.GetTemplateResponse\x12L\n" +
 	"\rListTemplates\x12\x1c.policy.ListTemplatesRequest\x1a\x1d.policy.ListTemplatesResponse\x12^\n" +
-	"\x13InstantiateTemplate\x12\".policy.InstantiateTemplateRequest\x1a#.policy.InstantiateTemplateResponseB$Z\"flamo/backend/pkg/api/proto/policyb\x06proto3"
+	"\x13InstantiateTemplate\x12\".policy.InstantiateTemplateRequest\x1a#.policy.InstantiateTemplateResponseB$Z\"exoper/backend/pkg/api/proto/policyb\x06proto3"
 
 var (
 	file_pkg_api_proto_policy_policy_proto_rawDescOnce sync.Once

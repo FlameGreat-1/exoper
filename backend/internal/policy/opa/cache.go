@@ -10,9 +10,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/pkg/api/models/policy"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/pkg/api/models/policy"
 )
 
 type Cache struct {

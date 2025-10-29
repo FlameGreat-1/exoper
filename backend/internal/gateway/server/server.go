@@ -25,17 +25,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/utils"
-	"flamo/backend/internal/gateway/handlers"
-	"flamo/backend/internal/gateway/middleware"
-	"flamo/backend/internal/gateway/orchestrator"
-	authpb "flamo/backend/pkg/api/proto/auth"
-	commonpb "flamo/backend/pkg/api/proto/common"
-	gatewaypb "flamo/backend/pkg/api/proto/gateway"
-	"flamo/backend/pkg/api/proto/models/request"
-	"flamo/backend/pkg/api/proto/models/response"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/utils"
+	"exoper/backend/internal/gateway/handlers"
+	"exoper/backend/internal/gateway/middleware"
+	"exoper/backend/internal/gateway/orchestrator"
+	authpb "exoper/backend/pkg/api/proto/auth"
+	commonpb "exoper/backend/pkg/api/proto/common"
+	gatewaypb "exoper/backend/pkg/api/proto/gateway"
+	"exoper/backend/pkg/api/proto/models/request"
+	"exoper/backend/pkg/api/proto/models/response"
 )
 
 type Server struct {

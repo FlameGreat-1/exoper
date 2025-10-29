@@ -8,11 +8,11 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"flamo/backend/internal/auth/service"
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/errors"
-	authpb "flamo/backend/pkg/api/proto/auth"
-	commonpb "flamo/backend/pkg/api/proto/common"
+	"exoper/backend/internal/auth/service"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/errors"
+	authpb "exoper/backend/pkg/api/proto/auth"
+	commonpb "exoper/backend/pkg/api/proto/common"
 )
 
 type SessionHandler struct {

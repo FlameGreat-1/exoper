@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
-	"flamo/backend/internal/common/errors"
+	"exoper/backend/internal/common/errors"
 )
 
 type MetricType string

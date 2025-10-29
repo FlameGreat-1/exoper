@@ -10,11 +10,11 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
-	"flamo/backend/internal/common/config"
-	"flamo/backend/internal/common/database"
-	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
-	authpb "flamo/backend/pkg/api/proto/auth"
+	"exoper/backend/internal/common/config"
+	"exoper/backend/internal/common/database"
+	"exoper/backend/internal/common/errors"
+	"exoper/backend/internal/common/utils"
+	authpb "exoper/backend/pkg/api/proto/auth"
 )
 
 type APIKeyProvider struct {

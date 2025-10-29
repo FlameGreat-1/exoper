@@ -3,7 +3,7 @@ package service
 import (
 	"time"
 
-	"flamo/backend/internal/common/errors"
+	"exoper/backend/internal/common/errors"
 )
 
 type TokenValidationResult struct {
