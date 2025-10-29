@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -13,149 +14,25 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
+	v1 "flamo/backend/pkg/api/policy/v1"
 	"flamo/backend/internal/policy/storage"
 	"flamo/backend/internal/policy/opa"
+	"flamo/backend/internal/policy/repository"
 )
 
-type DecisionService struct {
-	opaEngine     *opa.Engine
-	opaClient     *opa.Client
-	cache         *opa.Cache
-	policyStore   *storage.PolicyStore
-	bundleManager *storage.BundleManager
-	db            *database.Database
-	config        *config.Config
-	logger        *zap.Logger
-	rateLimiter   *utils.RateLimiter
+type decisionService struct {
+	opaEngine      *opa.Engine
+	opaClient      *opa.Client
+	cache          *opa.Cache
+	policyStore    *storage.PolicyStore
+	bundleManager  *storage.BundleManager
+	db             *database.Database
+	decisionRepo   repository.DecisionRepository
+	config         *config.Config
+	logger         *zap.Logger
+	rateLimiter    *utils.RateLimiter
 	circuitBreaker *utils.CircuitBreaker
-	mu            sync.RWMutex
-}
-
-type EvaluateRequest struct {
-	TenantID    string                 `json:"tenant_id" validate:"required,uuid"`
-	SubjectID   string                 `json:"subject_id" validate:"required"`
-	Resource    string                 `json:"resource" validate:"required"`
-	Action      string                 `json:"action" validate:"required"`
-	Context     map[string]interface{} `json:"context"`
-	Input       map[string]interface{} `json:"input"`
-	RequestID   string                 `json:"request_id"`
-	TraceID     string                 `json:"trace_id"`
-	Timestamp   time.Time              `json:"timestamp"`
-	CachePolicy string                 `json:"cache_policy" validate:"oneof=allow deny force_refresh"`
-}
-
-type EvaluateResponse struct {
-	Decision policy.PolicyDecision `json:"decision"`
-	Cached   bool                  `json:"cached"`
-	Duration time.Duration         `json:"duration"`
-}
-
-type BatchEvaluateRequest struct {
-	Requests []EvaluateRequest `json:"requests" validate:"required,min=1,max=100"`
-}
-
-type BatchEvaluateResponse struct {
-	Responses []EvaluateResponse `json:"responses"`
-	Duration  time.Duration      `json:"duration"`
-}
-
-type ExplainRequest struct {
-	TenantID  string                 `json:"tenant_id" validate:"required,uuid"`
-	SubjectID string                 `json:"subject_id" validate:"required"`
-	Resource  string                 `json:"resource" validate:"required"`
-	Action    string                 `json:"action" validate:"required"`
-	Context   map[string]interface{} `json:"context"`
-	Input     map[string]interface{} `json:"input"`
-	RequestID string                 `json:"request_id"`
-}
-
-type ExplainResponse struct {
-	Decision    policy.PolicyDecision `json:"decision"`
-	Explanation PolicyExplanation     `json:"explanation"`
-	Duration    time.Duration         `json:"duration"`
-}
-
-type PolicyExplanation struct {
-	MatchedPolicies []MatchedPolicy        `json:"matched_policies"`
-	AppliedRules    []AppliedRule          `json:"applied_rules"`
-	FailedRules     []FailedRule           `json:"failed_rules"`
-	Trace           []EvaluationStep       `json:"trace"`
-	Metadata        map[string]interface{} `json:"metadata"`
-}
-
-type MatchedPolicy struct {
-	PolicyID    string              `json:"policy_id"`
-	PolicyName  string              `json:"policy_name"`
-	Version     string              `json:"version"`
-	Priority    policy.Priority     `json:"priority"`
-	Effect      policy.Effect       `json:"effect"`
-	MatchReason string              `json:"match_reason"`
-	Rules       []policy.Rule       `json:"rules"`
-}
-
-type AppliedRule struct {
-	RuleID      string                 `json:"rule_id"`
-	PolicyID    string                 `json:"policy_id"`
-	Resource    string                 `json:"resource"`
-	Action      string                 `json:"action"`
-	Effect      policy.Effect          `json:"effect"`
-	Conditions  []policy.Condition     `json:"conditions"`
-	Metadata    map[string]interface{} `json:"metadata"`
-}
-
-type FailedRule struct {
-	RuleID       string                 `json:"rule_id"`
-	PolicyID     string                 `json:"policy_id"`
-	Resource     string                 `json:"resource"`
-	Action       string                 `json:"action"`
-	FailureType  string                 `json:"failure_type"`
-	FailureReason string                `json:"failure_reason"`
-	Conditions   []policy.Condition     `json:"conditions"`
-	Metadata     map[string]interface{} `json:"metadata"`
-}
-
-type EvaluationStep struct {
-	Step        int                    `json:"step"`
-	Type        string                 `json:"type"`
-	Description string                 `json:"description"`
-	Input       map[string]interface{} `json:"input"`
-	Output      map[string]interface{} `json:"output"`
-	Duration    time.Duration          `json:"duration"`
-	Timestamp   time.Time              `json:"timestamp"`
-}
-
-type QueryRequest struct {
-	TenantID string                 `json:"tenant_id" validate:"required,uuid"`
-	Query    string                 `json:"query" validate:"required"`
-	Input    map[string]interface{} `json:"input"`
-	Options  QueryOptions           `json:"options"`
-}
-
-type QueryOptions struct {
-	Explain     bool          `json:"explain"`
-	Trace       bool          `json:"trace"`
-	Metrics     bool          `json:"metrics"`
-	Timeout     time.Duration `json:"timeout"`
-	CachePolicy string        `json:"cache_policy"`
-}
-
-type QueryResponse struct {
-	Result      map[string]interface{} `json:"result"`
-	Explanation *PolicyExplanation     `json:"explanation,omitempty"`
-	Metrics     map[string]interface{} `json:"metrics,omitempty"`
-	Duration    time.Duration          `json:"duration"`
-}
-
-type CompileRequest struct {
-	TenantID string                 `json:"tenant_id" validate:"required,uuid"`
-	Query    string                 `json:"query" validate:"required"`
-	Input    map[string]interface{} `json:"input"`
-	Unknowns []string               `json:"unknowns"`
-}
-
-type CompileResponse struct {
-	Result   map[string]interface{} `json:"result"`
-	Duration time.Duration          `json:"duration"`
+	mu             sync.RWMutex
 }
 
 func NewDecisionService(
@@ -165,9 +42,10 @@ func NewDecisionService(
 	policyStore *storage.PolicyStore,
 	bundleManager *storage.BundleManager,
 	db *database.Database,
+	decisionRepo repository.DecisionRepository,
 	cfg *config.Config,
 	logger *zap.Logger,
-) *DecisionService {
+) v1.DecisionService {
 	rateLimiter := utils.NewRateLimiter(5000.0, 50000)
 	
 	circuitConfig := utils.CircuitBreakerConfig{
@@ -179,13 +57,14 @@ func NewDecisionService(
 	}
 	circuitBreaker := utils.NewCircuitBreaker(circuitConfig)
 
-	return &DecisionService{
+	return &decisionService{
 		opaEngine:      opaEngine,
 		opaClient:      opaClient,
 		cache:          cache,
 		policyStore:    policyStore,
 		bundleManager:  bundleManager,
 		db:             db,
+		decisionRepo:   decisionRepo,
 		config:         cfg,
 		logger:         logger,
 		rateLimiter:    rateLimiter,
@@ -193,7 +72,7 @@ func NewDecisionService(
 	}
 }
 
-func (ds *DecisionService) Evaluate(ctx context.Context, req *EvaluateRequest) (*EvaluateResponse, error) {
+func (ds *decisionService) Evaluate(ctx context.Context, req *v1.EvaluateRequest) (*v1.EvaluateResponse, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -218,7 +97,7 @@ func (ds *DecisionService) Evaluate(ctx context.Context, req *EvaluateRequest) (
 
 	ds.enrichRequest(req)
 
-	var response *EvaluateResponse
+	var response *v1.EvaluateResponse
 	err := ds.circuitBreaker.Execute(func() error {
 		var evalErr error
 		response, evalErr = ds.performEvaluation(ctx, req)
@@ -246,7 +125,7 @@ func (ds *DecisionService) Evaluate(ctx context.Context, req *EvaluateRequest) (
 	return response, nil
 }
 
-func (ds *DecisionService) BatchEvaluate(ctx context.Context, req *BatchEvaluateRequest) (*BatchEvaluateResponse, error) {
+func (ds *decisionService) BatchEvaluate(ctx context.Context, req *v1.BatchEvaluateRequest) (*v1.BatchEvaluateResponse, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -279,7 +158,7 @@ func (ds *DecisionService) BatchEvaluate(ctx context.Context, req *BatchEvaluate
 	return response, nil
 }
 
-func (ds *DecisionService) Explain(ctx context.Context, req *ExplainRequest) (*ExplainResponse, error) {
+func (ds *decisionService) Explain(ctx context.Context, req *v1.ExplainRequest) (*v1.ExplainResponse, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -302,7 +181,7 @@ func (ds *DecisionService) Explain(ctx context.Context, req *ExplainRequest) (*E
 		return nil, err
 	}
 
-	evalReq := &EvaluateRequest{
+	evalReq := &v1.EvaluateRequest{
 		TenantID:  req.TenantID,
 		SubjectID: req.SubjectID,
 		Resource:  req.Resource,
@@ -330,7 +209,7 @@ func (ds *DecisionService) Explain(ctx context.Context, req *ExplainRequest) (*E
 			WithContext("action", req.Action)
 	}
 
-	response := &ExplainResponse{
+	response := &v1.ExplainResponse{
 		Decision:    decision.Decision,
 		Explanation: *explanation,
 		Duration:    time.Since(start),
@@ -347,7 +226,7 @@ func (ds *DecisionService) Explain(ctx context.Context, req *ExplainRequest) (*E
 	return response, nil
 }
 
-func (ds *DecisionService) Query(ctx context.Context, req *QueryRequest) (*QueryResponse, error) {
+func (ds *decisionService) Query(ctx context.Context, req *v1.QueryRequest) (*v1.QueryResponse, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -388,7 +267,7 @@ func (ds *DecisionService) Query(ctx context.Context, req *QueryRequest) (*Query
 			WithContext("query", req.Query)
 	}
 
-	response := &QueryResponse{
+	response := &v1.QueryResponse{
 		Result:   compileResp.Result,
 		Duration: time.Since(start),
 	}
@@ -423,7 +302,134 @@ func (ds *DecisionService) Query(ctx context.Context, req *QueryRequest) (*Query
 	return response, nil
 }
 
-func (ds *DecisionService) Compile(ctx context.Context, req *CompileRequest) (*CompileResponse, error) {
+func (ds *decisionService) GetDecisionHistory(ctx context.Context, req *v1.GetDecisionHistoryRequest) (*v1.GetDecisionHistoryResponse, error) {
+	start := time.Now()
+	defer func() {
+		duration := time.Since(start)
+		ds.logger.Debug("Decision history retrieval completed", 
+			zap.String("tenant_id", req.TenantID),
+			zap.Duration("duration", duration))
+	}()
+
+	if !ds.rateLimiter.Allow() {
+		return nil, errors.NewRateLimitError(time.Minute).
+			WithTenantID(req.TenantID).
+			WithContext("operation", "get_decision_history")
+	}
+
+	if err := ds.validateGetDecisionHistoryRequest(req); err != nil {
+		return nil, err
+	}
+
+	query := &repository.GetDecisionHistoryQuery{
+		TenantID:  req.TenantID,
+		SubjectID: req.SubjectID,
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
+		Limit:     req.Limit,
+		Offset:    req.Offset,
+	}
+
+	result, err := ds.decisionRepo.GetDecisionHistory(ctx, query)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrCodeInternalError, "Failed to get decision history").
+			WithTenantID(req.TenantID)
+	}
+
+	var evaluations []policy.PolicyEvaluation
+	for _, decision := range result.Decisions {
+		var allow, deny bool
+		var reason string
+		var metadata map[string]string
+
+		if decision.Decision != nil {
+			if allowVal, ok := decision.Decision["allow"].(bool); ok {
+				allow = allowVal
+			}
+			if denyVal, ok := decision.Decision["deny"].(bool); ok {
+				deny = denyVal
+			}
+			if reasonVal, ok := decision.Decision["reason"].(string); ok {
+				reason = reasonVal
+			}
+			if metaVal, ok := decision.Decision["metadata"].(map[string]interface{}); ok {
+				metadata = make(map[string]string)
+				for k, v := range metaVal {
+					if strVal, ok := v.(string); ok {
+						metadata[k] = strVal
+					}
+				}
+			}
+		}
+
+		if metadata == nil {
+			metadata = make(map[string]string)
+		}
+
+		eval := policy.PolicyEvaluation{
+			RequestID:   decision.ID,
+			TenantID:    decision.TenantID,
+			SubjectID:   decision.TraceID,
+			Resource:    "",
+			Action:      "",
+			Context:     make(map[string]string),
+			Input:       make(map[string]string),
+			Decision: policy.PolicyDecision{
+				Allow:     allow,
+				Deny:      deny,
+				Reason:    reason,
+				PolicyID:  decision.PolicyBundleVersion,
+				RuleID:    "",
+				Metadata:  metadata,
+				Timestamp: decision.CreatedAt,
+				RequestID: decision.ID,
+				TenantID:  decision.TenantID,
+				SubjectID: decision.TraceID,
+			},
+			Duration:    time.Duration(decision.EvaluationTimeMs) * time.Millisecond,
+			Timestamp:   decision.CreatedAt,
+			CacheHit:    false,
+			PolicyCount: 1,
+		}
+		evaluations = append(evaluations, eval)
+	}
+
+	response := &v1.GetDecisionHistoryResponse{
+		Evaluations: evaluations,
+		Total:       result.Total,
+		HasMore:     result.HasMore,
+	}
+
+	ds.logger.Info("Decision history retrieved",
+		zap.String("tenant_id", req.TenantID),
+		zap.Int("total", result.Total),
+		zap.Int("returned", len(evaluations)),
+		zap.Duration("duration", time.Since(start)))
+
+	return response, nil
+}
+
+func (ds *decisionService) validateGetDecisionHistoryRequest(req *v1.GetDecisionHistoryRequest) error {
+	if req.TenantID != "" && !utils.IsValidUUID(req.TenantID) {
+		return errors.NewValidationError("tenant_id", "Invalid tenant ID format", req.TenantID)
+	}
+
+	if req.Limit < 0 || req.Limit > 1000 {
+		return errors.NewValidationError("limit", "Limit must be between 0 and 1000", req.Limit)
+	}
+
+	if req.Offset < 0 {
+		return errors.NewValidationError("offset", "Offset cannot be negative", req.Offset)
+	}
+
+	if !req.StartTime.IsZero() && !req.EndTime.IsZero() && req.StartTime.After(req.EndTime) {
+		return errors.NewValidationError("time_range", "Start time cannot be after end time", nil)
+	}
+
+	return nil
+}
+
+func (ds *decisionService) Compile(ctx context.Context, req *v1.CompileRequest) (*v1.CompileResponse, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -455,7 +461,7 @@ func (ds *DecisionService) Compile(ctx context.Context, req *CompileRequest) (*C
 			WithContext("query", req.Query)
 	}
 
-	response := &CompileResponse{
+	response := &v1.CompileResponse{
 		Result:   compileResp.Result,
 		Duration: time.Since(start),
 	}
@@ -467,12 +473,12 @@ func (ds *DecisionService) Compile(ctx context.Context, req *CompileRequest) (*C
 	return response, nil
 }
 
-func (ds *DecisionService) performEvaluation(ctx context.Context, req *EvaluateRequest) (*EvaluateResponse, error) {
+func (ds *decisionService) performEvaluation(ctx context.Context, req *v1.EvaluateRequest) (*v1.EvaluateResponse, error) {
 	cacheKey := ds.buildCacheKey(req)
 	
 	if req.CachePolicy != "force_refresh" {
 		if cached := ds.cache.Get(cacheKey); cached != nil {
-			return &EvaluateResponse{
+			return &v1.EvaluateResponse{
 				Decision: *cached,
 				Cached:   true,
 				Duration: 0,
@@ -480,7 +486,7 @@ func (ds *DecisionService) performEvaluation(ctx context.Context, req *EvaluateR
 		}
 	}
 
-	evalReq := &EvaluateRequest{
+	evalReq := &v1.EvaluateRequest{
 		TenantID:  req.TenantID,
 		SubjectID: req.SubjectID,
 		Resource:  req.Resource,
@@ -513,16 +519,16 @@ func (ds *DecisionService) performEvaluation(ctx context.Context, req *EvaluateR
 	return response, nil
 }
 
-func (ds *DecisionService) generateExplanation(ctx context.Context, req *EvaluateRequest, decision *policy.PolicyDecision) (*PolicyExplanation, error) {
-	explanation := &PolicyExplanation{
-		MatchedPolicies: []MatchedPolicy{},
-		AppliedRules:    []AppliedRule{},
-		FailedRules:     []FailedRule{},
-		Trace:           []EvaluationStep{},
-		Metadata:        make(map[string]interface{}),
+func (ds *decisionService) generateExplanation(ctx context.Context, req *v1.EvaluateRequest, decision *policy.PolicyDecision) (*v1.PolicyExplanation, error) {
+	explanation := &v1.PolicyExplanation{
+		MatchedPolicies: []v1.MatchedPolicy{},
+		AppliedRules:    []v1.AppliedRule{},
+		FailedRules:     []v1.FailedRule{},
+		Trace:           []v1.EvaluationStep{},
+		Metadata:        make(map[string]string),
 	}
 
-	policies, _, err := ds.policyStore.ListPolicies(ctx, &ListPoliciesRequest{
+	policies, err := ds.policyStore.ListPolicies(ctx, &v1.ListPoliciesRequest{
 		TenantID: req.TenantID,
 		Status:   policy.PolicyStatusActive,
 		Limit:    1000,
@@ -536,7 +542,7 @@ func (ds *DecisionService) generateExplanation(ctx context.Context, req *Evaluat
 		matched, appliedRules, failedRules := ds.evaluatePolicyAgainstRequest(&pol, req)
 		
 		if matched {
-			matchedPolicy := MatchedPolicy{
+			matchedPolicy := v1.MatchedPolicy{
 				PolicyID:    pol.ID,
 				PolicyName:  pol.Name,
 				Version:     pol.Version,
@@ -552,37 +558,38 @@ func (ds *DecisionService) generateExplanation(ctx context.Context, req *Evaluat
 		explanation.FailedRules = append(explanation.FailedRules, failedRules...)
 	}
 
-	explanation.Metadata["evaluation_time"] = time.Now().UTC()
+	explanation.Metadata["evaluation_time"] = time.Now().UTC().Format(time.RFC3339)
 	explanation.Metadata["tenant_id"] = req.TenantID
 	explanation.Metadata["subject_id"] = req.SubjectID
 	explanation.Metadata["resource"] = req.Resource
 	explanation.Metadata["action"] = req.Action
-	explanation.Metadata["decision_allow"] = decision.Allow
+	explanation.Metadata["decision_allow"] = fmt.Sprintf("%t", decision.Allow)
 	explanation.Metadata["decision_reason"] = decision.Reason
 
 	return explanation, nil
 }
 
-func (ds *DecisionService) generateQueryExplanation(ctx context.Context, req *QueryRequest, result map[string]interface{}) (*PolicyExplanation, error) {
-	explanation := &PolicyExplanation{
-		MatchedPolicies: []MatchedPolicy{},
-		AppliedRules:    []AppliedRule{},
-		FailedRules:     []FailedRule{},
-		Trace:           []EvaluationStep{},
-		Metadata:        make(map[string]interface{}),
+func (ds *decisionService) generateQueryExplanation(ctx context.Context, req *v1.QueryRequest, result map[string]interface{}) (*v1.PolicyExplanation, error) {
+	explanation := &v1.PolicyExplanation{
+		MatchedPolicies: []v1.MatchedPolicy{},
+		AppliedRules:    []v1.AppliedRule{},
+		FailedRules:     []v1.FailedRule{},
+		Trace:           []v1.EvaluationStep{},
+		Metadata:        make(map[string]string),
 	}
 
 	explanation.Metadata["query"] = req.Query
 	explanation.Metadata["tenant_id"] = req.TenantID
-	explanation.Metadata["result"] = result
-	explanation.Metadata["evaluation_time"] = time.Now().UTC()
+	resultJSON, _ := json.Marshal(result)
+    explanation.Metadata["result"] = string(resultJSON)
+	explanation.Metadata["evaluation_time"] = time.Now().UTC().Format(time.RFC3339)
 
 	return explanation, nil
 }
 
-func (ds *DecisionService) evaluatePolicyAgainstRequest(pol *policy.Policy, req *EvaluateRequest) (bool, []AppliedRule, []FailedRule) {
-	var appliedRules []AppliedRule
-	var failedRules []FailedRule
+func (ds *decisionService) evaluatePolicyAgainstRequest(pol *policy.Policy, req *v1.EvaluateRequest) (bool, []v1.AppliedRule, []v1.FailedRule) {
+	var appliedRules []v1.AppliedRule
+	var failedRules []v1.FailedRule
 	matched := false
 
 	for _, rule := range pol.Rules {
@@ -593,7 +600,7 @@ func (ds *DecisionService) evaluatePolicyAgainstRequest(pol *policy.Policy, req 
 			for _, condition := range rule.Conditions {
 				if !ds.evaluateCondition(condition, req.Context, req.Input) {
 					conditionsMet = false
-					failedRule := FailedRule{
+					failedRule := v1.FailedRule{
 						RuleID:        fmt.Sprintf("%s_%d", pol.ID, 0),
 						PolicyID:      pol.ID,
 						Resource:      rule.Resource,
@@ -601,7 +608,7 @@ func (ds *DecisionService) evaluatePolicyAgainstRequest(pol *policy.Policy, req 
 						FailureType:   "condition_not_met",
 						FailureReason: fmt.Sprintf("Condition %s %s %v not satisfied", condition.Field, condition.Operator, condition.Value),
 						Conditions:    rule.Conditions,
-						Metadata:      make(map[string]interface{}),
+						Metadata:      make(map[string]string),
 					}
 					failedRules = append(failedRules, failedRule)
 					break
@@ -609,14 +616,14 @@ func (ds *DecisionService) evaluatePolicyAgainstRequest(pol *policy.Policy, req 
 			}
 
 			if conditionsMet {
-				appliedRule := AppliedRule{
+				appliedRule := v1.AppliedRule{
 					RuleID:     fmt.Sprintf("%s_%d", pol.ID, 0),
 					PolicyID:   pol.ID,
 					Resource:   rule.Resource,
 					Action:     rule.Action,
 					Effect:     rule.Effect,
 					Conditions: rule.Conditions,
-					Metadata:   make(map[string]interface{}),
+					Metadata:   make(map[string]string),
 				}
 				appliedRules = append(appliedRules, appliedRule)
 			}
@@ -626,7 +633,7 @@ func (ds *DecisionService) evaluatePolicyAgainstRequest(pol *policy.Policy, req 
 	return matched, appliedRules, failedRules
 }
 
-func (ds *DecisionService) evaluateCondition(condition policy.Condition, context map[string]interface{}, input map[string]interface{}) bool {
+func (ds *decisionService) evaluateCondition(condition policy.Condition, context map[string]interface{}, input map[string]interface{}) bool {
 	var value interface{}
 	
 	if contextValue, exists := context[condition.Field]; exists {
@@ -677,23 +684,25 @@ func (ds *DecisionService) evaluateCondition(condition policy.Condition, context
 	}
 }
 
-func (ds *DecisionService) buildCacheKey(req *EvaluateRequest) string {
+func (ds *decisionService) buildCacheKey(req *v1.EvaluateRequest) string {
 	key := fmt.Sprintf("decision:%s:%s:%s:%s", req.TenantID, req.SubjectID, req.Resource, req.Action)
 	
 	if len(req.Context) > 0 {
-		contextHash := utils.HashSHA256(utils.CoalesceString(utils.ToJSON(req.Context)))
+		contextJSON, _ := utils.ToJSON(req.Context)
+		contextHash := utils.HashSHA256(utils.CoalesceString(contextJSON, ""))
 		key += ":" + contextHash[:8]
 	}
 	
 	if len(req.Input) > 0 {
-		inputHash := utils.HashSHA256(utils.CoalesceString(utils.ToJSON(req.Input)))
+		inputJSON, _ := utils.ToJSON(req.Input)
+		inputHash := utils.HashSHA256(utils.CoalesceString(inputJSON, ""))
 		key += ":" + inputHash[:8]
 	}
 	
 	return key
 }
 
-func (ds *DecisionService) enrichRequest(req *EvaluateRequest) {
+func (ds *decisionService) enrichRequest(req *v1.EvaluateRequest) {
 	if req.RequestID == "" {
 		req.RequestID = utils.GenerateRequestID()
 	}
@@ -723,7 +732,7 @@ func (ds *DecisionService) enrichRequest(req *EvaluateRequest) {
 	req.Context["timestamp"] = req.Timestamp
 }
 
-func (ds *DecisionService) validateEvaluateRequest(req *EvaluateRequest) error {
+func (ds *decisionService) validateEvaluateRequest(req *v1.EvaluateRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -754,7 +763,7 @@ func (ds *DecisionService) validateEvaluateRequest(req *EvaluateRequest) error {
 	return nil
 }
 
-func (ds *DecisionService) validateBatchEvaluateRequest(req *BatchEvaluateRequest) error {
+func (ds *decisionService) validateBatchEvaluateRequest(req *v1.BatchEvaluateRequest) error {
 	if len(req.Requests) == 0 {
 		return errors.NewValidationError("requests", "At least one request is required", len(req.Requests))
 	}
@@ -772,7 +781,7 @@ func (ds *DecisionService) validateBatchEvaluateRequest(req *BatchEvaluateReques
 	return nil
 }
 
-func (ds *DecisionService) validateExplainRequest(req *ExplainRequest) error {
+func (ds *decisionService) validateExplainRequest(req *v1.ExplainRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -796,7 +805,7 @@ func (ds *DecisionService) validateExplainRequest(req *ExplainRequest) error {
 	return nil
 }
 
-func (ds *DecisionService) validateQueryRequest(req *QueryRequest) error {
+func (ds *decisionService) validateQueryRequest(req *v1.QueryRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -827,7 +836,7 @@ func (ds *DecisionService) validateQueryRequest(req *QueryRequest) error {
 	return nil
 }
 
-func (ds *DecisionService) validateCompileRequest(req *CompileRequest) error {
+func (ds *decisionService) validateCompileRequest(req *v1.CompileRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -843,7 +852,7 @@ func (ds *DecisionService) validateCompileRequest(req *CompileRequest) error {
 	return nil
 }
 
-func (ds *DecisionService) GetDecisionMetrics(ctx context.Context, tenantID string) (map[string]interface{}, error) {
+func (ds *decisionService) GetDecisionMetrics(ctx context.Context, tenantID string) (map[string]interface{}, error) {
 	if tenantID == "" {
 		return nil, errors.NewValidationError("tenant_id", "Tenant ID is required", tenantID)
 	}
@@ -891,7 +900,7 @@ func (ds *DecisionService) GetDecisionMetrics(ctx context.Context, tenantID stri
 	return metrics, nil
 }
 
-func (ds *DecisionService) ClearDecisionCache(ctx context.Context, tenantID string, policyID string) error {
+func (ds *decisionService) ClearDecisionCache(ctx context.Context, tenantID string, policyID string) error {
 	if tenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", tenantID)
 	}
@@ -920,7 +929,11 @@ func (ds *DecisionService) ClearDecisionCache(ctx context.Context, tenantID stri
 	return nil
 }
 
-func (ds *DecisionService) WarmupCache(ctx context.Context, tenantID string) error {
+func (ds *decisionService) ClearCache(ctx context.Context, req *v1.ClearCacheRequest) error {
+    return ds.ClearDecisionCache(ctx, req.TenantID, req.PolicyID)
+}
+
+func (ds *decisionService) WarmupCache(ctx context.Context, tenantID string) error {
 	if tenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", tenantID)
 	}
@@ -929,7 +942,7 @@ func (ds *DecisionService) WarmupCache(ctx context.Context, tenantID string) err
 		return errors.NewValidationError("tenant_id", "Invalid tenant ID format", tenantID)
 	}
 
-	policies, _, err := ds.policyStore.ListPolicies(ctx, &ListPoliciesRequest{
+	policies, err := ds.policyStore.ListPolicies(ctx, &v1.ListPoliciesRequest{
 		TenantID: tenantID,
 		Status:   policy.PolicyStatusActive,
 		Limit:    100,
@@ -943,7 +956,7 @@ func (ds *DecisionService) WarmupCache(ctx context.Context, tenantID string) err
 	warmedUp := 0
 	for _, pol := range policies.Policies {
 		for _, rule := range pol.Rules {
-			evalReq := &EvaluateRequest{
+			evalReq := &v1.EvaluateRequest{
 				TenantID:    tenantID,
 				SubjectID:   "warmup_subject",
 				Resource:    rule.Resource,
@@ -975,13 +988,13 @@ func (ds *DecisionService) WarmupCache(ctx context.Context, tenantID string) err
 	return nil
 }
 
-func (ds *DecisionService) HealthCheck(ctx context.Context) error {
+func (ds *decisionService) HealthCheck(ctx context.Context) error {
 	if !ds.opaEngine.IsHealthy() {
-		return errors.NewServiceUnavailable("OPA engine is not healthy")
+		return errors.New(errors.ErrCodeServiceUnavailable, "OPA engine is not healthy")
 	}
 
 	if !ds.opaClient.IsHealthy(ctx) {
-		return errors.NewServiceUnavailable("OPA client is not healthy")
+		return errors.New(errors.ErrCodeServiceUnavailable, "OPA client is not healthy")
 	}
 
 	if err := ds.cache.HealthCheck(); err != nil {
@@ -994,13 +1007,13 @@ func (ds *DecisionService) HealthCheck(ctx context.Context) error {
 
 	circuitState := ds.circuitBreaker.GetState()
 	if circuitState == "open" {
-		return errors.NewServiceUnavailable("Circuit breaker is open")
+		return errors.New(errors.ErrCodeServiceUnavailable, "Circuit breaker is open")
 	}
 
 	return nil
 }
 
-func (ds *DecisionService) GetHealthStatus() map[string]interface{} {
+func (ds *decisionService) GetHealthStatus() map[string]interface{} {
 	return map[string]interface{}{
 		"opa_engine":      ds.opaEngine.GetHealthStatus(),
 		"opa_client":      ds.opaClient.IsHealthy(context.Background()),
@@ -1014,20 +1027,20 @@ func (ds *DecisionService) GetHealthStatus() map[string]interface{} {
 	}
 }
 
-func (ds *DecisionService) ResetCircuitBreaker() {
+func (ds *decisionService) ResetCircuitBreaker() {
 	ds.circuitBreaker.Reset()
 	ds.logger.Info("Circuit breaker reset")
 }
 
-func (ds *DecisionService) GetCircuitBreakerState() string {
+func (ds *decisionService) GetCircuitBreakerState() string {
 	return ds.circuitBreaker.GetState()
 }
 
-func (ds *DecisionService) IsRateLimited() bool {
+func (ds *decisionService) IsRateLimited() bool {
 	return !ds.rateLimiter.Allow()
 }
 
-func (ds *DecisionService) GetRateLimiterStatus() map[string]interface{} {
+func (ds *decisionService) GetRateLimiterStatus() map[string]interface{} {
 	return map[string]interface{}{
 		"tokens":   ds.rateLimiter.GetTokens(),
 		"capacity": ds.rateLimiter.GetCapacity(),
@@ -1035,7 +1048,7 @@ func (ds *DecisionService) GetRateLimiterStatus() map[string]interface{} {
 	}
 }
 
-func (ds *DecisionService) Close() error {
+func (ds *decisionService) Close() error {
 	ds.logger.Info("Shutting down decision service")
 
 	if err := ds.opaEngine.Close(); err != nil {

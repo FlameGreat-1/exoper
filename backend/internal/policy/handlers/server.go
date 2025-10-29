@@ -17,7 +17,7 @@ import (
 	"flamo/backend/internal/common/database"
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
-	"flamo/backend/internal/policy/service"
+	v1 "flamo/backend/pkg/api/policy/v1"
 	"flamo/backend/internal/policy/opa"
 	"flamo/backend/internal/policy/storage"
 )
@@ -28,8 +28,8 @@ type Server struct {
 	healthHandler   *HealthHandler
 	policyHandler   *PolicyHandler
 	decisionHandler *DecisionHandler
-	policyService   *service.PolicyService
-	decisionService *service.DecisionService
+	policyService   v1.PolicyService
+	decisionService v1.DecisionService
 	opaEngine       *opa.Engine
 	opaClient       *opa.Client
 	policyLoader    *opa.PolicyLoader
@@ -41,6 +41,7 @@ type Server struct {
 	logger          *zap.Logger
 	shutdownTimeout time.Duration
 	isRunning       bool
+	startTime       time.Time
 	mu              sync.RWMutex
 }
 
@@ -71,9 +72,19 @@ type ServerMetrics struct {
 	mu              sync.RWMutex
 }
 
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
 func NewServer(
-	policyService *service.PolicyService,
-	decisionService *service.DecisionService,
+	policyService v1.PolicyService,
+	decisionService v1.DecisionService,
 	opaEngine *opa.Engine,
 	opaClient *opa.Client,
 	policyLoader *opa.PolicyLoader,
@@ -100,7 +111,14 @@ func NewServer(
 		logger,
 	)
 
-	policyHandler := NewPolicyHandler(policyService, cfg, logger)
+	policyHandler := NewPolicyHandler(
+		policyService,
+		policyService.(v1.BundleService),
+		policyService.(v1.LoaderService),
+		decisionService,
+		cfg,
+		logger,
+	)
 	decisionHandler := NewDecisionHandler(decisionService, cfg, logger)
 
 	serverConfig := getServerConfig(cfg)
@@ -132,6 +150,7 @@ func NewServer(
 		config:          cfg,
 		logger:          logger,
 		shutdownTimeout: serverConfig.ShutdownTimeout,
+		startTime:       time.Now(),
 	}
 
 	server.setupRoutes()
@@ -224,7 +243,12 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 func (s *Server) setupRoutes() {
-	s.healthHandler.RegisterRoutes(s.router)
+	healthMux := http.NewServeMux()
+	s.healthHandler.RegisterRoutes(healthMux)
+	s.router.PathPrefix("/health").Handler(healthMux)
+	s.router.PathPrefix("/metrics").Handler(healthMux)
+	s.router.PathPrefix("/status").Handler(healthMux)
+
 	s.policyHandler.RegisterRoutes(s.router)
 	s.decisionHandler.RegisterRoutes(s.router)
 
@@ -318,10 +342,6 @@ func (s *Server) startDependencies() error {
 		return errors.Wrap(err, errors.ErrCodeInternalError, "Failed to start policy loader")
 	}
 
-	if err := s.opaEngine.Start(); err != nil {
-		return errors.Wrap(err, errors.ErrCodeInternalError, "Failed to start OPA engine")
-	}
-
 	s.logger.Info("All dependencies started successfully")
 	return nil
 }
@@ -357,32 +377,8 @@ func (s *Server) stopDependencies(ctx context.Context) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := s.policyService.Close(); err != nil {
-			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "Failed to close policy service")
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := s.decisionService.Close(); err != nil {
-			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "Failed to close decision service")
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := s.policyLoader.Close(); err != nil {
+		if err := s.policyLoader.Stop(); err != nil {
 			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "Failed to close policy loader")
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := s.opaEngine.Close(); err != nil {
-			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "Failed to close OPA engine")
 		}
 	}()
 
@@ -407,6 +403,22 @@ func (s *Server) stopDependencies(ctx context.Context) error {
 		defer wg.Done()
 		if err := s.bundleManager.Close(); err != nil {
 			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "Failed to close bundle manager")
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := s.opaClient.Close(); err != nil {
+			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "Failed to close OPA client")
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := s.db.Close(); err != nil {
+			errChan <- errors.Wrap(err, errors.ErrCodeInternalError, "Failed to close database")
 		}
 	}()
 
@@ -457,8 +469,8 @@ func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	response := map[string]interface{}{
 		"service":     "policy-service",
-		"version":     s.config.App.Version,
-		"environment": s.config.App.Environment,
+		"version":     "1.0.0",
+		"environment": string(s.config.Environment),
 		"status":      "running",
 		"timestamp":   time.Now().UTC(),
 		"endpoints": map[string]interface{}{
@@ -469,8 +481,7 @@ func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := utils.WriteJSON(w, response); err != nil {
+	if err := utils.WriteJSONResponse(w, http.StatusOK, response); err != nil {
 		s.logger.Error("Failed to write root response", zap.Error(err))
 	}
 }
@@ -484,8 +495,7 @@ func (s *Server) handlePing(w http.ResponseWriter, r *http.Request) {
 		"timestamp": time.Now().UTC(),
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := utils.WriteJSON(w, response); err != nil {
+	if err := utils.WriteJSONResponse(w, http.StatusOK, response); err != nil {
 		s.logger.Error("Failed to write ping response", zap.Error(err))
 	}
 }
@@ -501,8 +511,7 @@ func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
 		"timestamp": time.Now().UTC(),
 	}
 
-	w.WriteHeader(http.StatusNotFound)
-	if err := utils.WriteJSON(w, response); err != nil {
+	if err := utils.WriteJSONResponse(w, http.StatusNotFound, response); err != nil {
 		s.logger.Error("Failed to write not found response", zap.Error(err))
 	}
 
@@ -523,8 +532,7 @@ func (s *Server) handleMethodNotAllowed(w http.ResponseWriter, r *http.Request) 
 		"timestamp": time.Now().UTC(),
 	}
 
-	w.WriteHeader(http.StatusMethodNotAllowed)
-	if err := utils.WriteJSON(w, response); err != nil {
+	if err := utils.WriteJSONResponse(w, http.StatusMethodNotAllowed, response); err != nil {
 		s.logger.Error("Failed to write method not allowed response", zap.Error(err))
 	}
 
@@ -606,8 +614,7 @@ func (s *Server) recoveryMiddleware(next http.Handler) http.Handler {
 					"timestamp":  time.Now().UTC(),
 				}
 
-				w.WriteHeader(http.StatusInternalServerError)
-				if writeErr := utils.WriteJSON(w, response); writeErr != nil {
+				if writeErr := utils.WriteJSONResponse(w, http.StatusInternalServerError, response); writeErr != nil {
 					s.logger.Error("Failed to write panic response", zap.Error(writeErr))
 				}
 			}
@@ -648,9 +655,6 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		origin := r.Header.Get("Origin")
 		
 		allowedOrigins := []string{"*"}
-		if s.config.Server.CORS.AllowedOrigins != nil {
-			allowedOrigins = s.config.Server.CORS.AllowedOrigins
-		}
 
 		allowed := false
 		for _, allowedOrigin := range allowedOrigins {
@@ -694,215 +698,27 @@ func (s *Server) GetRouter() *mux.Router {
 
 func (s *Server) HealthCheck(ctx context.Context) error {
 	if !s.IsRunning() {
-		return errors.NewServiceUnavailable("Server is not running")
+		return errors.NewServiceUnavailableError("Server is not running")
 	}
 
-	if err := s.policyService.HealthCheck(ctx); err != nil {
-		return errors.Wrap(err, errors.ErrCodeServiceUnavailable, "Policy service health check failed")
-	}
-
-	if err := s.decisionService.HealthCheck(ctx); err != nil {
-		return errors.Wrap(err, errors.ErrCodeServiceUnavailable, "Decision service health check failed")
+	healthStatus := s.decisionService.GetHealthStatus()
+	if healthStatus == nil {
+		return errors.NewServiceUnavailableError("Decision service health check failed")
 	}
 
 	return nil
 }
 
 func (s *Server) GetHealthStatus() map[string]interface{} {
-	return map[string]interface{}{
+	healthStatus := map[string]interface{}{
 		"server": map[string]interface{}{
 			"running": s.IsRunning(),
 			"address": s.GetAddress(),
 		},
-		"policy_service":   s.policyService.GetHealthStatus(),
 		"decision_service": s.decisionService.GetHealthStatus(),
 	}
-}
 
-type responseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
-}
-
-func getServerConfig(cfg *config.Config) *ServerConfig {
-	serverConfig := &ServerConfig{
-		Host:            "0.0.0.0",
-		Port:            8080,
-		ReadTimeout:     30 * time.Second,
-		WriteTimeout:    30 * time.Second,
-		IdleTimeout:     120 * time.Second,
-		ShutdownTimeout: 30 * time.Second,
-		MaxHeaderBytes:  1 << 20,
-		EnableTLS:       false,
-		EnableCORS:      true,
-		EnableMetrics:   true,
-		EnablePprof:     false,
-	}
-
-	if cfg.Server.Host != "" {
-		serverConfig.Host = cfg.Server.Host
-	}
-
-	if cfg.Server.Port > 0 {
-		serverConfig.Port = cfg.Server.Port
-	}
-
-	if cfg.Server.ReadTimeout > 0 {
-		serverConfig.ReadTimeout = cfg.Server.ReadTimeout
-	}
-
-	if cfg.Server.WriteTimeout > 0 {
-		serverConfig.WriteTimeout = cfg.Server.WriteTimeout
-	}
-
-	if cfg.Server.IdleTimeout > 0 {
-		serverConfig.IdleTimeout = cfg.Server.IdleTimeout
-	}
-
-	if cfg.Server.ShutdownTimeout > 0 {
-		serverConfig.ShutdownTimeout = cfg.Server.ShutdownTimeout
-	}
-
-	if cfg.Server.MaxHeaderBytes > 0 {
-		serverConfig.MaxHeaderBytes = cfg.Server.MaxHeaderBytes
-	}
-
-	if cfg.Server.TLS.Enabled {
-		serverConfig.EnableTLS = true
-		serverConfig.TLSCertFile = cfg.Server.TLS.CertFile
-		serverConfig.TLSKeyFile = cfg.Server.TLS.KeyFile
-	}
-
-	if cfg.Server.CORS.Enabled {
-		serverConfig.EnableCORS = true
-	}
-
-	if cfg.Server.Metrics.Enabled {
-		serverConfig.EnableMetrics = true
-	}
-
-	if cfg.Server.Debug.Enabled {
-		serverConfig.EnablePprof = true
-	}
-
-	return serverConfig
-}
-
-
-func (s *Server) GetMetrics() map[string]interface{} {
-	return map[string]interface{}{
-		"server": map[string]interface{}{
-			"running":     s.IsRunning(),
-			"address":     s.GetAddress(),
-			"uptime":      time.Since(time.Now()).Seconds(),
-			"go_version":  utils.GetGoVersion(),
-			"memory":      utils.GetMemoryUsage(),
-			"goroutines":  utils.GetGoroutineCount(),
-		},
-		"policy_service":   s.policyService.GetHealthStatus(),
-		"decision_service": s.decisionService.GetHealthStatus(),
-		"opa_engine":       s.opaEngine.GetHealthStatus(),
-		"opa_client":       s.opaClient.IsHealthy(context.Background()),
-		"policy_loader":    s.policyLoader.GetHealthStatus(),
-		"cache":            s.cache.GetStats(),
-		"database":         s.db.Stats(),
-	}
-}
-
-func (s *Server) RegisterCustomRoute(path string, handler http.HandlerFunc, methods ...string) {
-	if len(methods) == 0 {
-		methods = []string{"GET"}
-	}
-	
-	s.router.HandleFunc(path, handler).Methods(methods...)
-	
-	s.logger.Info("Custom route registered",
-		zap.String("path", path),
-		zap.Strings("methods", methods))
-}
-
-func (s *Server) RegisterCustomMiddleware(middleware mux.MiddlewareFunc) {
-	s.router.Use(middleware)
-	s.logger.Info("Custom middleware registered")
-}
-
-func (s *Server) SetNotFoundHandler(handler http.HandlerFunc) {
-	s.router.NotFoundHandler = handler
-	s.logger.Info("Custom not found handler set")
-}
-
-func (s *Server) SetMethodNotAllowedHandler(handler http.HandlerFunc) {
-	s.router.MethodNotAllowedHandler = handler
-	s.logger.Info("Custom method not allowed handler set")
-}
-
-func (s *Server) EnableGracefulShutdown(timeout time.Duration) {
-	s.shutdownTimeout = timeout
-	s.logger.Info("Graceful shutdown enabled", zap.Duration("timeout", timeout))
-}
-
-func (s *Server) GetConfig() *ServerConfig {
-	return getServerConfig(s.config)
-}
-
-func (s *Server) UpdateConfig(newConfig *config.Config) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.isRunning {
-		return errors.NewConflictError("Cannot update config while server is running")
-	}
-
-	s.config = newConfig
-	
-	serverConfig := getServerConfig(newConfig)
-	s.httpServer.Addr = fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
-	s.httpServer.ReadTimeout = serverConfig.ReadTimeout
-	s.httpServer.WriteTimeout = serverConfig.WriteTimeout
-	s.httpServer.IdleTimeout = serverConfig.IdleTimeout
-	s.httpServer.MaxHeaderBytes = serverConfig.MaxHeaderBytes
-	s.shutdownTimeout = serverConfig.ShutdownTimeout
-
-	s.logger.Info("Server configuration updated",
-		zap.String("address", s.httpServer.Addr),
-		zap.Duration("read_timeout", serverConfig.ReadTimeout),
-		zap.Duration("write_timeout", serverConfig.WriteTimeout),
-		zap.Duration("shutdown_timeout", s.shutdownTimeout))
-
-	return nil
-}
-
-func (s *Server) ListRoutes() []string {
-	var routes []string
-	
-	err := s.router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		pathTemplate, err := route.GetPathTemplate()
-		if err != nil {
-			return nil
-		}
-		
-		methods, err := route.GetMethods()
-		if err != nil {
-			methods = []string{"*"}
-		}
-		
-		for _, method := range methods {
-			routes = append(routes, fmt.Sprintf("%s %s", method, pathTemplate))
-		}
-		
-		return nil
-	})
-	
-	if err != nil {
-		s.logger.Error("Failed to walk routes", zap.Error(err))
-	}
-	
-	return routes
+	return healthStatus
 }
 
 func (s *Server) GetStats() map[string]interface{} {
@@ -912,16 +728,9 @@ func (s *Server) GetStats() map[string]interface{} {
 			"address":          s.GetAddress(),
 			"routes_count":     len(s.ListRoutes()),
 			"shutdown_timeout": s.shutdownTimeout.Seconds(),
-		},
-		"system": map[string]interface{}{
-			"go_version":  utils.GetGoVersion(),
-			"memory":      utils.GetMemoryUsage(),
-			"cpu":         utils.GetCPUUsage(),
-			"goroutines":  utils.GetGoroutineCount(),
+			"uptime":           time.Since(s.startTime).Seconds(),
 		},
 		"dependencies": map[string]interface{}{
-			"policy_service_healthy":   s.policyService.HealthCheck(context.Background()) == nil,
-			"decision_service_healthy": s.decisionService.HealthCheck(context.Background()) == nil,
 			"opa_engine_healthy":       s.opaEngine.IsHealthy(),
 			"opa_client_healthy":       s.opaClient.IsHealthy(context.Background()),
 			"policy_loader_running":    s.policyLoader.IsRunning(),
@@ -933,71 +742,30 @@ func (s *Server) GetStats() map[string]interface{} {
 	return stats
 }
 
-func (s *Server) Restart(ctx context.Context) error {
-	s.logger.Info("Restarting server")
-
-	if err := s.Stop(ctx); err != nil {
-		return errors.Wrap(err, errors.ErrCodeInternalError, "Failed to stop server during restart")
+func (s *Server) GetMetrics() map[string]interface{} {
+	metrics := map[string]interface{}{
+		"server": map[string]interface{}{
+			"running": s.IsRunning(),
+			"address": s.GetAddress(),
+			"uptime":  time.Since(s.startTime).Seconds(),
+		},
+		"decision_service": s.decisionService.GetHealthStatus(),
+		"opa_engine":       s.opaEngine.GetHealthStatus(),
+		"opa_client":       s.opaClient.IsHealthy(context.Background()),
+		"policy_loader":    s.policyLoader.IsRunning(),
+		"cache":            s.cache.GetStats(),
+		"database":         s.db.Stats(),
 	}
 
-	time.Sleep(1 * time.Second)
-
-	if err := s.Start(); err != nil {
-		return errors.Wrap(err, errors.ErrCodeInternalError, "Failed to start server during restart")
-	}
-
-	s.logger.Info("Server restarted successfully")
-	return nil
-}
-
-func (s *Server) Reload(ctx context.Context) error {
-	s.logger.Info("Reloading server configuration and dependencies")
-
-	if err := s.policyLoader.Stop(); err != nil {
-		s.logger.Error("Failed to stop policy loader during reload", zap.Error(err))
-	}
-
-	if err := s.opaEngine.Stop(); err != nil {
-		s.logger.Error("Failed to stop OPA engine during reload", zap.Error(err))
-	}
-
-	time.Sleep(500 * time.Millisecond)
-
-	if err := s.startDependencies(); err != nil {
-		return errors.Wrap(err, errors.ErrCodeInternalError, "Failed to restart dependencies during reload")
-	}
-
-	s.logger.Info("Server reloaded successfully")
-	return nil
+	return metrics
 }
 
 func (s *Server) GetVersion() map[string]interface{} {
 	return map[string]interface{}{
 		"service":     "policy-service",
-		"version":     s.config.App.Version,
-		"build_time":  s.config.App.BuildTime,
-		"commit_hash": s.config.App.CommitHash,
-		"go_version":  utils.GetGoVersion(),
-		"environment": s.config.App.Environment,
+		"version":     "1.0.0",
+		"environment": string(s.config.Environment),
 	}
-}
-
-func (s *Server) EnableDebugMode() {
-	s.logger.Info("Debug mode enabled")
-	s.setupPprofRoutes()
-}
-
-func (s *Server) DisableDebugMode() {
-	s.logger.Info("Debug mode disabled")
-}
-
-func (s *Server) SetLogLevel(level string) error {
-	s.logger.Info("Setting log level", zap.String("level", level))
-	return nil
-}
-
-func (s *Server) GetLogLevel() string {
-	return s.config.Logging.Level
 }
 
 func (s *Server) DumpConfig() map[string]interface{} {
@@ -1017,27 +785,7 @@ func (s *Server) DumpConfig() map[string]interface{} {
 			"enable_metrics":   serverConfig.EnableMetrics,
 			"enable_pprof":     serverConfig.EnablePprof,
 		},
-		"app": map[string]interface{}{
-			"name":        s.config.App.Name,
-			"version":     s.config.App.Version,
-			"environment": s.config.App.Environment,
-		},
-		"database": map[string]interface{}{
-			"host":         s.config.Database.Host,
-			"port":         s.config.Database.Port,
-			"name":         s.config.Database.Name,
-			"max_conns":    s.config.Database.MaxConnections,
-			"max_idle":     s.config.Database.MaxIdleConnections,
-			"conn_timeout": s.config.Database.ConnectionTimeout.Seconds(),
-		},
-		"opa": map[string]interface{}{
-			"url":     s.config.OPA.URL,
-			"timeout": s.config.OPA.Timeout.Seconds(),
-		},
-		"logging": map[string]interface{}{
-			"level":  s.config.Logging.Level,
-			"format": s.config.Logging.Format,
-		},
+		"environment": string(s.config.Environment),
 	}
 }
 
@@ -1077,4 +825,82 @@ func (s *Server) Close() error {
 	defer cancel()
 
 	return s.Stop(ctx)
+}
+
+func (s *Server) ListRoutes() []string {
+	var routes []string
+	
+	err := s.router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		pathTemplate, err := route.GetPathTemplate()
+		if err != nil {
+			return nil
+		}
+		
+		methods, err := route.GetMethods()
+		if err != nil {
+			methods = []string{"*"}
+		}
+		
+		for _, method := range methods {
+			routes = append(routes, fmt.Sprintf("%s %s", method, pathTemplate))
+		}
+		
+		return nil
+	})
+	
+	if err != nil {
+		s.logger.Error("Failed to walk routes", zap.Error(err))
+	}
+	
+	return routes
+}
+
+func getServerConfig(cfg *config.Config) *ServerConfig {
+	serverConfig := &ServerConfig{
+		Host:            "0.0.0.0",
+		Port:            8080,
+		ReadTimeout:     30 * time.Second,
+		WriteTimeout:    30 * time.Second,
+		IdleTimeout:     120 * time.Second,
+		ShutdownTimeout: 30 * time.Second,
+		MaxHeaderBytes:  1 << 20,
+		EnableTLS:       false,
+		EnableCORS:      true,
+		EnableMetrics:   true,
+		EnablePprof:     false,
+	}
+
+	if cfg.Server.Host != "" {
+		serverConfig.Host = cfg.Server.Host
+	}
+
+	if cfg.Server.Port > 0 {
+		serverConfig.Port = cfg.Server.Port
+	}
+
+	if cfg.Server.ReadTimeout > 0 {
+		serverConfig.ReadTimeout = cfg.Server.ReadTimeout
+	}
+
+	if cfg.Server.WriteTimeout > 0 {
+		serverConfig.WriteTimeout = cfg.Server.WriteTimeout
+	}
+
+	if cfg.Server.IdleTimeout > 0 {
+		serverConfig.IdleTimeout = cfg.Server.IdleTimeout
+	}
+
+	if cfg.Server.GracefulTimeout > 0 {
+		serverConfig.ShutdownTimeout = cfg.Server.GracefulTimeout
+	}
+
+	if cfg.Server.MaxHeaderBytes > 0 {
+		serverConfig.MaxHeaderBytes = cfg.Server.MaxHeaderBytes
+	}
+
+	if cfg.Server.EnableProfiling {
+		serverConfig.EnablePprof = true
+	}
+
+	return serverConfig
 }

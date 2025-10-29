@@ -1,0 +1,219 @@
+server:
+  name: "exoper-policy-service"
+  version: "1.0.0"
+  environment: "production"
+  host: "0.0.0.0"
+  port: 8080
+  grpc_port: 9090
+  read_timeout: "60s"
+  write_timeout: "60s"
+  idle_timeout: "300s"
+  shutdown_timeout: "60s"
+
+security:
+  tls:
+    enabled: true
+    cert_file: "/etc/ssl/certs/policy-service-prod.crt"
+    key_file: "/etc/ssl/private/policy-service-prod.key"
+    ca_file: "/etc/ssl/certs/ca-prod.crt"
+  mtls:
+    enabled: true
+    client_ca_file: "/etc/ssl/certs/client-ca-prod.crt"
+    verify_client_cert: true
+
+opa:
+  url: "https://opa-cluster.exoper.com:8181"
+  timeout: "45s"
+  retry_attempts: 10
+  retry_delay: "5s"
+  max_retry_delay: "60s"
+  health_check_interval: "15s"
+  batch_size: 500
+  max_concurrency: 500
+
+database:
+  driver: "postgres"
+  host: "postgres-cluster.exoper.com"
+  port: 5432
+  name: "exoper_production"
+  user: "exoper_policy_prod"
+  password: "${DB_PASSWORD}"
+  ssl_mode: "require"
+  max_open_conns: 200
+  max_idle_conns: 50
+  conn_max_lifetime: "30m"
+
+cache:
+  default_ttl: "30m"
+  allow_policy_ttl: "60m"
+  max_entries: 500000
+  cleanup_interval: "5m"
+  eviction_policy: "lru"
+
+policy_engine:
+  rate_limit:
+    requests_per_second: 50000
+    burst_size: 500000
+  circuit_breaker:
+    max_requests: 1000
+    interval: "120s"
+    timeout: "300s"
+    failure_threshold: 0.3
+    success_threshold: 20
+  evaluation:
+    default_timeout: "30s"
+    batch_max_size: 500
+    explain_enabled: false
+    trace_enabled: false
+
+policy_storage:
+  bundle_path: "/app/policies"
+  sync_interval: "1m"
+  batch_size: 500
+  max_policies_per_tenant: 50000
+  validation_timeout: "30s"
+
+decision_engine:
+  cache_policies: ["allow", "deny", "force_refresh"]
+  warmup_enabled: true
+  warmup_batch_size: 1000
+  warmup_subject: "prod_warmup_subject"
+  metrics_enabled: true
+
+observability:
+  logging:
+    level: "info"
+    format: "json"
+    output: "stdout"
+  tracing:
+    enabled: true
+    service_name: "exoper-policy-service-staging"
+    jaeger:
+      endpoint: "https://jaeger-staging.exoper.internal:14268/api/traces"
+  metrics:
+    enabled: true
+    prometheus:
+      enabled: true
+      path: "/metrics"
+      port: 8085
+
+bundle_management:
+  max_policies_per_bundle: 500
+  deployment_timeout: "10m"
+  supported_targets: ["opa", "database"]
+  auto_deploy: true
+  validation_enabled: true
+
+condition_evaluation:
+  supported_operators: ["==", "!=", "in", "not_in", "contains", "starts_with", "ends_with"]
+  pattern_matching_enabled: true
+  case_sensitive: true
+  timeout: "2s"
+
+cache_management:
+  warmup_enabled: true
+  warmup_batch_size: 200
+  warmup_subject: "staging_warmup_subject"
+  clear_pattern_support: true
+  hit_rate_threshold: 0.85
+
+validation:
+  max_name_length: 255
+  max_policies_per_bundle: 500
+  default_page_size: 100
+  max_page_size: 2000
+  supported_cache_policies: ["allow", "deny", "force_refresh"]
+  max_batch_size: 200
+  max_query_timeout: "2m"
+
+rate_limiting:
+  enabled: true
+  policy_operations:
+    requests_per_minute: 5000
+    burst: 50000
+  decision_evaluations:
+    requests_per_minute: 20000
+    burst: 200000
+  batch_evaluations:
+    requests_per_minute: 500
+    burst: 5000
+
+health_check:
+  enabled: true
+  path: "/health"
+  interval: "30s"
+  timeout: "15s"
+  component_timeouts:
+    policy_store: "10s"
+    bundle_manager: "10s"
+    opa_engine: "5s"
+    opa_client: "10s"
+    cache: "2s"
+    database: "10s"
+
+middleware:
+  logging:
+    enabled: true
+    log_request_body: false
+    log_response_body: false
+  recovery:
+    enabled: true
+    include_stack_trace: false
+  security:
+    enabled: true
+    headers:
+      x_frame_options: "DENY"
+      x_content_type_options: "nosniff"
+      x_xss_protection: "1; mode=block"
+      strict_transport_security: "max-age=31536000; includeSubDomains"
+      content_security_policy: "default-src 'self'"
+  cors:
+    enabled: true
+    allowed_origins: ["https://staging.exoper.com", "https://admin-staging.exoper.com"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Content-Type", "Authorization", "X-Tenant-ID", "X-Request-ID", "X-Trace-ID"]
+    allow_credentials: true
+    max_age: 86400
+
+operations:
+  circuit_breaker_reset_enabled: true
+  cache_warmup_enabled: true
+  selective_cache_clear_enabled: true
+  debug_mode_enabled: false
+  pprof_enabled: false
+  graceful_shutdown_enabled: true
+
+session:
+  store_type: "redis"
+  redis_url: "redis://redis-staging.exoper.internal:6379"
+  redis_password: "${REDIS_PASSWORD}"
+  redis_db: 2
+  cookie_name: "exoper_policy_session_staging"
+  cookie_domain: "staging.exoper.com"
+  cookie_secure: true
+  cookie_http_only: true
+  cookie_same_site: "strict"
+  max_age: 43200
+
+redis:
+  enabled: true
+  host: "redis-staging.exoper.internal"
+  port: 6379
+  password: "${REDIS_PASSWORD}"
+  db: 2
+  pool_size: 20
+  session_prefix: "policy:session:"
+  cache_prefix: "policy:cache:"
+
+monitoring:
+  alerts:
+    enabled: true
+    error_rate_threshold: 0.05
+    latency_threshold: "1s"
+    availability_threshold: 0.99
+  dashboards:
+    enabled: true
+    grafana_url: "https://grafana-staging.exoper.internal"
+  log_aggregation:
+    enabled: true
+    elasticsearch_url: "https://elasticsearch-staging.exoper.internal:9200"

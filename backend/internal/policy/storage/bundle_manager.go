@@ -17,7 +17,7 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
-	"flamo/backend/internal/policy/service"
+	v1 "flamo/backend/pkg/api/policy/v1"
 )
 
 type BundleManager struct {
@@ -116,7 +116,7 @@ func NewBundleManager(db *database.Database, policyStore *PolicyStore, cfg *conf
 	}
 }
 
-func (bm *BundleManager) CreateBundle(ctx context.Context, req *service.CreateBundleRequest) (*policy.PolicyBundle, error) {
+func (bm *BundleManager) CreateBundle(ctx context.Context, req *v1.CreateBundleRequest) (*policy.PolicyBundle, error) {
 	if err := bm.validateCreateBundleRequest(req); err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (bm *BundleManager) CreateBundle(ctx context.Context, req *service.CreateBu
 	return bundle, nil
 }
 
-func (bm *BundleManager) GetBundle(ctx context.Context, req *service.GetBundleRequest) (*policy.PolicyBundle, error) {
+func (bm *BundleManager) GetBundle(ctx context.Context, req *v1.GetBundleRequest) (*policy.PolicyBundle, error) {
 	if req.ID == "" {
 		return nil, errors.NewValidationError("bundle_id", "Bundle ID is required", req.ID)
 	}
@@ -189,12 +189,12 @@ func (bm *BundleManager) GetBundle(ctx context.Context, req *service.GetBundleRe
 	return bundle, nil
 }
 
-func (bm *BundleManager) UpdateBundle(ctx context.Context, req *service.UpdateBundleRequest) (*policy.PolicyBundle, error) {
+func (bm *BundleManager) UpdateBundle(ctx context.Context, req *v1.UpdateBundleRequest) (*policy.PolicyBundle, error) {
 	if err := bm.validateUpdateBundleRequest(req); err != nil {
 		return nil, err
 	}
 
-	existing, err := bm.GetBundle(ctx, &service.GetBundleRequest{
+	existing, err := bm.GetBundle(ctx, &v1.GetBundleRequest{
 		ID:       req.ID,
 		TenantID: req.TenantID,
 	})
@@ -231,7 +231,7 @@ func (bm *BundleManager) UpdateBundle(ctx context.Context, req *service.UpdateBu
 	return existing, nil
 }
 
-func (bm *BundleManager) DeleteBundle(ctx context.Context, req *service.DeleteBundleRequest) error {
+func (bm *BundleManager) DeleteBundle(ctx context.Context, req *v1.DeleteBundleRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("bundle_id", "Bundle ID is required", req.ID)
 	}
@@ -240,7 +240,7 @@ func (bm *BundleManager) DeleteBundle(ctx context.Context, req *service.DeleteBu
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
 
-	existing, err := bm.GetBundle(ctx, &service.GetBundleRequest{
+	existing, err := bm.GetBundle(ctx, &v1.GetBundleRequest{
 		ID:       req.ID,
 		TenantID: req.TenantID,
 	})
@@ -269,7 +269,7 @@ func (bm *BundleManager) DeleteBundle(ctx context.Context, req *service.DeleteBu
 	return nil
 }
 
-func (bm *BundleManager) ListBundles(ctx context.Context, req *service.ListBundlesRequest) (*service.ListBundlesResponse, error) {
+func (bm *BundleManager) ListBundles(ctx context.Context, req *v1.ListBundlesRequest) (*v1.ListBundlesResponse, error) {
 	if req.TenantID == "" {
 		return nil, errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -296,19 +296,19 @@ func (bm *BundleManager) ListBundles(ctx context.Context, req *service.ListBundl
 
 	hasMore := (filter.Offset + filter.Limit) < int(total)
 
-	return &service.ListBundlesResponse{
+	return &v1.ListBundlesResponse{
 		Bundles: bundles,
 		Total:   int(total),
 		HasMore: hasMore,
 	}, nil
 }
 
-func (bm *BundleManager) DeployBundle(ctx context.Context, req *service.DeployBundleRequest) error {
+func (bm *BundleManager) DeployBundle(ctx context.Context, req *v1.DeployBundleRequest) error {
 	if err := bm.validateDeployBundleRequest(req); err != nil {
 		return err
 	}
 
-	bundle, err := bm.GetBundle(ctx, &service.GetBundleRequest{
+	bundle, err := bm.GetBundle(ctx, &v1.GetBundleRequest{
 		ID:       req.ID,
 		TenantID: req.TenantID,
 	})
@@ -376,7 +376,7 @@ func (bm *BundleManager) ValidateBundle(ctx context.Context, bundle *policy.Poli
 	}
 
 	for _, policyID := range bundle.Policies {
-		pol, err := bm.policyStore.GetPolicy(ctx, &service.GetPolicyRequest{
+		pol, err := bm.policyStore.GetPolicy(ctx, &v1.GetPolicyRequest{
 			ID:       policyID,
 			TenantID: bundle.TenantID,
 		})
@@ -404,7 +404,6 @@ func (bm *BundleManager) ValidateBundle(ctx context.Context, bundle *policy.Poli
 	return result, nil
 }
 
-
 func (bm *BundleManager) executeDeployment(ctx context.Context, deploymentID string, bundle *policy.PolicyBundle) {
 	bm.mu.Lock()
 	deployment := bm.deployments[deploymentID]
@@ -428,7 +427,7 @@ func (bm *BundleManager) executeDeployment(ctx context.Context, deploymentID str
 	deployment.Progress = 2
 
 	for i, policyID := range bundle.Policies {
-		pol, err := bm.policyStore.GetPolicy(ctx, &service.GetPolicyRequest{
+		pol, err := bm.policyStore.GetPolicy(ctx, &v1.GetPolicyRequest{
 			ID:       policyID,
 			TenantID: bundle.TenantID,
 		})
@@ -492,7 +491,7 @@ func (bm *BundleManager) deployToOPA(ctx context.Context, pol *policy.Policy) er
 }
 
 func (bm *BundleManager) deployToDatabase(ctx context.Context, pol *policy.Policy) error {
-	return bm.policyStore.ActivatePolicy(ctx, &service.ActivatePolicyRequest{
+	return bm.policyStore.ActivatePolicy(ctx, &v1.ActivatePolicyRequest{
 		ID:       pol.ID,
 		TenantID: pol.TenantID,
 	})
@@ -656,7 +655,7 @@ func (bm *BundleManager) selectBundles(ctx context.Context, filter *BundleFilter
 	return bundles, total, nil
 }
 
-func (bm *BundleManager) validateCreateBundleRequest(req *service.CreateBundleRequest) error {
+func (bm *BundleManager) validateCreateBundleRequest(req *v1.CreateBundleRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -684,7 +683,7 @@ func (bm *BundleManager) validateCreateBundleRequest(req *service.CreateBundleRe
 	return nil
 }
 
-func (bm *BundleManager) validateUpdateBundleRequest(req *service.UpdateBundleRequest) error {
+func (bm *BundleManager) validateUpdateBundleRequest(req *v1.UpdateBundleRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Bundle ID is required", req.ID)
 	}
@@ -720,7 +719,7 @@ func (bm *BundleManager) validateUpdateBundleRequest(req *service.UpdateBundleRe
 	return nil
 }
 
-func (bm *BundleManager) validateDeployBundleRequest(req *service.DeployBundleRequest) error {
+func (bm *BundleManager) validateDeployBundleRequest(req *v1.DeployBundleRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Bundle ID is required", req.ID)
 	}
@@ -747,7 +746,7 @@ func (bm *BundleManager) validateBundlePolicies(ctx context.Context, bundle *pol
 			return errors.NewValidationError("policies", "Invalid policy ID format", policyID)
 		}
 
-		_, err := bm.policyStore.GetPolicy(ctx, &service.GetPolicyRequest{
+		_, err := bm.policyStore.GetPolicy(ctx, &v1.GetPolicyRequest{
 			ID:       policyID,
 			TenantID: bundle.TenantID,
 		})
@@ -788,7 +787,7 @@ func (bm *BundleManager) detectPolicyConflicts(ctx context.Context, bundle *poli
 
 	policies := make([]*policy.Policy, 0, len(bundle.Policies))
 	for _, policyID := range bundle.Policies {
-		pol, err := bm.policyStore.GetPolicy(ctx, &service.GetPolicyRequest{
+		pol, err := bm.policyStore.GetPolicy(ctx, &v1.GetPolicyRequest{
 			ID:       policyID,
 			TenantID: bundle.TenantID,
 		})
@@ -901,7 +900,7 @@ func (bm *BundleManager) GetBundleMetrics(ctx context.Context, tenantID string) 
 
 func (bm *BundleManager) HealthCheck(ctx context.Context) error {
 	query := "SELECT 1"
-	_, err := bm.db.QueryRow(ctx, query).Scan(new(int))
+	err := bm.db.QueryRow(ctx, query).Scan(new(int))
 	return err
 }
 

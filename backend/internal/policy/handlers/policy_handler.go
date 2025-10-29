@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -15,14 +14,17 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
-	"flamo/backend/internal/policy/service"
+	v1 "flamo/backend/pkg/api/policy/v1"
 )
 
 type PolicyHandler struct {
-	policyService *service.PolicyService
-	config        *config.Config
-	logger        *zap.Logger
-	rateLimiter   *utils.RateLimiter
+	policyService   v1.PolicyService
+	bundleService   v1.BundleService
+	loaderService   v1.LoaderService
+	decisionService v1.DecisionService
+	config          *config.Config
+	logger          *zap.Logger
+	rateLimiter     *utils.RateLimiter
 }
 
 type CreatePolicyRequest struct {
@@ -109,15 +111,35 @@ type ErrorResponse struct {
 	Details map[string]interface{} `json:"details,omitempty"`
 }
 
-func NewPolicyHandler(policyService *service.PolicyService, cfg *config.Config, logger *zap.Logger) *PolicyHandler {
+func NewPolicyHandler(
+	policyService v1.PolicyService,
+	bundleService v1.BundleService,
+	loaderService v1.LoaderService,
+	decisionService v1.DecisionService,
+	cfg *config.Config,
+	logger *zap.Logger,
+) *PolicyHandler {
 	rateLimiter := utils.NewRateLimiter(1000.0, 10000)
 
 	return &PolicyHandler{
-		policyService: policyService,
-		config:        cfg,
-		logger:        logger,
-		rateLimiter:   rateLimiter,
+		policyService:   policyService,
+		bundleService:   bundleService,
+		loaderService:   loaderService,
+		decisionService: decisionService,
+		config:          cfg,
+		logger:          logger,
+		rateLimiter:     rateLimiter,
 	}
+}
+
+func (h *PolicyHandler) convertMetadata(metadata map[string]interface{}) map[string]string {
+	result := make(map[string]string)
+	for k, v := range metadata {
+		if str, ok := v.(string); ok {
+			result[k] = str
+		}
+	}
+	return result
 }
 
 func (h *PolicyHandler) CreatePolicy(w http.ResponseWriter, r *http.Request) {
@@ -138,12 +160,12 @@ func (h *PolicyHandler) CreatePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.TenantID == "" || req.Name == "" || req.CreatedBy == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("validation", "Required fields missing", "tenant_id, name, and created_by are required"), http.StatusBadRequest)
 		return
 	}
 
-	serviceReq := &service.CreatePolicyRequest{
+	serviceReq := &v1.CreatePolicyRequest{
 		TenantID:    req.TenantID,
 		Name:        req.Name,
 		Description: req.Description,
@@ -152,7 +174,7 @@ func (h *PolicyHandler) CreatePolicy(w http.ResponseWriter, r *http.Request) {
 		Effect:      req.Effect,
 		Rules:       req.Rules,
 		Conditions:  req.Conditions,
-		Metadata:    req.Metadata,
+		Metadata:    h.convertMetadata(req.Metadata),
 		CreatedBy:   req.CreatedBy,
 	}
 
@@ -164,7 +186,7 @@ func (h *PolicyHandler) CreatePolicy(w http.ResponseWriter, r *http.Request) {
 
 	response := &PolicyResponse{Policy: pol}
 	w.WriteHeader(http.StatusCreated)
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode create policy response", zap.Error(err))
 		return
@@ -203,7 +225,7 @@ func (h *PolicyHandler) GetPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceReq := &service.GetPolicyRequest{
+	serviceReq := &v1.GetPolicyRequest{
 		ID:       policyID,
 		TenantID: tenantID,
 	}
@@ -216,7 +238,7 @@ func (h *PolicyHandler) GetPolicy(w http.ResponseWriter, r *http.Request) {
 
 	response := &PolicyResponse{Policy: pol}
 	w.WriteHeader(http.StatusOK)
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode get policy response", zap.Error(err))
 		return
@@ -260,12 +282,12 @@ func (h *PolicyHandler) UpdatePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.Name == "" || req.UpdatedBy == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("validation", "Required fields missing", "name and updated_by are required"), http.StatusBadRequest)
 		return
 	}
 
-	serviceReq := &service.UpdatePolicyRequest{
+	serviceReq := &v1.UpdatePolicyRequest{
 		ID:          policyID,
 		TenantID:    tenantID,
 		Name:        req.Name,
@@ -274,7 +296,7 @@ func (h *PolicyHandler) UpdatePolicy(w http.ResponseWriter, r *http.Request) {
 		Effect:      req.Effect,
 		Rules:       req.Rules,
 		Conditions:  req.Conditions,
-		Metadata:    req.Metadata,
+		Metadata:    h.convertMetadata(req.Metadata),
 		UpdatedBy:   req.UpdatedBy,
 	}
 
@@ -286,7 +308,7 @@ func (h *PolicyHandler) UpdatePolicy(w http.ResponseWriter, r *http.Request) {
 
 	response := &PolicyResponse{Policy: pol}
 	w.WriteHeader(http.StatusOK)
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode update policy response", zap.Error(err))
 		return
@@ -324,7 +346,7 @@ func (h *PolicyHandler) DeletePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceReq := &service.DeletePolicyRequest{
+	serviceReq := &v1.DeletePolicyRequest{
 		ID:       policyID,
 		TenantID: tenantID,
 	}
@@ -375,7 +397,7 @@ func (h *PolicyHandler) ListPolicies(w http.ResponseWriter, r *http.Request) {
 		limit = 1000
 	}
 
-	serviceReq := &service.ListPoliciesRequest{
+	serviceReq := &v1.ListPoliciesRequest{
 		TenantID:  tenantID,
 		Type:      policy.PolicyType(policyType),
 		Status:    policy.PolicyStatus(status),
@@ -400,7 +422,7 @@ func (h *PolicyHandler) ListPolicies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	
+
 	if err := json.NewEncoder(w).Encode(listResponse); err != nil {
 		h.logger.Error("Failed to encode list policies response", zap.Error(err))
 		return
@@ -438,7 +460,7 @@ func (h *PolicyHandler) ActivatePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceReq := &service.ActivatePolicyRequest{
+	serviceReq := &v1.ActivatePolicyRequest{
 		ID:       policyID,
 		TenantID: tenantID,
 	}
@@ -449,13 +471,13 @@ func (h *PolicyHandler) ActivatePolicy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	
+
 	response := map[string]interface{}{
 		"message":   "Policy activated successfully",
 		"policy_id": policyID,
 		"status":    "active",
 	}
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode activate policy response", zap.Error(err))
 		return
@@ -493,7 +515,7 @@ func (h *PolicyHandler) DeactivatePolicy(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	serviceReq := &service.DeactivatePolicyRequest{
+	serviceReq := &v1.DeactivatePolicyRequest{
 		ID:       policyID,
 		TenantID: tenantID,
 	}
@@ -504,13 +526,13 @@ func (h *PolicyHandler) DeactivatePolicy(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	
+
 	response := map[string]interface{}{
 		"message":   "Policy deactivated successfully",
 		"policy_id": policyID,
 		"status":    "inactive",
 	}
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode deactivate policy response", zap.Error(err))
 		return
@@ -540,12 +562,12 @@ func (h *PolicyHandler) ValidatePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.Policy == nil {
+		h.writeErrorResponse(w, errors.NewValidationError("policy", "Policy is required", "policy field cannot be null"), http.StatusBadRequest)
 		return
 	}
 
-	serviceReq := &service.ValidatePolicyRequest{
+	serviceReq := &v1.ValidatePolicyRequest{
 		Policy: req.Policy,
 	}
 
@@ -562,7 +584,7 @@ func (h *PolicyHandler) ValidatePolicy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode validate policy response", zap.Error(err))
 		return
@@ -593,21 +615,21 @@ func (h *PolicyHandler) CreateBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.TenantID == "" || req.Name == "" || req.CreatedBy == "" || len(req.Policies) == 0 {
+		h.writeErrorResponse(w, errors.NewValidationError("validation", "Required fields missing", "tenant_id, name, created_by, and policies are required"), http.StatusBadRequest)
 		return
 	}
 
-	serviceReq := &service.CreateBundleRequest{
+	serviceReq := &v1.CreateBundleRequest{
 		TenantID:    req.TenantID,
 		Name:        req.Name,
 		Description: req.Description,
 		Policies:    req.Policies,
-		Metadata:    req.Metadata,
+		Metadata:    h.convertMetadata(req.Metadata),
 		CreatedBy:   req.CreatedBy,
 	}
 
-	bundle, err := h.policyService.CreateBundle(ctx, serviceReq)
+	bundle, err := h.bundleService.CreateBundle(ctx, serviceReq)
 	if err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
@@ -615,7 +637,7 @@ func (h *PolicyHandler) CreateBundle(w http.ResponseWriter, r *http.Request) {
 
 	response := &BundleResponse{Bundle: bundle}
 	w.WriteHeader(http.StatusCreated)
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode create bundle response", zap.Error(err))
 		return
@@ -655,12 +677,12 @@ func (h *PolicyHandler) GetBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceReq := &service.GetBundleRequest{
+	serviceReq := &v1.GetBundleRequest{
 		ID:       bundleID,
 		TenantID: tenantID,
 	}
 
-	bundle, err := h.policyService.GetBundle(ctx, serviceReq)
+	bundle, err := h.bundleService.GetBundle(ctx, serviceReq)
 	if err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
@@ -668,7 +690,7 @@ func (h *PolicyHandler) GetBundle(w http.ResponseWriter, r *http.Request) {
 
 	response := &BundleResponse{Bundle: bundle}
 	w.WriteHeader(http.StatusOK)
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode get bundle response", zap.Error(err))
 		return
@@ -712,22 +734,22 @@ func (h *PolicyHandler) UpdateBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.Name == "" || req.UpdatedBy == "" || len(req.Policies) == 0 {
+		h.writeErrorResponse(w, errors.NewValidationError("validation", "Required fields missing", "name, updated_by, and policies are required"), http.StatusBadRequest)
 		return
 	}
 
-	serviceReq := &service.UpdateBundleRequest{
+	serviceReq := &v1.UpdateBundleRequest{
 		ID:          bundleID,
 		TenantID:    tenantID,
 		Name:        req.Name,
 		Description: req.Description,
 		Policies:    req.Policies,
-		Metadata:    req.Metadata,
+		Metadata:    h.convertMetadata(req.Metadata),
 		UpdatedBy:   req.UpdatedBy,
 	}
 
-	bundle, err := h.policyService.UpdateBundle(ctx, serviceReq)
+	bundle, err := h.bundleService.UpdateBundle(ctx, serviceReq)
 	if err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
@@ -735,7 +757,7 @@ func (h *PolicyHandler) UpdateBundle(w http.ResponseWriter, r *http.Request) {
 
 	response := &BundleResponse{Bundle: bundle}
 	w.WriteHeader(http.StatusOK)
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode update bundle response", zap.Error(err))
 		return
@@ -773,12 +795,12 @@ func (h *PolicyHandler) DeleteBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceReq := &service.DeleteBundleRequest{
+	serviceReq := &v1.DeleteBundleRequest{
 		ID:       bundleID,
 		TenantID: tenantID,
 	}
 
-	if err := h.policyService.DeleteBundle(ctx, serviceReq); err != nil {
+	if err := h.bundleService.DeleteBundle(ctx, serviceReq); err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
 	}
@@ -821,14 +843,14 @@ func (h *PolicyHandler) ListBundles(w http.ResponseWriter, r *http.Request) {
 		limit = 1000
 	}
 
-	serviceReq := &service.ListBundlesRequest{
+	serviceReq := &v1.ListBundlesRequest{
 		TenantID: tenantID,
 		Status:   policy.PolicyStatus(status),
 		Limit:    limit,
 		Offset:   offset,
 	}
 
-	response, err := h.policyService.ListBundles(ctx, serviceReq)
+	response, err := h.bundleService.ListBundles(ctx, serviceReq)
 	if err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
@@ -841,7 +863,7 @@ func (h *PolicyHandler) ListBundles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	
+
 	if err := json.NewEncoder(w).Encode(listResponse); err != nil {
 		h.logger.Error("Failed to encode list bundles response", zap.Error(err))
 		return
@@ -885,31 +907,31 @@ func (h *PolicyHandler) DeployBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.Target == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("target", "Target is required", "target must be 'opa' or 'database'"), http.StatusBadRequest)
 		return
 	}
 
-	serviceReq := &service.DeployBundleRequest{
+	serviceReq := &v1.DeployBundleRequest{
 		ID:       bundleID,
 		TenantID: tenantID,
 		Target:   req.Target,
 	}
 
-	if err := h.policyService.DeployBundle(ctx, serviceReq); err != nil {
+	if err := h.bundleService.DeployBundle(ctx, serviceReq); err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-	
+
 	response := map[string]interface{}{
 		"message":   "Bundle deployment initiated",
 		"bundle_id": bundleID,
 		"target":    req.Target,
 		"status":    "deploying",
 	}
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode deploy bundle response", zap.Error(err))
 		return
@@ -940,23 +962,23 @@ func (h *PolicyHandler) SyncTenant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceReq := &service.SyncTenantRequest{
+	serviceReq := &v1.SyncTenantRequest{
 		TenantID: tenantID,
 	}
 
-	if err := h.policyService.SyncTenant(ctx, serviceReq); err != nil {
+	if err := h.loaderService.SyncTenant(ctx, serviceReq); err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-	
+
 	response := map[string]interface{}{
 		"message":   "Tenant sync initiated",
 		"tenant_id": tenantID,
 		"status":    "syncing",
 	}
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode sync tenant response", zap.Error(err))
 		return
@@ -988,27 +1010,27 @@ func (h *PolicyHandler) ClearCache(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	policyID := query.Get("policy_id")
 
-	serviceReq := &service.ClearCacheRequest{
+	serviceReq := &v1.ClearCacheRequest{
 		TenantID: tenantID,
 		PolicyID: policyID,
 	}
 
-	if err := h.policyService.ClearCache(ctx, serviceReq); err != nil {
+	if err := h.decisionService.ClearCache(ctx, serviceReq); err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	
+
 	response := map[string]interface{}{
 		"message":   "Cache cleared successfully",
 		"tenant_id": tenantID,
 	}
-	
+
 	if policyID != "" {
 		response["policy_id"] = policyID
 	}
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		h.logger.Error("Failed to encode clear cache response", zap.Error(err))
 		return
@@ -1044,43 +1066,29 @@ func (h *PolicyHandler) writeErrorResponse(w http.ResponseWriter, err error, sta
 }
 
 func (h *PolicyHandler) getStatusCodeFromError(err error) int {
-	switch {
-	case errors.IsValidationError(err):
-		return http.StatusBadRequest
-	case errors.IsNotFoundError(err):
-		return http.StatusNotFound
-	case errors.IsConflictError(err):
-		return http.StatusConflict
-	case errors.IsUnauthorizedError(err):
-		return http.StatusUnauthorized
-	case errors.IsForbiddenError(err):
-		return http.StatusForbidden
-	case errors.IsRateLimitError(err):
-		return http.StatusTooManyRequests
-	case errors.IsServiceUnavailableError(err):
-		return http.StatusServiceUnavailable
-	default:
-		return http.StatusInternalServerError
+	if errors.IsAppError(err) {
+		return errors.GetHTTPStatus(err)
 	}
+	return http.StatusInternalServerError
 }
 
 func (h *PolicyHandler) getErrorCode(err error) string {
-	if customErr, ok := err.(*errors.CustomError); ok {
-		return customErr.Code
+	if appErr, ok := err.(*errors.AppError); ok {
+		return string(appErr.Code)
 	}
 	return "INTERNAL_ERROR"
 }
 
 func (h *PolicyHandler) getErrorMessage(err error) string {
-	if customErr, ok := err.(*errors.CustomError); ok {
-		return customErr.Message
+	if appErr, ok := err.(*errors.AppError); ok {
+		return appErr.Message
 	}
 	return err.Error()
 }
 
 func (h *PolicyHandler) getErrorDetails(err error) map[string]interface{} {
-	if customErr, ok := err.(*errors.CustomError); ok {
-		return customErr.Context
+	if appErr, ok := err.(*errors.AppError); ok {
+		return appErr.Context
 	}
 	return nil
 }

@@ -1,0 +1,191 @@
+server:
+  name: "exoper-policy-service"
+  version: "1.0.0"
+  environment: "local"
+  host: "0.0.0.0"
+  port: 8080
+  grpc_port: 9090
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "120s"
+  shutdown_timeout: "30s"
+
+security:
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+    ca_file: ""
+  mtls:
+    enabled: false
+    client_ca_file: ""
+    verify_client_cert: false
+
+opa:
+  url: "http://localhost:8181"
+  timeout: "30s"
+  retry_attempts: 3
+  retry_delay: "1s"
+  max_retry_delay: "10s"
+  health_check_interval: "30s"
+  batch_size: 100
+  max_concurrency: 50
+
+database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  name: "exoper_local"
+  user: "exoper_user"
+  password: "exoper_pass"
+  ssl_mode: "disable"
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: "5m"
+
+cache:
+  default_ttl: "5m"
+  allow_policy_ttl: "15m"
+  max_entries: 10000
+  cleanup_interval: "1m"
+  eviction_policy: "lru"
+
+policy_engine:
+  rate_limit:
+    requests_per_second: 5000
+    burst_size: 50000
+  circuit_breaker:
+    max_requests: 100
+    interval: "30s"
+    timeout: "60s"
+    failure_threshold: 0.6
+    success_threshold: 5
+  evaluation:
+    default_timeout: "30s"
+    batch_max_size: 100
+    explain_enabled: true
+    trace_enabled: true
+
+policy_storage:
+  bundle_path: "/policies"
+  sync_interval: "5m"
+  batch_size: 50
+  max_policies_per_tenant: 1000
+  validation_timeout: "10s"
+
+decision_engine:
+  cache_policies: ["allow", "deny", "force_refresh"]
+  warmup_enabled: true
+  warmup_batch_size: 100
+  warmup_subject: "warmup_subject"
+  metrics_enabled: true
+
+observability:
+  logging:
+    level: "debug"
+    format: "json"
+    output: "stdout"
+  tracing:
+    enabled: true
+    service_name: "exoper-policy-service"
+    jaeger:
+      endpoint: "http://localhost:14268/api/traces"
+  metrics:
+    enabled: true
+    prometheus:
+      enabled: true
+      path: "/metrics"
+      port: 8085
+
+bundle_management:
+  max_policies_per_bundle: 100
+  deployment_timeout: "5m"
+  supported_targets: ["opa", "database"]
+  auto_deploy: true
+  validation_enabled: true
+
+condition_evaluation:
+  supported_operators: ["==", "!=", "in", "not_in", "contains", "starts_with", "ends_with"]
+  pattern_matching_enabled: true
+  case_sensitive: true
+  timeout: "1s"
+
+cache_management:
+  warmup_enabled: true
+  warmup_batch_size: 100
+  warmup_subject: "warmup_subject"
+  clear_pattern_support: true
+  hit_rate_threshold: 0.8
+
+validation:
+  max_name_length: 255
+  max_policies_per_bundle: 100
+  default_page_size: 50
+  max_page_size: 1000
+  supported_cache_policies: ["allow", "deny", "force_refresh"]
+  max_batch_size: 100
+  max_query_timeout: "5m"
+
+rate_limiting:
+  enabled: true
+  policy_operations:
+    requests_per_minute: 1000
+    burst: 10000
+  decision_evaluations:
+    requests_per_minute: 5000
+    burst: 50000
+  batch_evaluations:
+    requests_per_minute: 100
+    burst: 1000
+
+health_check:
+  enabled: true
+  path: "/health"
+  interval: "30s"
+  timeout: "10s"
+  component_timeouts:
+    policy_store: "5s"
+    bundle_manager: "5s"
+    opa_engine: "3s"
+    opa_client: "5s"
+    cache: "1s"
+    database: "5s"
+
+middleware:
+  logging:
+    enabled: true
+    log_request_body: false
+    log_response_body: false
+  recovery:
+    enabled: true
+    include_stack_trace: true
+  security:
+    enabled: true
+    headers:
+      x_frame_options: "DENY"
+      x_content_type_options: "nosniff"
+      x_xss_protection: "1; mode=block"
+  cors:
+    enabled: true
+    allowed_origins: ["*"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Content-Type", "Authorization", "X-Tenant-ID", "X-Request-ID", "X-Trace-ID"]
+    allow_credentials: true
+    max_age: 86400
+
+operations:
+  circuit_breaker_reset_enabled: true
+  cache_warmup_enabled: true
+  selective_cache_clear_enabled: true
+  debug_mode_enabled: false
+  pprof_enabled: false
+  graceful_shutdown_enabled: true
+
+session:
+  store_type: "memory"
+  cookie_name: "exoper_policy_session"
+  cookie_domain: "localhost"
+  cookie_secure: false
+  cookie_http_only: true
+  cookie_same_site: "lax"
+  max_age: 86400

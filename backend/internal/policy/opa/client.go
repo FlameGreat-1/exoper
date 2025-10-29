@@ -17,7 +17,7 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
-	"flamo/backend/internal/policy/service"
+	v1 "flamo/backend/pkg/api/policy/v1"
 )
 
 type Client struct {
@@ -119,7 +119,7 @@ func NewClient(cfg *config.Config, logger *zap.Logger) *Client {
 	}
 }
 
-func (c *Client) Evaluate(ctx context.Context, req *service.EvaluateRequest) (*service.EvaluateResponse, error) {
+func (c *Client) Evaluate(ctx context.Context, req *v1.EvaluateRequest) (*v1.EvaluateResponse, error) {
 	if err := c.validateEvaluateRequest(req); err != nil {
 		return nil, err
 	}
@@ -161,14 +161,14 @@ func (c *Client) Evaluate(ctx context.Context, req *service.EvaluateRequest) (*s
 		zap.Bool("allow", decision.Allow),
 		zap.Duration("duration", duration))
 
-	return &service.EvaluateResponse{
+	return &v1.EvaluateResponse{
 		Decision: decision,
 		Cached:   false,
 		Duration: duration,
 	}, nil
 }
 
-func (c *Client) BatchEvaluate(ctx context.Context, req *service.BatchEvaluateRequest) (*service.BatchEvaluateResponse, error) {
+func (c *Client) BatchEvaluate(ctx context.Context, req *v1.BatchEvaluateRequest) (*v1.BatchEvaluateResponse, error) {
 	if len(req.Requests) == 0 {
 		return nil, errors.NewValidationError("requests", "At least one request is required", len(req.Requests))
 	}
@@ -178,12 +178,12 @@ func (c *Client) BatchEvaluate(ctx context.Context, req *service.BatchEvaluateRe
 	}
 
 	start := time.Now()
-	responses := make([]service.EvaluateResponse, len(req.Requests))
+	responses := make([]v1.EvaluateResponse, len(req.Requests))
 
 	for i, evalReq := range req.Requests {
 		resp, err := c.Evaluate(ctx, &evalReq)
 		if err != nil {
-			responses[i] = service.EvaluateResponse{
+			responses[i] = v1.EvaluateResponse{
 				Decision: policy.PolicyDecision{
 					Allow:     false,
 					Deny:      true,
@@ -202,7 +202,7 @@ func (c *Client) BatchEvaluate(ctx context.Context, req *service.BatchEvaluateRe
 		}
 	}
 
-	return &service.BatchEvaluateResponse{
+	return &v1.BatchEvaluateResponse{
 		Responses: responses,
 		Duration:  time.Since(start),
 	}, nil
@@ -519,7 +519,7 @@ func (c *Client) GetAuthToken() string {
 	return c.authToken
 }
 
-func (c *Client) validateEvaluateRequest(req *service.EvaluateRequest) error {
+func (c *Client) validateEvaluateRequest(req *v1.EvaluateRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -575,7 +575,7 @@ func (c *Client) buildPolicyPath(tenantID string) string {
 	return fmt.Sprintf("tenants/%s/policies/allow", tenantID)
 }
 
-func (c *Client) parseDecision(opaResp *OPAResponse, req *service.EvaluateRequest, traceID string) policy.PolicyDecision {
+func (c *Client) parseDecision(opaResp *OPAResponse, req *v1.EvaluateRequest, traceID string) policy.PolicyDecision {
 	decision := policy.PolicyDecision{
 		Allow:     false,
 		Deny:      true,
@@ -586,7 +586,7 @@ func (c *Client) parseDecision(opaResp *OPAResponse, req *service.EvaluateReques
 		SubjectID: req.SubjectID,
 		Resource:  req.Resource,
 		Action:    req.Action,
-		Context:   req.Context,
+		Context:   make(map[string]string),
 		Metadata:  make(map[string]string),
 	}
 

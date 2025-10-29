@@ -13,7 +13,7 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
-	"flamo/backend/internal/policy/service"
+	v1 "flamo/backend/pkg/api/policy/v1"
 	"flamo/backend/internal/policy/storage"
 )
 
@@ -97,7 +97,7 @@ func NewEngine(client *Client, policyStore *storage.PolicyStore, cache *Cache, d
 	return engine
 }
 
-func (e *Engine) Evaluate(ctx context.Context, req *service.EvaluateRequest) (*service.EvaluateResponse, error) {
+func (e *Engine) Evaluate(ctx context.Context, req *v1.EvaluateRequest) (*v1.EvaluateResponse, error) {
 	if !e.rateLimiter.Allow() {
 		return nil, errors.NewRateLimitError(time.Minute).
 			WithTenantID(req.TenantID).
@@ -141,14 +141,14 @@ func (e *Engine) Evaluate(ctx context.Context, req *service.EvaluateRequest) (*s
 		zap.Bool("cache_hit", result.CacheHit),
 		zap.Duration("duration", result.Duration))
 
-	return &service.EvaluateResponse{
+	return &v1.EvaluateResponse{
 		Decision: result.Decision,
 		Cached:   result.CacheHit,
 		Duration: result.Duration,
 	}, nil
 }
 
-func (e *Engine) BatchEvaluate(ctx context.Context, req *service.BatchEvaluateRequest) (*service.BatchEvaluateResponse, error) {
+func (e *Engine) BatchEvaluate(ctx context.Context, req *v1.BatchEvaluateRequest) (*v1.BatchEvaluateResponse, error) {
 	if len(req.Requests) == 0 {
 		return nil, errors.NewValidationError("requests", "At least one request is required", len(req.Requests))
 	}
@@ -158,21 +158,21 @@ func (e *Engine) BatchEvaluate(ctx context.Context, req *service.BatchEvaluateRe
 	}
 
 	start := time.Now()
-	responses := make([]service.EvaluateResponse, len(req.Requests))
+	responses := make([]v1.EvaluateResponse, len(req.Requests))
 	
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	
 	for i, evalReq := range req.Requests {
 		wg.Add(1)
-		go func(index int, request service.EvaluateRequest) {
+		go func(index int, request v1.EvaluateRequest) {
 			defer wg.Done()
 			
 			resp, err := e.Evaluate(ctx, &request)
 			
 			mu.Lock()
 			if err != nil {
-				responses[index] = service.EvaluateResponse{
+				responses[index] = v1.EvaluateResponse{
 					Decision: policy.PolicyDecision{
 						Allow:     false,
 						Deny:      true,
@@ -182,7 +182,7 @@ func (e *Engine) BatchEvaluate(ctx context.Context, req *service.BatchEvaluateRe
 						SubjectID: request.SubjectID,
 						Resource:  request.Resource,
 						Action:    request.Action,
-						Context:   request.Context,
+						Context:   make(map[string]string),
 						Metadata:  map[string]string{"error": err.Error()},
 					},
 					Cached:   false,
@@ -197,7 +197,7 @@ func (e *Engine) BatchEvaluate(ctx context.Context, req *service.BatchEvaluateRe
 	
 	wg.Wait()
 
-	return &service.BatchEvaluateResponse{
+	return &v1.BatchEvaluateResponse{
 		Responses: responses,
 		Duration:  time.Since(start),
 	}, nil
@@ -214,7 +214,7 @@ func (e *Engine) SyncPolicies(ctx context.Context, tenantID string) (*PolicySync
 		Errors:    []string{},
 	}
 
-	policies, _, err := e.policyStore.ListPolicies(ctx, &service.ListPoliciesRequest{
+	policies, err := e.policyStore.ListPolicies(ctx, &v1.ListPoliciesRequest{
 		TenantID: tenantID,
 		Status:   policy.PolicyStatusActive,
 		Limit:    1000,
@@ -280,7 +280,7 @@ func (e *Engine) evaluateWithCache(ctx context.Context, evalCtx *EvaluationConte
 
 	start := time.Now()
 	
-	opaReq := &service.EvaluateRequest{
+	opaReq := &v1.EvaluateRequest{
 		TenantID:  evalCtx.TenantID,
 		SubjectID: evalCtx.SubjectID,
 		Resource:  evalCtx.Resource,
@@ -363,7 +363,7 @@ policy_rules[rule] {
 evaluate_conditions {
 `, packageName, pol.TenantID, pol.ID, pol.Name, pol.Effect, pol.Priority)
 
-	for i, rule := range pol.Rules {
+	for i, _ := range pol.Rules {
 		rego += fmt.Sprintf(`    rule_%d
 `, i)
 	}
@@ -441,16 +441,18 @@ func (e *Engine) encryptAuditPayload(evalCtx *EvaluationContext) ([]byte, error)
 	return []byte(encryptedData), nil
 }
 
-func (e *Engine) buildCacheKey(req *service.EvaluateRequest) string {
+func (e *Engine) buildCacheKey(req *v1.EvaluateRequest) string {
 	key := fmt.Sprintf("eval:%s:%s:%s:%s", req.TenantID, req.SubjectID, req.Resource, req.Action)
 	
 	if len(req.Context) > 0 {
-		contextHash := utils.HashSHA256(utils.CoalesceString(utils.ToJSON(req.Context)))
+		contextJSON, _ := utils.ToJSON(req.Context)
+        contextHash := utils.HashSHA256(utils.CoalesceString(contextJSON, ""))
 		key += ":" + contextHash[:8]
 	}
 	
 	if len(req.Input) > 0 {
-		inputHash := utils.HashSHA256(utils.CoalesceString(utils.ToJSON(req.Input)))
+		inputJSON, _ := utils.ToJSON(req.Input)
+        inputHash := utils.HashSHA256(utils.CoalesceString(inputJSON, ""))
 		key += ":" + inputHash[:8]
 	}
 	
@@ -574,7 +576,7 @@ func (e *Engine) getActiveTenants(ctx context.Context) ([]string, error) {
 	return tenants, nil
 }
 
-func (e *Engine) ClearCache(ctx context.Context, req *service.ClearCacheRequest) error {
+func (e *Engine) ClearCache(ctx context.Context, req *v1.ClearCacheRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}

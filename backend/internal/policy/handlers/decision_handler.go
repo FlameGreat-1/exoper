@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -14,11 +13,11 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
-	"flamo/backend/internal/policy/service"
+	v1 "flamo/backend/pkg/api/policy/v1"
 )
 
 type DecisionHandler struct {
-	decisionService *service.DecisionService
+	decisionService v1.DecisionService
 	config          *config.Config
 	logger          *zap.Logger
 	rateLimiter     *utils.RateLimiter
@@ -33,6 +32,7 @@ type EvaluateRequest struct {
 	Input       map[string]interface{} `json:"input"`
 	RequestID   string                 `json:"request_id"`
 	TraceID     string                 `json:"trace_id"`
+	Timestamp   time.Time              `json:"timestamp"`
 	CachePolicy string                 `json:"cache_policy" validate:"omitempty,oneof=allow deny force_refresh"`
 }
 
@@ -68,11 +68,11 @@ type ExplainResponse struct {
 }
 
 type PolicyExplanation struct {
-	MatchedPolicies []MatchedPolicy        `json:"matched_policies"`
-	AppliedRules    []AppliedRule          `json:"applied_rules"`
-	FailedRules     []FailedRule           `json:"failed_rules"`
-	Trace           []EvaluationStep       `json:"trace"`
-	Metadata        map[string]interface{} `json:"metadata"`
+	MatchedPolicies []MatchedPolicy   `json:"matched_policies"`
+	AppliedRules    []AppliedRule     `json:"applied_rules"`
+	FailedRules     []FailedRule      `json:"failed_rules"`
+	Trace           []EvaluationStep  `json:"trace"`
+	Metadata        map[string]string `json:"metadata"`
 }
 
 type MatchedPolicy struct {
@@ -86,24 +86,24 @@ type MatchedPolicy struct {
 }
 
 type AppliedRule struct {
-	RuleID      string                 `json:"rule_id"`
-	PolicyID    string                 `json:"policy_id"`
-	Resource    string                 `json:"resource"`
-	Action      string                 `json:"action"`
-	Effect      policy.Effect          `json:"effect"`
-	Conditions  []policy.Condition     `json:"conditions"`
-	Metadata    map[string]interface{} `json:"metadata"`
+	RuleID      string             `json:"rule_id"`
+	PolicyID    string             `json:"policy_id"`
+	Resource    string             `json:"resource"`
+	Action      string             `json:"action"`
+	Effect      policy.Effect      `json:"effect"`
+	Conditions  []policy.Condition `json:"conditions"`
+	Metadata    map[string]string  `json:"metadata"`
 }
 
 type FailedRule struct {
-	RuleID        string                 `json:"rule_id"`
-	PolicyID      string                 `json:"policy_id"`
-	Resource      string                 `json:"resource"`
-	Action        string                 `json:"action"`
-	FailureType   string                 `json:"failure_type"`
-	FailureReason string                 `json:"failure_reason"`
-	Conditions    []policy.Condition     `json:"conditions"`
-	Metadata      map[string]interface{} `json:"metadata"`
+	RuleID        string             `json:"rule_id"`
+	PolicyID      string             `json:"policy_id"`
+	Resource      string             `json:"resource"`
+	Action        string             `json:"action"`
+	FailureType   string             `json:"failure_type"`
+	FailureReason string             `json:"failure_reason"`
+	Conditions    []policy.Condition `json:"conditions"`
+	Metadata      map[string]string  `json:"metadata"`
 }
 
 type EvaluationStep struct {
@@ -150,7 +150,7 @@ type CompileResponse struct {
 	Duration time.Duration          `json:"duration"`
 }
 
-func NewDecisionHandler(decisionService *service.DecisionService, cfg *config.Config, logger *zap.Logger) *DecisionHandler {
+func NewDecisionHandler(decisionService v1.DecisionService, cfg *config.Config, logger *zap.Logger) *DecisionHandler {
 	rateLimiter := utils.NewRateLimiter(5000.0, 50000)
 
 	return &DecisionHandler{
@@ -179,8 +179,20 @@ func (h *DecisionHandler) Evaluate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.TenantID == "" || !utils.IsValidUUID(req.TenantID) {
+		h.writeErrorResponse(w, errors.NewValidationError("tenant_id", "Invalid tenant ID", req.TenantID), http.StatusBadRequest)
+		return
+	}
+	if req.SubjectID == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("subject_id", "Subject ID is required", req.SubjectID), http.StatusBadRequest)
+		return
+	}
+	if req.Resource == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("resource", "Resource is required", req.Resource), http.StatusBadRequest)
+		return
+	}
+	if req.Action == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("action", "Action is required", req.Action), http.StatusBadRequest)
 		return
 	}
 
@@ -193,7 +205,7 @@ func (h *DecisionHandler) Evaluate(w http.ResponseWriter, r *http.Request) {
 		req.TenantID = tenantID
 	}
 
-	serviceReq := &service.EvaluateRequest{
+	serviceReq := &v1.EvaluateRequest{
 		TenantID:    req.TenantID,
 		SubjectID:   req.SubjectID,
 		Resource:    req.Resource,
@@ -254,8 +266,12 @@ func (h *DecisionHandler) BatchEvaluate(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if len(req.Requests) == 0 {
+		h.writeErrorResponse(w, errors.NewValidationError("requests", "At least one request is required", ""), http.StatusBadRequest)
+		return
+	}
+	if len(req.Requests) > 100 {
+		h.writeErrorResponse(w, errors.NewValidationError("requests", "Maximum 100 requests allowed", ""), http.StatusBadRequest)
 		return
 	}
 
@@ -274,12 +290,12 @@ func (h *DecisionHandler) BatchEvaluate(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	serviceReq := &service.BatchEvaluateRequest{
-		Requests: make([]service.EvaluateRequest, len(req.Requests)),
+	serviceReq := &v1.BatchEvaluateRequest{
+		Requests: make([]v1.EvaluateRequest, len(req.Requests)),
 	}
 
 	for i, evalReq := range req.Requests {
-		serviceReq.Requests[i] = service.EvaluateRequest{
+		serviceReq.Requests[i] = v1.EvaluateRequest{
 			TenantID:    evalReq.TenantID,
 			SubjectID:   evalReq.SubjectID,
 			Resource:    evalReq.Resource,
@@ -343,8 +359,20 @@ func (h *DecisionHandler) Explain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.TenantID == "" || !utils.IsValidUUID(req.TenantID) {
+		h.writeErrorResponse(w, errors.NewValidationError("tenant_id", "Invalid tenant ID", req.TenantID), http.StatusBadRequest)
+		return
+	}
+	if req.SubjectID == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("subject_id", "Subject ID is required", req.SubjectID), http.StatusBadRequest)
+		return
+	}
+	if req.Resource == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("resource", "Resource is required", req.Resource), http.StatusBadRequest)
+		return
+	}
+	if req.Action == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("action", "Action is required", req.Action), http.StatusBadRequest)
 		return
 	}
 
@@ -357,7 +385,7 @@ func (h *DecisionHandler) Explain(w http.ResponseWriter, r *http.Request) {
 		req.TenantID = tenantID
 	}
 
-	serviceReq := &service.ExplainRequest{
+	serviceReq := &v1.ExplainRequest{
 		TenantID:  req.TenantID,
 		SubjectID: req.SubjectID,
 		Resource:  req.Resource,
@@ -420,8 +448,12 @@ func (h *DecisionHandler) Query(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.TenantID == "" || !utils.IsValidUUID(req.TenantID) {
+		h.writeErrorResponse(w, errors.NewValidationError("tenant_id", "Invalid tenant ID", req.TenantID), http.StatusBadRequest)
+		return
+	}
+	if req.Query == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("query", "Query is required", req.Query), http.StatusBadRequest)
 		return
 	}
 
@@ -434,11 +466,11 @@ func (h *DecisionHandler) Query(w http.ResponseWriter, r *http.Request) {
 		req.TenantID = tenantID
 	}
 
-	serviceReq := &service.QueryRequest{
+	serviceReq := &v1.QueryRequest{
 		TenantID: req.TenantID,
 		Query:    req.Query,
 		Input:    req.Input,
-		Options: service.QueryOptions{
+		Options: v1.QueryOptions{
 			Explain:     req.Options.Explain,
 			Trace:       req.Options.Trace,
 			Metrics:     req.Options.Metrics,
@@ -503,8 +535,12 @@ func (h *DecisionHandler) Compile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := utils.ValidateStruct(&req); err != nil {
-		h.writeErrorResponse(w, err, http.StatusBadRequest)
+	if req.TenantID == "" || !utils.IsValidUUID(req.TenantID) {
+		h.writeErrorResponse(w, errors.NewValidationError("tenant_id", "Invalid tenant ID", req.TenantID), http.StatusBadRequest)
+		return
+	}
+	if req.Query == "" {
+		h.writeErrorResponse(w, errors.NewValidationError("query", "Query is required", req.Query), http.StatusBadRequest)
 		return
 	}
 
@@ -517,7 +553,7 @@ func (h *DecisionHandler) Compile(w http.ResponseWriter, r *http.Request) {
 		req.TenantID = tenantID
 	}
 
-	serviceReq := &service.CompileRequest{
+	serviceReq := &v1.CompileRequest{
 		TenantID: req.TenantID,
 		Query:    req.Query,
 		Input:    req.Input,
@@ -604,7 +640,11 @@ func (h *DecisionHandler) ClearCache(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	policyID := query.Get("policy_id")
 
-	if err := h.decisionService.ClearDecisionCache(ctx, tenantID, policyID); err != nil {
+	clearReq := &v1.ClearCacheRequest{
+		TenantID: tenantID,
+		PolicyID: policyID,
+	}
+	if err := h.decisionService.ClearCache(ctx, clearReq); err != nil {
 		h.writeErrorResponse(w, err, h.getStatusCodeFromError(err))
 		return
 	}
@@ -672,7 +712,7 @@ func (h *DecisionHandler) WarmupCache(w http.ResponseWriter, r *http.Request) {
 		zap.Duration("duration", time.Since(start)))
 }
 
-func (h *DecisionHandler) convertMatchedPolicies(servicePolicies []service.MatchedPolicy) []MatchedPolicy {
+func (h *DecisionHandler) convertMatchedPolicies(servicePolicies []v1.MatchedPolicy) []MatchedPolicy {
 	policies := make([]MatchedPolicy, len(servicePolicies))
 	for i, sp := range servicePolicies {
 		policies[i] = MatchedPolicy{
@@ -688,7 +728,7 @@ func (h *DecisionHandler) convertMatchedPolicies(servicePolicies []service.Match
 	return policies
 }
 
-func (h *DecisionHandler) convertAppliedRules(serviceRules []service.AppliedRule) []AppliedRule {
+func (h *DecisionHandler) convertAppliedRules(serviceRules []v1.AppliedRule) []AppliedRule {
 	rules := make([]AppliedRule, len(serviceRules))
 	for i, sr := range serviceRules {
 		rules[i] = AppliedRule{
@@ -704,7 +744,7 @@ func (h *DecisionHandler) convertAppliedRules(serviceRules []service.AppliedRule
 	return rules
 }
 
-func (h *DecisionHandler) convertFailedRules(serviceRules []service.FailedRule) []FailedRule {
+func (h *DecisionHandler) convertFailedRules(serviceRules []v1.FailedRule) []FailedRule {
 	rules := make([]FailedRule, len(serviceRules))
 	for i, sr := range serviceRules {
 		rules[i] = FailedRule{
@@ -721,7 +761,7 @@ func (h *DecisionHandler) convertFailedRules(serviceRules []service.FailedRule) 
 	return rules
 }
 
-func (h *DecisionHandler) convertEvaluationSteps(serviceSteps []service.EvaluationStep) []EvaluationStep {
+func (h *DecisionHandler) convertEvaluationSteps(serviceSteps []v1.EvaluationStep) []EvaluationStep {
 	steps := make([]EvaluationStep, len(serviceSteps))
 	for i, ss := range serviceSteps {
 		steps[i] = EvaluationStep{
@@ -761,43 +801,29 @@ func (h *DecisionHandler) writeErrorResponse(w http.ResponseWriter, err error, s
 }
 
 func (h *DecisionHandler) getStatusCodeFromError(err error) int {
-	switch {
-	case errors.IsValidationError(err):
-		return http.StatusBadRequest
-	case errors.IsNotFoundError(err):
-		return http.StatusNotFound
-	case errors.IsConflictError(err):
-		return http.StatusConflict
-	case errors.IsUnauthorizedError(err):
-		return http.StatusUnauthorized
-	case errors.IsForbiddenError(err):
-		return http.StatusForbidden
-	case errors.IsRateLimitError(err):
-		return http.StatusTooManyRequests
-	case errors.IsServiceUnavailableError(err):
-		return http.StatusServiceUnavailable
-	default:
-		return http.StatusInternalServerError
+	if errors.IsAppError(err) {
+		return errors.GetHTTPStatus(err)
 	}
+	return http.StatusInternalServerError
 }
 
 func (h *DecisionHandler) getErrorCode(err error) string {
-	if customErr, ok := err.(*errors.CustomError); ok {
-		return customErr.Code
+	if appErr, ok := err.(*errors.AppError); ok {
+		return string(appErr.Code)
 	}
 	return "INTERNAL_ERROR"
 }
 
 func (h *DecisionHandler) getErrorMessage(err error) string {
-	if customErr, ok := err.(*errors.CustomError); ok {
-		return customErr.Message
+	if appErr, ok := err.(*errors.AppError); ok {
+		return appErr.Message
 	}
 	return err.Error()
 }
 
 func (h *DecisionHandler) getErrorDetails(err error) map[string]interface{} {
-	if customErr, ok := err.(*errors.CustomError); ok {
-		return customErr.Context
+	if appErr, ok := err.(*errors.AppError); ok {
+		return appErr.Context
 	}
 	return nil
 }

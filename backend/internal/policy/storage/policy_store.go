@@ -17,7 +17,7 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
-	"flamo/backend/internal/policy/service"
+	v1 "flamo/backend/pkg/api/policy/v1"
 )
 
 type PolicyStore struct {
@@ -71,7 +71,7 @@ func NewPolicyStore(db *database.Database, cfg *config.Config, logger *zap.Logge
 	}
 }
 
-func (ps *PolicyStore) CreatePolicy(ctx context.Context, req *service.CreatePolicyRequest) (*policy.Policy, error) {
+func (ps *PolicyStore) CreatePolicy(ctx context.Context, req *v1.CreatePolicyRequest) (*policy.Policy, error) {
 	if err := ps.validateCreateRequest(req); err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (ps *PolicyStore) CreatePolicy(ctx context.Context, req *service.CreatePoli
 	return pol, nil
 }
 
-func (ps *PolicyStore) GetPolicy(ctx context.Context, req *service.GetPolicyRequest) (*policy.Policy, error) {
+func (ps *PolicyStore) GetPolicy(ctx context.Context, req *v1.GetPolicyRequest) (*policy.Policy, error) {
 	if req.ID == "" {
 		return nil, errors.NewValidationError("policy_id", "Policy ID is required", req.ID)
 	}
@@ -144,12 +144,12 @@ func (ps *PolicyStore) GetPolicy(ctx context.Context, req *service.GetPolicyRequ
 	return pol, nil
 }
 
-func (ps *PolicyStore) UpdatePolicy(ctx context.Context, req *service.UpdatePolicyRequest) (*policy.Policy, error) {
+func (ps *PolicyStore) UpdatePolicy(ctx context.Context, req *v1.UpdatePolicyRequest) (*policy.Policy, error) {
 	if err := ps.validateUpdateRequest(req); err != nil {
 		return nil, err
 	}
 
-	existing, err := ps.GetPolicy(ctx, &service.GetPolicyRequest{
+	existing, err := ps.GetPolicy(ctx, &v1.GetPolicyRequest{
 		ID:       req.ID,
 		TenantID: req.TenantID,
 	})
@@ -185,7 +185,7 @@ func (ps *PolicyStore) UpdatePolicy(ctx context.Context, req *service.UpdatePoli
 	return existing, nil
 }
 
-func (ps *PolicyStore) DeletePolicy(ctx context.Context, req *service.DeletePolicyRequest) error {
+func (ps *PolicyStore) DeletePolicy(ctx context.Context, req *v1.DeletePolicyRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("policy_id", "Policy ID is required", req.ID)
 	}
@@ -194,7 +194,7 @@ func (ps *PolicyStore) DeletePolicy(ctx context.Context, req *service.DeletePoli
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
 
-	existing, err := ps.GetPolicy(ctx, &service.GetPolicyRequest{
+	existing, err := ps.GetPolicy(ctx, &v1.GetPolicyRequest{
 		ID:       req.ID,
 		TenantID: req.TenantID,
 	})
@@ -223,7 +223,7 @@ func (ps *PolicyStore) DeletePolicy(ctx context.Context, req *service.DeletePoli
 	return nil
 }
 
-func (ps *PolicyStore) ListPolicies(ctx context.Context, req *service.ListPoliciesRequest) (*service.ListPoliciesResponse, error) {
+func (ps *PolicyStore) ListPolicies(ctx context.Context, req *v1.ListPoliciesRequest) (*v1.ListPoliciesResponse, error) {
 	if req.TenantID == "" {
 		return nil, errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -253,7 +253,7 @@ func (ps *PolicyStore) ListPolicies(ctx context.Context, req *service.ListPolici
 
 	hasMore := (filter.Offset + filter.Limit) < int(total)
 
-	return &service.ListPoliciesResponse{
+	return &v1.ListPoliciesResponse{
 		Policies: policies,
 		Total:    int(total),
 		Limit:    filter.Limit,
@@ -262,16 +262,16 @@ func (ps *PolicyStore) ListPolicies(ctx context.Context, req *service.ListPolici
 	}, nil
 }
 
-func (ps *PolicyStore) ActivatePolicy(ctx context.Context, req *service.ActivatePolicyRequest) error {
+func (ps *PolicyStore) ActivatePolicy(ctx context.Context, req *v1.ActivatePolicyRequest) error {
 	return ps.updatePolicyStatus(ctx, req.ID, req.TenantID, policy.PolicyStatusActive)
 }
 
-func (ps *PolicyStore) DeactivatePolicy(ctx context.Context, req *service.DeactivatePolicyRequest) error {
+func (ps *PolicyStore) DeactivatePolicy(ctx context.Context, req *v1.DeactivatePolicyRequest) error {
 	return ps.updatePolicyStatus(ctx, req.ID, req.TenantID, policy.PolicyStatusInactive)
 }
 
-func (ps *PolicyStore) ValidatePolicy(ctx context.Context, req *service.ValidatePolicyRequest) (*service.ValidatePolicyResponse, error) {
-	result := &service.ValidatePolicyResponse{
+func (ps *PolicyStore) ValidatePolicy(ctx context.Context, req *v1.ValidatePolicyRequest) (*v1.ValidatePolicyResponse, error) {
+	result := &v1.ValidatePolicyResponse{
 		Valid:    true,
 		Errors:   []string{},
 		Warnings: []string{},
@@ -314,7 +314,7 @@ func (ps *PolicyStore) updatePolicyStatus(ctx context.Context, policyID, tenantI
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", tenantID)
 	}
 
-	existing, err := ps.GetPolicy(ctx, &service.GetPolicyRequest{
+	existing, err := ps.GetPolicy(ctx, &v1.GetPolicyRequest{
 		ID:       policyID,
 		TenantID: tenantID,
 	})
@@ -528,7 +528,7 @@ func (ps *PolicyStore) selectPolicies(ctx context.Context, filter *PolicyFilter)
 	return policies, total, nil
 }
 
-func (ps *PolicyStore) validateCreateRequest(req *service.CreatePolicyRequest) error {
+func (ps *PolicyStore) validateCreateRequest(req *v1.CreatePolicyRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -552,7 +552,7 @@ func (ps *PolicyStore) validateCreateRequest(req *service.CreatePolicyRequest) e
 	return nil
 }
 
-func (ps *PolicyStore) validateUpdateRequest(req *service.UpdatePolicyRequest) error {
+func (ps *PolicyStore) validateUpdateRequest(req *v1.UpdatePolicyRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Policy ID is required", req.ID)
 	}
@@ -626,6 +626,6 @@ func (ps *PolicyStore) Close() error {
 
 func (ps *PolicyStore) HealthCheck(ctx context.Context) error {
 	query := "SELECT 1"
-	_, err := ps.db.QueryRow(ctx, query).Scan(new(int))
+	err := ps.db.QueryRow(ctx, query).Scan(new(int))
 	return err
 }

@@ -13,11 +13,12 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
+	v1 "flamo/backend/pkg/api/policy/v1"
 	"flamo/backend/internal/policy/storage"
 	"flamo/backend/internal/policy/opa"
 )
 
-type PolicyService struct {
+type policyService struct {
 	policyStore   *storage.PolicyStore
 	bundleManager *storage.BundleManager
 	opaEngine     *opa.Engine
@@ -47,159 +48,6 @@ type PolicyServiceMetrics struct {
 	mu                  sync.RWMutex
 }
 
-type CreatePolicyRequest struct {
-	TenantID    string                 `json:"tenant_id" validate:"required,uuid"`
-	Name        string                 `json:"name" validate:"required,max=255"`
-	Description string                 `json:"description" validate:"max=1000"`
-	Type        policy.PolicyType      `json:"type" validate:"required"`
-	Priority    policy.Priority        `json:"priority" validate:"required,min=1,max=15"`
-	Effect      policy.Effect          `json:"effect" validate:"required"`
-	Rules       []policy.Rule          `json:"rules" validate:"required,min=1"`
-	Conditions  []policy.Condition     `json:"conditions"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	CreatedBy   string                 `json:"created_by" validate:"required"`
-}
-
-type UpdatePolicyRequest struct {
-	ID          string                 `json:"id" validate:"required,uuid"`
-	TenantID    string                 `json:"tenant_id" validate:"required,uuid"`
-	Name        string                 `json:"name" validate:"required,max=255"`
-	Description string                 `json:"description" validate:"max=1000"`
-	Priority    policy.Priority        `json:"priority" validate:"required,min=1,max=15"`
-	Effect      policy.Effect          `json:"effect" validate:"required"`
-	Rules       []policy.Rule          `json:"rules" validate:"required,min=1"`
-	Conditions  []policy.Condition     `json:"conditions"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	UpdatedBy   string                 `json:"updated_by" validate:"required"`
-}
-
-type GetPolicyRequest struct {
-	ID       string `json:"id" validate:"required,uuid"`
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-}
-
-type DeletePolicyRequest struct {
-	ID       string `json:"id" validate:"required,uuid"`
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-}
-
-type ListPoliciesRequest struct {
-	TenantID  string              `json:"tenant_id" validate:"required,uuid"`
-	Type      policy.PolicyType   `json:"type"`
-	Status    policy.PolicyStatus `json:"status"`
-	Limit     int                 `json:"limit" validate:"min=1,max=1000"`
-	Offset    int                 `json:"offset" validate:"min=0"`
-	SortBy    string              `json:"sort_by"`
-	SortOrder string              `json:"sort_order" validate:"oneof=asc desc"`
-}
-
-type ListPoliciesResponse struct {
-	Policies []policy.Policy `json:"policies"`
-	Total    int             `json:"total"`
-	Limit    int             `json:"limit"`
-	Offset   int             `json:"offset"`
-	HasMore  bool            `json:"has_more"`
-}
-
-type ActivatePolicyRequest struct {
-	ID       string `json:"id" validate:"required,uuid"`
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-}
-
-type DeactivatePolicyRequest struct {
-	ID       string `json:"id" validate:"required,uuid"`
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-}
-
-type ValidatePolicyRequest struct {
-	Policy *policy.Policy `json:"policy" validate:"required"`
-}
-
-type ValidatePolicyResponse struct {
-	Valid    bool     `json:"valid"`
-	Errors   []string `json:"errors,omitempty"`
-	Warnings []string `json:"warnings,omitempty"`
-}
-
-type CreateBundleRequest struct {
-	TenantID    string                 `json:"tenant_id" validate:"required,uuid"`
-	Name        string                 `json:"name" validate:"required,max=255"`
-	Description string                 `json:"description" validate:"max=1000"`
-	Policies    []string               `json:"policies" validate:"required,min=1"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	CreatedBy   string                 `json:"created_by" validate:"required"`
-}
-
-type UpdateBundleRequest struct {
-	ID          string                 `json:"id" validate:"required,uuid"`
-	TenantID    string                 `json:"tenant_id" validate:"required,uuid"`
-	Name        string                 `json:"name" validate:"required,max=255"`
-	Description string                 `json:"description" validate:"max=1000"`
-	Policies    []string               `json:"policies" validate:"required,min=1"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	UpdatedBy   string                 `json:"updated_by" validate:"required"`
-}
-
-type GetBundleRequest struct {
-	ID       string `json:"id" validate:"required,uuid"`
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-}
-
-type DeleteBundleRequest struct {
-	ID       string `json:"id" validate:"required,uuid"`
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-}
-
-type ListBundlesRequest struct {
-	TenantID string              `json:"tenant_id" validate:"required,uuid"`
-	Status   policy.PolicyStatus `json:"status"`
-	Limit    int                 `json:"limit" validate:"min=1,max=1000"`
-	Offset   int                 `json:"offset" validate:"min=0"`
-}
-
-type ListBundlesResponse struct {
-	Bundles []policy.PolicyBundle `json:"bundles"`
-	Total   int                   `json:"total"`
-	HasMore bool                  `json:"has_more"`
-}
-
-type DeployBundleRequest struct {
-	ID       string `json:"id" validate:"required,uuid"`
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-	Target   string `json:"target" validate:"required,oneof=opa database"`
-}
-
-type LoadPolicyRequest struct {
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-	PolicyID string `json:"policy_id" validate:"required,uuid"`
-	Priority int    `json:"priority" validate:"min=1,max=15"`
-}
-
-type LoadBundleRequest struct {
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-	BundleID string `json:"bundle_id" validate:"required,uuid"`
-	Priority int    `json:"priority" validate:"min=1,max=15"`
-}
-
-type UnloadPolicyRequest struct {
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-	PolicyID string `json:"policy_id" validate:"required,uuid"`
-}
-
-type ReloadPolicyRequest struct {
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-	PolicyID string `json:"policy_id" validate:"required,uuid"`
-}
-
-type SyncTenantRequest struct {
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-}
-
-type ClearCacheRequest struct {
-	TenantID string `json:"tenant_id" validate:"required,uuid"`
-	PolicyID string `json:"policy_id,omitempty"`
-}
-
 func NewPolicyService(
 	policyStore *storage.PolicyStore,
 	bundleManager *storage.BundleManager,
@@ -210,10 +58,10 @@ func NewPolicyService(
 	db *database.Database,
 	cfg *config.Config,
 	logger *zap.Logger,
-) *PolicyService {
+) v1.PolicyService {
 	rateLimiter := utils.NewRateLimiter(1000.0, 10000)
 
-	return &PolicyService{
+	return &policyService{
 		policyStore:   policyStore,
 		bundleManager: bundleManager,
 		opaEngine:     opaEngine,
@@ -228,7 +76,7 @@ func NewPolicyService(
 	}
 }
 
-func (ps *PolicyService) CreatePolicy(ctx context.Context, req *CreatePolicyRequest) (*policy.Policy, error) {
+func (ps *policyService) CreatePolicy(ctx context.Context, req *v1.CreatePolicyRequest) (*policy.Policy, error) {
 	start := time.Now()
 	defer ps.recordMetrics("create_policy", time.Since(start), nil)
 
@@ -265,7 +113,7 @@ func (ps *PolicyService) CreatePolicy(ctx context.Context, req *CreatePolicyRequ
 	return pol, nil
 }
 
-func (ps *PolicyService) GetPolicy(ctx context.Context, req *GetPolicyRequest) (*policy.Policy, error) {
+func (ps *policyService) GetPolicy(ctx context.Context, req *v1.GetPolicyRequest) (*policy.Policy, error) {
 	start := time.Now()
 	defer ps.recordMetrics("get_policy", time.Since(start), nil)
 
@@ -290,7 +138,7 @@ func (ps *PolicyService) GetPolicy(ctx context.Context, req *GetPolicyRequest) (
 	return pol, nil
 }
 
-func (ps *PolicyService) UpdatePolicy(ctx context.Context, req *UpdatePolicyRequest) (*policy.Policy, error) {
+func (ps *policyService) UpdatePolicy(ctx context.Context, req *v1.UpdatePolicyRequest) (*policy.Policy, error) {
 	start := time.Now()
 	defer ps.recordMetrics("update_policy", time.Since(start), nil)
 
@@ -314,7 +162,7 @@ func (ps *PolicyService) UpdatePolicy(ctx context.Context, req *UpdatePolicyRequ
 	}
 
 	if pol.Status == policy.PolicyStatusActive {
-		if err := ps.policyLoader.ReloadPolicy(ctx, &ReloadPolicyRequest{
+		if err := ps.policyLoader.ReloadPolicy(ctx, &v1.ReloadPolicyRequest{
 			TenantID: req.TenantID,
 			PolicyID: req.ID,
 		}); err != nil {
@@ -338,7 +186,7 @@ func (ps *PolicyService) UpdatePolicy(ctx context.Context, req *UpdatePolicyRequ
 	return pol, nil
 }
 
-func (ps *PolicyService) DeletePolicy(ctx context.Context, req *DeletePolicyRequest) error {
+func (ps *policyService) DeletePolicy(ctx context.Context, req *v1.DeletePolicyRequest) error {
 	start := time.Now()
 	defer ps.recordMetrics("delete_policy", time.Since(start), nil)
 
@@ -353,7 +201,7 @@ func (ps *PolicyService) DeletePolicy(ctx context.Context, req *DeletePolicyRequ
 		return err
 	}
 
-	existing, err := ps.policyStore.GetPolicy(ctx, &GetPolicyRequest{
+	existing, err := ps.policyStore.GetPolicy(ctx, &v1.GetPolicyRequest{
 		ID:       req.ID,
 		TenantID: req.TenantID,
 	})
@@ -363,7 +211,7 @@ func (ps *PolicyService) DeletePolicy(ctx context.Context, req *DeletePolicyRequ
 	}
 
 	if existing.Status == policy.PolicyStatusActive {
-		if err := ps.policyLoader.UnloadPolicy(ctx, &UnloadPolicyRequest{
+		if err := ps.policyLoader.UnloadPolicy(ctx, &v1.UnloadPolicyRequest{
 			TenantID: req.TenantID,
 			PolicyID: req.ID,
 		}); err != nil {
@@ -393,7 +241,7 @@ func (ps *PolicyService) DeletePolicy(ctx context.Context, req *DeletePolicyRequ
 	return nil
 }
 
-func (ps *PolicyService) ListPolicies(ctx context.Context, req *ListPoliciesRequest) (*ListPoliciesResponse, error) {
+func (ps *policyService) ListPolicies(ctx context.Context, req *v1.ListPoliciesRequest) (*v1.ListPoliciesResponse, error) {
 	start := time.Now()
 	defer ps.recordMetrics("list_policies", time.Since(start), nil)
 
@@ -419,7 +267,7 @@ func (ps *PolicyService) ListPolicies(ctx context.Context, req *ListPoliciesRequ
 	return response, nil
 }
 
-func (ps *PolicyService) ActivatePolicy(ctx context.Context, req *ActivatePolicyRequest) error {
+func (ps *policyService) ActivatePolicy(ctx context.Context, req *v1.ActivatePolicyRequest) error {
 	start := time.Now()
 	defer ps.recordMetrics("activate_policy", time.Since(start), nil)
 
@@ -441,7 +289,7 @@ func (ps *PolicyService) ActivatePolicy(ctx context.Context, req *ActivatePolicy
 			WithContext("policy_id", req.ID)
 	}
 
-	if err := ps.policyLoader.LoadPolicy(ctx, &LoadPolicyRequest{
+	if err := ps.policyLoader.LoadPolicy(ctx, &v1.LoadPolicyRequest{
 		TenantID: req.TenantID,
 		PolicyID: req.ID,
 		Priority: 10,
@@ -461,7 +309,7 @@ func (ps *PolicyService) ActivatePolicy(ctx context.Context, req *ActivatePolicy
 	return nil
 }
 
-func (ps *PolicyService) DeactivatePolicy(ctx context.Context, req *DeactivatePolicyRequest) error {
+func (ps *policyService) DeactivatePolicy(ctx context.Context, req *v1.DeactivatePolicyRequest) error {
 	start := time.Now()
 	defer ps.recordMetrics("deactivate_policy", time.Since(start), nil)
 
@@ -476,7 +324,7 @@ func (ps *PolicyService) DeactivatePolicy(ctx context.Context, req *DeactivatePo
 		return err
 	}
 
-	if err := ps.policyLoader.UnloadPolicy(ctx, &UnloadPolicyRequest{
+	if err := ps.policyLoader.UnloadPolicy(ctx, &v1.UnloadPolicyRequest{
 		TenantID: req.TenantID,
 		PolicyID: req.ID,
 	}); err != nil {
@@ -502,7 +350,7 @@ func (ps *PolicyService) DeactivatePolicy(ctx context.Context, req *DeactivatePo
 	return nil
 }
 
-func (ps *PolicyService) ValidatePolicy(ctx context.Context, req *ValidatePolicyRequest) (*ValidatePolicyResponse, error) {
+func (ps *policyService) ValidatePolicy(ctx context.Context, req *v1.ValidatePolicyRequest) (*v1.ValidatePolicyResponse, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -533,7 +381,7 @@ func (ps *PolicyService) ValidatePolicy(ctx context.Context, req *ValidatePolicy
 	return response, nil
 }
 
-func (ps *PolicyService) CreateBundle(ctx context.Context, req *CreateBundleRequest) (*policy.PolicyBundle, error) {
+func (ps *policyService) CreateBundle(ctx context.Context, req *v1.CreateBundleRequest) (*policy.PolicyBundle, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -567,7 +415,7 @@ func (ps *PolicyService) CreateBundle(ctx context.Context, req *CreateBundleRequ
 	return bundle, nil
 }
 
-func (ps *PolicyService) GetBundle(ctx context.Context, req *GetBundleRequest) (*policy.PolicyBundle, error) {
+func (ps *policyService) GetBundle(ctx context.Context, req *v1.GetBundleRequest) (*policy.PolicyBundle, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -592,7 +440,7 @@ func (ps *PolicyService) GetBundle(ctx context.Context, req *GetBundleRequest) (
 	return bundle, nil
 }
 
-func (ps *PolicyService) UpdateBundle(ctx context.Context, req *UpdateBundleRequest) (*policy.PolicyBundle, error) {
+func (ps *policyService) UpdateBundle(ctx context.Context, req *v1.UpdateBundleRequest) (*policy.PolicyBundle, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -624,7 +472,7 @@ func (ps *PolicyService) UpdateBundle(ctx context.Context, req *UpdateBundleRequ
 	return bundle, nil
 }
 
-func (ps *PolicyService) DeleteBundle(ctx context.Context, req *DeleteBundleRequest) error {
+func (ps *policyService) DeleteBundle(ctx context.Context, req *v1.DeleteBundleRequest) error {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -654,7 +502,7 @@ func (ps *PolicyService) DeleteBundle(ctx context.Context, req *DeleteBundleRequ
 	return nil
 }
 
-func (ps *PolicyService) ListBundles(ctx context.Context, req *ListBundlesRequest) (*ListBundlesResponse, error) {
+func (ps *policyService) ListBundles(ctx context.Context, req *v1.ListBundlesRequest) (*v1.ListBundlesResponse, error) {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -680,7 +528,7 @@ func (ps *PolicyService) ListBundles(ctx context.Context, req *ListBundlesReques
 	return response, nil
 }
 
-func (ps *PolicyService) DeployBundle(ctx context.Context, req *DeployBundleRequest) error {
+func (ps *policyService) DeployBundle(ctx context.Context, req *v1.DeployBundleRequest) error {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -712,7 +560,7 @@ func (ps *PolicyService) DeployBundle(ctx context.Context, req *DeployBundleRequ
 	return nil
 }
 
-func (ps *PolicyService) LoadPolicy(ctx context.Context, req *LoadPolicyRequest) error {
+func (ps *policyService) LoadPolicy(ctx context.Context, req *v1.LoadPolicyRequest) error {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -742,7 +590,7 @@ func (ps *PolicyService) LoadPolicy(ctx context.Context, req *LoadPolicyRequest)
 	return nil
 }
 
-func (ps *PolicyService) LoadBundle(ctx context.Context, req *LoadBundleRequest) error {
+func (ps *policyService) LoadBundle(ctx context.Context, req *v1.LoadBundleRequest) error {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -772,7 +620,7 @@ func (ps *PolicyService) LoadBundle(ctx context.Context, req *LoadBundleRequest)
 	return nil
 }
 
-func (ps *PolicyService) SyncTenant(ctx context.Context, req *SyncTenantRequest) error {
+func (ps *policyService) SyncTenant(ctx context.Context, req *v1.SyncTenantRequest) error {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -800,7 +648,7 @@ func (ps *PolicyService) SyncTenant(ctx context.Context, req *SyncTenantRequest)
 	return nil
 }
 
-func (ps *PolicyService) ClearCache(ctx context.Context, req *ClearCacheRequest) error {
+func (ps *policyService) ClearCache(ctx context.Context, req *v1.ClearCacheRequest) error {
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -829,7 +677,7 @@ func (ps *PolicyService) ClearCache(ctx context.Context, req *ClearCacheRequest)
 	return nil
 }
 
-func (ps *PolicyService) validateCreatePolicyRequest(req *CreatePolicyRequest) error {
+func (ps *policyService) validateCreatePolicyRequest(req *v1.CreatePolicyRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -870,7 +718,7 @@ func (ps *PolicyService) validateCreatePolicyRequest(req *CreatePolicyRequest) e
 	return nil
 }
 
-func (ps *PolicyService) validateUpdatePolicyRequest(req *UpdatePolicyRequest) error {
+func (ps *policyService) validateUpdatePolicyRequest(req *v1.UpdatePolicyRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Policy ID is required", req.ID)
 	}
@@ -910,7 +758,7 @@ func (ps *PolicyService) validateUpdatePolicyRequest(req *UpdatePolicyRequest) e
 	return nil
 }
 
-func (ps *PolicyService) validateGetPolicyRequest(req *GetPolicyRequest) error {
+func (ps *policyService) validateGetPolicyRequest(req *v1.GetPolicyRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Policy ID is required", req.ID)
 	}
@@ -930,7 +778,7 @@ func (ps *PolicyService) validateGetPolicyRequest(req *GetPolicyRequest) error {
 	return nil
 }
 
-func (ps *PolicyService) validateDeletePolicyRequest(req *DeletePolicyRequest) error {
+func (ps *policyService) validateDeletePolicyRequest(req *v1.DeletePolicyRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Policy ID is required", req.ID)
 	}
@@ -950,7 +798,7 @@ func (ps *PolicyService) validateDeletePolicyRequest(req *DeletePolicyRequest) e
 	return nil
 }
 
-func (ps *PolicyService) validateListPoliciesRequest(req *ListPoliciesRequest) error {
+func (ps *policyService) validateListPoliciesRequest(req *v1.ListPoliciesRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -978,7 +826,7 @@ func (ps *PolicyService) validateListPoliciesRequest(req *ListPoliciesRequest) e
 	return nil
 }
 
-func (ps *PolicyService) validateActivatePolicyRequest(req *ActivatePolicyRequest) error {
+func (ps *policyService) validateActivatePolicyRequest(req *v1.ActivatePolicyRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Policy ID is required", req.ID)
 	}
@@ -998,7 +846,7 @@ func (ps *PolicyService) validateActivatePolicyRequest(req *ActivatePolicyReques
 	return nil
 }
 
-func (ps *PolicyService) validateDeactivatePolicyRequest(req *DeactivatePolicyRequest) error {
+func (ps *policyService) validateDeactivatePolicyRequest(req *v1.DeactivatePolicyRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Policy ID is required", req.ID)
 	}
@@ -1018,7 +866,7 @@ func (ps *PolicyService) validateDeactivatePolicyRequest(req *DeactivatePolicyRe
 	return nil
 }
 
-func (ps *PolicyService) validateCreateBundleRequest(req *CreateBundleRequest) error {
+func (ps *policyService) validateCreateBundleRequest(req *v1.CreateBundleRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -1052,7 +900,7 @@ func (ps *PolicyService) validateCreateBundleRequest(req *CreateBundleRequest) e
 	return nil
 }
 
-func (ps *PolicyService) validateUpdateBundleRequest(req *UpdateBundleRequest) error {
+func (ps *policyService) validateUpdateBundleRequest(req *v1.UpdateBundleRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Bundle ID is required", req.ID)
 	}
@@ -1088,7 +936,7 @@ func (ps *PolicyService) validateUpdateBundleRequest(req *UpdateBundleRequest) e
 	return nil
 }
 
-func (ps *PolicyService) validateGetBundleRequest(req *GetBundleRequest) error {
+func (ps *policyService) validateGetBundleRequest(req *v1.GetBundleRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Bundle ID is required", req.ID)
 	}
@@ -1108,7 +956,7 @@ func (ps *PolicyService) validateGetBundleRequest(req *GetBundleRequest) error {
 	return nil
 }
 
-func (ps *PolicyService) validateDeleteBundleRequest(req *DeleteBundleRequest) error {
+func (ps *policyService) validateDeleteBundleRequest(req *v1.DeleteBundleRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Bundle ID is required", req.ID)
 	}
@@ -1128,7 +976,7 @@ func (ps *PolicyService) validateDeleteBundleRequest(req *DeleteBundleRequest) e
 	return nil
 }
 
-func (ps *PolicyService) validateListBundlesRequest(req *ListBundlesRequest) error {
+func (ps *policyService) validateListBundlesRequest(req *v1.ListBundlesRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -1152,7 +1000,7 @@ func (ps *PolicyService) validateListBundlesRequest(req *ListBundlesRequest) err
 	return nil
 }
 
-func (ps *PolicyService) validateDeployBundleRequest(req *DeployBundleRequest) error {
+func (ps *policyService) validateDeployBundleRequest(req *v1.DeployBundleRequest) error {
 	if req.ID == "" {
 		return errors.NewValidationError("id", "Bundle ID is required", req.ID)
 	}
@@ -1181,7 +1029,7 @@ func (ps *PolicyService) validateDeployBundleRequest(req *DeployBundleRequest) e
 	return nil
 }
 
-func (ps *PolicyService) validateLoadPolicyRequest(req *LoadPolicyRequest) error {
+func (ps *policyService) validateLoadPolicyRequest(req *v1.LoadPolicyRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -1201,7 +1049,7 @@ func (ps *PolicyService) validateLoadPolicyRequest(req *LoadPolicyRequest) error
 	return nil
 }
 
-func (ps *PolicyService) validateLoadBundleRequest(req *LoadBundleRequest) error {
+func (ps *policyService) validateLoadBundleRequest(req *v1.LoadBundleRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -1221,7 +1069,7 @@ func (ps *PolicyService) validateLoadBundleRequest(req *LoadBundleRequest) error
 	return nil
 }
 
-func (ps *PolicyService) validateSyncTenantRequest(req *SyncTenantRequest) error {
+func (ps *policyService) validateSyncTenantRequest(req *v1.SyncTenantRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -1233,7 +1081,7 @@ func (ps *PolicyService) validateSyncTenantRequest(req *SyncTenantRequest) error
 	return nil
 }
 
-func (ps *PolicyService) validateClearCacheRequest(req *ClearCacheRequest) error {
+func (ps *policyService) validateClearCacheRequest(req *v1.ClearCacheRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -1249,26 +1097,26 @@ func (ps *PolicyService) validateClearCacheRequest(req *ClearCacheRequest) error
 	return nil
 }
 
-func (ps *PolicyService) recordMetrics(operation string, duration time.Duration, err error) {
+func (ps *policyService) recordMetrics(operation string, duration time.Duration, err error) {
 	ps.logger.Debug("Operation completed",
 		zap.String("operation", operation),
 		zap.Duration("duration", duration),
 		zap.Bool("success", err == nil))
 }
 
-func (ps *PolicyService) recordSuccessfulOperation() {
+func (ps *policyService) recordSuccessfulOperation() {
 	ps.logger.Debug("Operation completed successfully")
 }
 
-func (ps *PolicyService) recordFailedOperation() {
+func (ps *policyService) recordFailedOperation() {
 	ps.logger.Debug("Operation failed")
 }
 
-func (ps *PolicyService) recordValidationError() {
+func (ps *policyService) recordValidationError() {
 	ps.logger.Debug("Validation error occurred")
 }
 
-func (ps *PolicyService) HealthCheck(ctx context.Context) error {
+func (ps *policyService) HealthCheck(ctx context.Context) error {
 	if err := ps.policyStore.HealthCheck(ctx); err != nil {
 		return errors.Wrap(err, errors.ErrCodeServiceUnavailable, "Policy store health check failed")
 	}
@@ -1282,17 +1130,17 @@ func (ps *PolicyService) HealthCheck(ctx context.Context) error {
 	}
 
 	if !ps.opaEngine.IsHealthy() {
-		return errors.NewServiceUnavailable("OPA engine is not healthy")
+		return errors.New(errors.ErrCodeServiceUnavailable, "OPA engine is not healthy")
 	}
 
 	if !ps.policyLoader.IsRunning() {
-		return errors.NewServiceUnavailable("Policy loader is not running")
+		return errors.New(errors.ErrCodeServiceUnavailable, "Policy loader is not running")
 	}
 
 	return nil
 }
 
-func (ps *PolicyService) GetHealthStatus() map[string]interface{} {
+func (ps *policyService) GetHealthStatus() map[string]interface{} {
 	return map[string]interface{}{
 		"policy_store":   ps.policyStore.HealthCheck(context.Background()) == nil,
 		"bundle_manager": ps.bundleManager.HealthCheck(context.Background()) == nil,
@@ -1303,7 +1151,7 @@ func (ps *PolicyService) GetHealthStatus() map[string]interface{} {
 	}
 }
 
-func (ps *PolicyService) Close() error {
+func (ps *policyService) Close() error {
 	ps.logger.Info("Shutting down policy service")
 
 	if err := ps.policyLoader.Close(); err != nil {

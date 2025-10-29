@@ -14,7 +14,7 @@ import (
 	"flamo/backend/internal/common/errors"
 	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
-	"flamo/backend/internal/policy/service"
+	v1 "flamo/backend/pkg/api/policy/v1"
 	"flamo/backend/internal/policy/storage"
 )
 
@@ -186,7 +186,7 @@ func (pl *PolicyLoader) Stop() error {
 	return nil
 }
 
-func (pl *PolicyLoader) LoadPolicy(ctx context.Context, req *service.LoadPolicyRequest) error {
+func (pl *PolicyLoader) LoadPolicy(ctx context.Context, req *v1.LoadPolicyRequest) error {
 	if err := pl.validateLoadPolicyRequest(req); err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func (pl *PolicyLoader) LoadPolicy(ctx context.Context, req *service.LoadPolicyR
 	return pl.enqueueRequest(loadReq)
 }
 
-func (pl *PolicyLoader) LoadBundle(ctx context.Context, req *service.LoadBundleRequest) error {
+func (pl *PolicyLoader) LoadBundle(ctx context.Context, req *v1.LoadBundleRequest) error {
 	if err := pl.validateLoadBundleRequest(req); err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func (pl *PolicyLoader) LoadBundle(ctx context.Context, req *service.LoadBundleR
 	return pl.enqueueRequest(loadReq)
 }
 
-func (pl *PolicyLoader) SyncTenant(ctx context.Context, req *service.SyncTenantRequest) error {
+func (pl *PolicyLoader) SyncTenant(ctx context.Context, req *v1.SyncTenantRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -255,7 +255,7 @@ func (pl *PolicyLoader) FullSync(ctx context.Context) error {
 	return pl.enqueueRequest(loadReq)
 }
 
-func (pl *PolicyLoader) UnloadPolicy(ctx context.Context, req *service.UnloadPolicyRequest) error {
+func (pl *PolicyLoader) UnloadPolicy(ctx context.Context, req *v1.UnloadPolicyRequest) error {
 	if err := pl.validateUnloadPolicyRequest(req); err != nil {
 		return err
 	}
@@ -272,7 +272,7 @@ func (pl *PolicyLoader) UnloadPolicy(ctx context.Context, req *service.UnloadPol
 	return pl.enqueueRequest(loadReq)
 }
 
-func (pl *PolicyLoader) ReloadPolicy(ctx context.Context, req *service.ReloadPolicyRequest) error {
+func (pl *PolicyLoader) ReloadPolicy(ctx context.Context, req *v1.ReloadPolicyRequest) error {
 	if err := pl.validateReloadPolicyRequest(req); err != nil {
 		return err
 	}
@@ -293,7 +293,7 @@ func (pl *PolicyLoader) enqueueRequest(req *LoadRequest) error {
 	pl.mu.RLock()
 	if !pl.isRunning {
 		pl.mu.RUnlock()
-		return errors.NewServiceUnavailable("Policy loader is not running")
+		return errors.New(errors.ErrCodeServiceUnavailable, "Policy loader is not running")
 	}
 	pl.mu.RUnlock()
 
@@ -312,7 +312,7 @@ func (pl *PolicyLoader) enqueueRequest(req *LoadRequest) error {
 
 		return nil
 	default:
-		return errors.NewServiceUnavailable("Load queue is full")
+		return errors.New(errors.ErrCodeServiceUnavailable, "Load queue is full")
 	}
 }
 
@@ -380,7 +380,7 @@ func (w *LoadWorker) processRequest(req *LoadRequest) {
 }
 
 func (w *LoadWorker) processLoadPolicy(ctx context.Context, req *LoadRequest, result *LoadResult) {
-	pol, err := w.loader.policyStore.GetPolicy(ctx, &service.GetPolicyRequest{
+	pol, err := w.loader.policyStore.GetPolicy(ctx, &v1.GetPolicyRequest{
 		ID:       req.PolicyID,
 		TenantID: req.TenantID,
 	})
@@ -425,7 +425,7 @@ func (w *LoadWorker) processLoadPolicy(ctx context.Context, req *LoadRequest, re
 }
 
 func (w *LoadWorker) processLoadBundle(ctx context.Context, req *LoadRequest, result *LoadResult) {
-	bundle, err := w.loader.bundleManager.GetBundle(ctx, &service.GetBundleRequest{
+	bundle, err := w.loader.bundleManager.GetBundle(ctx, &v1.GetBundleRequest{
 		ID:       req.BundleID,
 		TenantID: req.TenantID,
 	})
@@ -445,7 +445,7 @@ func (w *LoadWorker) processLoadBundle(ctx context.Context, req *LoadRequest, re
 	failed := 0
 
 	for _, policyID := range bundle.Policies {
-		pol, err := w.loader.policyStore.GetPolicy(ctx, &service.GetPolicyRequest{
+		pol, err := w.loader.policyStore.GetPolicy(ctx, &v1.GetPolicyRequest{
 			ID:       policyID,
 			TenantID: req.TenantID,
 		})
@@ -503,7 +503,7 @@ func (w *LoadWorker) processLoadBundle(ctx context.Context, req *LoadRequest, re
 }
 
 func (w *LoadWorker) processTenantSync(ctx context.Context, req *LoadRequest, result *LoadResult) {
-	policies, _, err := w.loader.policyStore.ListPolicies(ctx, &service.ListPoliciesRequest{
+	policies, err := w.loader.policyStore.ListPolicies(ctx, &v1.ListPoliciesRequest{
 		TenantID: req.TenantID,
 		Status:   policy.PolicyStatusActive,
 		Limit:    1000,
@@ -569,7 +569,7 @@ func (w *LoadWorker) processFullSync(ctx context.Context, req *LoadRequest, resu
 	totalFailed := 0
 
 	for _, tenantID := range tenants {
-		policies, _, err := w.loader.policyStore.ListPolicies(ctx, &service.ListPoliciesRequest{
+		policies, err := w.loader.policyStore.ListPolicies(ctx, &v1.ListPoliciesRequest{
 			TenantID: tenantID,
 			Status:   policy.PolicyStatusActive,
 			Limit:    1000,
@@ -641,7 +641,7 @@ func (w *LoadWorker) processReloadPolicy(ctx context.Context, req *LoadRequest, 
 			zap.Error(err))
 	}
 
-	pol, err := w.loader.policyStore.GetPolicy(ctx, &service.GetPolicyRequest{
+	pol, err := w.loader.policyStore.GetPolicy(ctx, &v1.GetPolicyRequest{
 		ID:       req.PolicyID,
 		TenantID: req.TenantID,
 	})
@@ -765,6 +765,9 @@ rules := [
 		_ = i
 	}
 
+	metadataJSON, _ := utils.ToJSONIndent(template.Metadata)
+	metadataStr := utils.CoalesceString(metadataJSON, "{}")
+
 	rego += fmt.Sprintf(`policy_data := {
     "id": "%s",
     "name": "%s",
@@ -780,7 +783,7 @@ metadata := %s
 		template.Data["version"],
 		template.Data["priority"],
 		template.Data["effect"],
-		utils.CoalesceString(utils.ToJSONIndent(template.Metadata)))
+		metadataStr)
 
 	return rego
 }
@@ -832,7 +835,7 @@ func (pl *PolicyLoader) recordMetrics(result *LoadResult) {
 	pl.metrics.QueueSize = len(pl.loadQueue)
 }
 
-func (pl *PolicyLoader) validateLoadPolicyRequest(req *service.LoadPolicyRequest) error {
+func (pl *PolicyLoader) validateLoadPolicyRequest(req *v1.LoadPolicyRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -852,7 +855,7 @@ func (pl *PolicyLoader) validateLoadPolicyRequest(req *service.LoadPolicyRequest
 	return nil
 }
 
-func (pl *PolicyLoader) validateLoadBundleRequest(req *service.LoadBundleRequest) error {
+func (pl *PolicyLoader) validateLoadBundleRequest(req *v1.LoadBundleRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -872,7 +875,7 @@ func (pl *PolicyLoader) validateLoadBundleRequest(req *service.LoadBundleRequest
 	return nil
 }
 
-func (pl *PolicyLoader) validateUnloadPolicyRequest(req *service.UnloadPolicyRequest) error {
+func (pl *PolicyLoader) validateUnloadPolicyRequest(req *v1.UnloadPolicyRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -892,7 +895,7 @@ func (pl *PolicyLoader) validateUnloadPolicyRequest(req *service.UnloadPolicyReq
 	return nil
 }
 
-func (pl *PolicyLoader) validateReloadPolicyRequest(req *service.ReloadPolicyRequest) error {
+func (pl *PolicyLoader) validateReloadPolicyRequest(req *v1.ReloadPolicyRequest) error {
 	if req.TenantID == "" {
 		return errors.NewValidationError("tenant_id", "Tenant ID is required", req.TenantID)
 	}
@@ -998,18 +1001,18 @@ func (pl *PolicyLoader) HealthCheck() error {
 	pl.mu.RUnlock()
 
 	if !isRunning {
-		return errors.NewServiceUnavailable("Policy loader is not running")
+		return errors.New(errors.ErrCodeServiceUnavailable, "Policy loader is not running")
 	}
 
 	if workerCount == 0 {
-		return errors.NewServiceUnavailable("No active workers")
+		return errors.New(errors.ErrCodeServiceUnavailable, "No active workers")
 	}
 
 	queueSize := len(pl.loadQueue)
 	queueCapacity := cap(pl.loadQueue)
 	
 	if float64(queueSize)/float64(queueCapacity) > 0.9 {
-		return errors.NewServiceUnavailable("Load queue is nearly full")
+		return errors.New(errors.ErrCodeServiceUnavailable, "Load queue is nearly full")
 	}
 
 	return nil

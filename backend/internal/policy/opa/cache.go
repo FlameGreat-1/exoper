@@ -1,7 +1,6 @@
 package opa
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -13,7 +12,6 @@ import (
 
 	"flamo/backend/internal/common/config"
 	"flamo/backend/internal/common/errors"
-	"flamo/backend/internal/common/utils"
 	"flamo/backend/pkg/api/models/policy"
 )
 
@@ -432,7 +430,7 @@ func (cj *CacheJanitor) cleanup() {
 	}
 }
 
-func (cj *CacheJanitor) stop() {
+func (cj *CacheJanitor) Stop() {
 	close(cj.stop)
 }
 
@@ -700,11 +698,11 @@ func (c *Cache) HealthCheck() error {
 	stats := c.GetStats()
 	
 	if stats.TotalEntries < 0 {
-		return errors.NewInternalError("Invalid cache state: negative entry count")
+		return errors.New(errors.ErrCodeCacheError, "Invalid cache state: negative entry count")
 	}
 
 	if c.maxSize > 0 && stats.TotalEntries > int64(c.maxSize) {
-		return errors.NewInternalError("Cache size exceeded maximum limit")
+		return errors.New(errors.ErrCodeInternalError, "Cache size exceeded maximum limit")
 	}
 
 	memUsage := c.GetMemoryUsage()
@@ -818,7 +816,7 @@ func (c *Cache) Close() error {
 	c.logger.Info("Shutting down cache")
 	
 	if c.janitor != nil {
-		c.janitor.stop()
+		c.janitor.Stop()
 	}
 
 	c.Clear()
