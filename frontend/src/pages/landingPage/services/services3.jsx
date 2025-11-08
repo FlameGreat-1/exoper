@@ -26,8 +26,8 @@ const Services3 = () => {
       lastScrollY = currentScrollY;
 
       setPipelinePosition(prev => {
-        const newPos = prev + scrollDelta * 0.5;
-        return Math.max(-150, Math.min(50, newPos));
+        const newPos = prev + scrollDelta * 1.2;
+        return Math.max(-350, Math.min(250, newPos));
       });
     };
 
@@ -216,20 +216,17 @@ const Services3 = () => {
 
                 <div 
                   ref={pipelineRef}
-                  className="relative w-10 md:w-12 h-32 md:h-40 cursor-pointer z-20"
+                  className="relative w-16 md:w-24 h-48 md:h-64 cursor-pointer z-20"
                   style={{
                     transform: `translateY(${pipelinePosition}px)`,
                     transition: 'transform 0.1s ease-out'
                   }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-b from-blue-500/40 via-cyan-400/50 to-blue-500/40 blur-xl animate-pulse"></div>
-                  <div className="relative w-full h-full rounded-full bg-gradient-to-b from-blue-500/70 via-cyan-400/80 to-blue-500/70 shadow-2xl shadow-cyan-500/50"></div>
-                  
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 md:w-9 h-24 md:h-28 bg-gradient-to-b from-cyan-300/60 to-blue-400/60 rounded-full"></div>
-                  
-                  <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-1 md:w-1.5 h-1 md:h-1.5 bg-white rounded-full shadow-lg shadow-white/50" style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}></div>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-1 md:w-1.5 h-1 md:h-1.5 bg-white rounded-full shadow-lg shadow-white/50" style={{ animation: 'pulse-glow 2s ease-in-out infinite', animationDelay: '0.5s' }}></div>
-                  <div className="absolute top-2/3 left-1/2 -translate-x-1/2 w-1 md:w-1.5 h-1 md:h-1.5 bg-white rounded-full shadow-lg shadow-white/50" style={{ animation: 'pulse-glow 2s ease-in-out infinite', animationDelay: '1s' }}></div>
+                  <img 
+                    src="/images/capsule.svg" 
+                    alt="Pipeline Capsule" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
             </div>

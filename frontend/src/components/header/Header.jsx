@@ -251,8 +251,8 @@ const Header = () => {
                                 onMouseLeave={() => setOpenDropdown(null)}
                                 className="absolute left-0 mt-3 z-50"
                                 style={{
-                                  left: item.label === "Pricing" ? "auto" : "0",
-                                  right: item.label === "Pricing" ? "0" : "auto",
+                                  left: item.label === "Pricing" || item.label === "Resources" ? "auto" : "0",
+                                  right: item.label === "Pricing" || item.label === "Resources" ? "0" : "auto",
                                   maxWidth: "calc(100vw - 2rem)",
                                 }}
                               >

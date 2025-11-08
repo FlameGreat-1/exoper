@@ -3,21 +3,11 @@ import { ChevronRight, Globe, Database, Server, Activity, GitBranch, Terminal } 
 
 const Projects = () => {
   const [scrollY, setScrollY] = useState(0);
-  const [rocketPosition, setRocketPosition] = useState(0);
   const sectionRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (sectionRef.current) {
-        const rect = sectionRef.current.getBoundingClientRect();
-        const sectionTop = window.scrollY + rect.top;
-        const sectionHeight = rect.height;
-        const relativeScroll = window.scrollY - sectionTop;
-        const scrollProgress = Math.max(0, Math.min(1, relativeScroll / sectionHeight));
-        
-        setScrollY(window.scrollY);
-        setRocketPosition(scrollProgress * 100);
-      }
+      setScrollY(window.scrollY);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -48,74 +38,6 @@ const Projects = () => {
         ></div>
       </div>
 
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-        <defs>
-          <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8">
-              <animate attributeName="stopOpacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
-            </stop>
-            <stop offset="50%" stopColor="#3B82F6" stopOpacity="1">
-              <animate attributeName="stopOpacity" values="1;0.8;1" dur="3s" repeatCount="indefinite" />
-            </stop>
-            <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.8">
-              <animate attributeName="stopOpacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
-            </stop>
-          </linearGradient>
-          
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-
-          <filter id="pulseGlow">
-            <feGaussianBlur stdDeviation="2">
-              <animate attributeName="stdDeviation" values="2;4;2" dur="2s" repeatCount="indefinite" />
-            </feGaussianBlur>
-          </filter>
-        </defs>
-
-        <path
-          d="M 150 0 L 150 300 Q 150 350 200 350 L 400 350"
-          stroke="url(#pipeGradient)"
-          strokeWidth="3"
-          fill="none"
-          filter="url(#glow)"
-          strokeDasharray="0"
-        >
-          <animate attributeName="stroke-dasharray" from="0 1000" to="1000 0" dur="3s" repeatCount="indefinite" />
-        </path>
-
-        <path
-          d="M 1200 100 L 1200 400 Q 1200 450 1150 450 L 800 450"
-          stroke="url(#pipeGradient)"
-          strokeWidth="3"
-          fill="none"
-          filter="url(#glow)"
-        />
-
-        <circle cx="150" cy="200" r="6" fill="#8B5CF6" filter="url(#pulseGlow)">
-          <animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite" />
-        </circle>
-        
-        <circle cx="150" cy="300" r="6" fill="#3B82F6" filter="url(#pulseGlow)">
-          <animate attributeName="r" values="6;8;6" dur="2.5s" repeatCount="indefinite" />
-        </circle>
-
-        <circle cx="1200" cy="250" r="6" fill="#8B5CF6" filter="url(#pulseGlow)">
-          <animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite" />
-        </circle>
-
-        <g transform={`translate(150, ${100 + rocketPosition * 2})`}>
-          <circle cx="0" cy="0" r="4" fill="#FFD700">
-            <animate attributeName="opacity" values="1;0.6;1" dur="1s" repeatCount="indefinite" />
-          </circle>
-          <path d="M -2 -6 L 2 -6 L 3 0 L 0 3 L -3 0 Z" fill="#FFD700" />
-        </g>
-      </svg>
-
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           <div className="flex flex-col justify-center space-y-6">
@@ -138,19 +60,15 @@ const Projects = () => {
             </div>
 
             <div className="pt-8 border-t border-gray-800">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-6">
                 <span className="text-gray-500 text-sm">Replaces</span>
                 {techLogos.map((logo, index) => (
-                  <div
+                  <img 
                     key={index}
-                    className="w-8 h-8 rounded bg-gray-800/50 flex items-center justify-center transform hover:scale-110 transition-transform border border-gray-700/50"
-                  >
-                    <img 
-                      src={logo.icon} 
-                      alt={logo.name}
-                      className="w-5 h-5 object-contain opacity-60 hover:opacity-100 transition-opacity"
-                    />
-                  </div>
+                    src={logo.icon} 
+                    alt={logo.name}
+                    className="w-8 h-8 object-contain opacity-60 hover:opacity-100 transition-opacity transform hover:scale-110 transition-transform cursor-pointer"
+                  />
                 ))}
               </div>
             </div>
@@ -293,7 +211,7 @@ const Projects = () => {
             </div>
           </div>
         </div>
-        </div>
+      </div>
     </div>
   );
 };
