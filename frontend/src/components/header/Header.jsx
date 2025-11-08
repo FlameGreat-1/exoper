@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { HamburgerMenuOverlay } from "../ui/hamburger-menu-overlay";
 import CompanyDropdownCard from "../ui/company/aboutCard";
 import PricingDropdownCard from "../ui/company/pricingCard";
+import ResourcesDropdownCard from "../ui/company/resourcesCard";
 import { ChevronDown } from "lucide-react";
 
 const NAV = [
-  { label: "Home", href: "/" },
   { label: "Services", href: "/services" },
   {
     label: "Company",
@@ -38,6 +38,7 @@ const NAV = [
   {
     label: "Resources",
     href: "/resources",
+    hasCustomDropdown: true,
     children: [
       { label: "Freebies", href: "/resources/freebies" },
       { label: "Articles", href: "/resources/articles" },
@@ -47,7 +48,6 @@ const NAV = [
 ];
 
 const MOBILE_NAV_ITEMS = [
-  { label: "Home", href: "/" },
   { label: "Services", href: "/services" },
   {
     label: "Company",
@@ -258,6 +258,7 @@ const Header = () => {
                               >
                                 {item.label === "Company" && <CompanyDropdownCard />}
                                 {item.label === "Pricing" && <PricingDropdownCard />}
+                                {item.label === "Resources" && <ResourcesDropdownCard />}
                               </motion.div>
                             )}
                           </AnimatePresence>
@@ -354,9 +355,9 @@ const Header = () => {
               <div className="md:hidden">
                 <HamburgerMenuOverlay
                   items={MOBILE_NAV_ITEMS}
-                  buttonTop="30px"
-                  buttonLeft="calc(100% - 30px)"
-                  buttonSize="md"
+                  buttonTop="24px"
+                  buttonLeft="calc(100% - 24px)"
+                  buttonSize="sm"
                   buttonColor="linear-gradient(90deg, #8B5CF6, #3B82F6, #8B5CF6)"
                   overlayBackground="linear-gradient(180deg,#0b0210 0%, #1f032a 60%)"
                   textColor="#fff"
@@ -364,7 +365,7 @@ const Header = () => {
                   enableBlur={true}
                   zIndex={1200}
                   currentPath={location.pathname}
-                  className="w-12 h-12 relative"
+                  className="w-10 h-10 relative"
                   menuAlignment="center"
                   staggerDelay={0.05}
                   animationDuration={0.8}
