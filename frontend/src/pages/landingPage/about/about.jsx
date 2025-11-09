@@ -1,6 +1,30 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const About = () => {
+  const robotRef = useRef(null);
+  const [bouncePosition, setBouncePosition] = useState(0);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollY;
+      lastScrollY = currentScrollY;
+
+      setBouncePosition(prev => {
+        const newPos = prev + scrollDelta * 0.5;
+        return Math.max(-50, Math.min(50, newPos));
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   return (
     <main className="bg-[#0f0f14] min-h-screen text-white antialiased">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-12 sm:py-16 lg:py-20">
@@ -20,11 +44,20 @@ const About = () => {
             </div>
 
             <div className="relative order-2 lg:order-2">
-              <img 
-                src="/images/features/robot.png" 
-                alt="Deployment workflow illustration" 
+              <div 
+                ref={robotRef}
                 className="w-full h-auto max-w-[500px] sm:max-w-[600px] lg:max-w-[700px] mx-auto"
-              />
+                style={{
+                  transform: `translateY(${bouncePosition}px)`,
+                  transition: 'transform 0.1s ease-out'
+                }}
+              >
+                <img 
+                  src="/images/features/robot.png" 
+                  alt="Deployment workflow illustration" 
+                  className="w-full h-auto"
+                />
+              </div>
             </div>
           </div>
         </section>

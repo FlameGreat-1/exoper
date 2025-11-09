@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HamburgerMenuOverlay } from "../ui/hamburger-menu-overlay";
 import CompanyDropdownCard from "../ui/company/aboutCard";
@@ -132,11 +133,34 @@ const LogoComponent = ({ className = "", alt = "Exoper Logo" }) => {
   );
 };
 
+// DROPDOWN PORTAL COMPONENT - RENDERS OUTSIDE REACT TREE
+const DropdownPortal = ({ isOpen, children, headerHeight, isScrolled }) => {
+  if (!isOpen) return null;
+
+  const dropdownContent = (
+    <div
+      style={{
+        position: "fixed",
+        left: "50%",
+        top: `${headerHeight + 12}px`,
+        transform: "translateX(-50%)",
+        zIndex: 99999,
+        pointerEvents: "auto",
+      }}
+    >
+      {children}
+    </div>
+  );
+
+  return createPortal(dropdownContent, document.body);
+};
+
 const Header = () => {
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [headerHeight, setHeaderHeight] = useState(80);
   const headerRef = useRef(null);
 
   useEffect(() => {
@@ -154,6 +178,12 @@ const Header = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
+    }
+  }, [isScrolled]);
 
   useEffect(() => {
     setOpenDropdown(null);
@@ -220,7 +250,7 @@ const Header = () => {
                     isActive(item.href) ||
                     (hasChildren && item.children.some((c) => isActive(c.href)));
                   return (
-                    <li key={item.label} className="relative group">
+                    <li key={item.label} className="relative">
                       {hasCustomDropdown ? (
                         <>
                           <button
@@ -239,29 +269,6 @@ const Header = () => {
                             {item.label}
                             <ChevronDown className="w-3 h-3 flex-shrink-0" />
                           </button>
-
-                          <AnimatePresence>
-                            {openDropdown === idx && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -6 }}
-                                transition={{ duration: 0.16 }}
-                                onMouseEnter={() => setOpenDropdown(idx)}
-                                onMouseLeave={() => setOpenDropdown(null)}
-                                className="absolute left-0 mt-3 z-50"
-                                style={{
-                                  left: item.label === "Pricing" || item.label === "Resources" ? "auto" : "0",
-                                  right: item.label === "Pricing" || item.label === "Resources" ? "0" : "auto",
-                                  maxWidth: "calc(100vw - 2rem)",
-                                }}
-                              >
-                                {item.label === "Company" && <CompanyDropdownCard />}
-                                {item.label === "Pricing" && <PricingDropdownCard />}
-                                {item.label === "Resources" && <ResourcesDropdownCard />}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
                         </>
                       ) : hasChildren ? (
                         <>
@@ -281,41 +288,6 @@ const Header = () => {
                             {item.label}
                             <ChevronDown className="w-3 h-3 flex-shrink-0" />
                           </button>
-
-                          <AnimatePresence>
-                            {openDropdown === idx && (
-                              <motion.ul
-                                initial={{ opacity: 0, y: -6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -6 }}
-                                transition={{ duration: 0.16 }}
-                                onMouseEnter={() => setOpenDropdown(idx)}
-                                onMouseLeave={() => setOpenDropdown(null)}
-                                className="absolute left-1/2 -translate-x-1/2 mt-3 w-56 bg-black rounded-lg shadow-lg ring-1 ring-gray-700 ring-opacity-50 py-2 z-50"
-                                style={{
-                                  maxWidth: "calc(100vw - 2rem)",
-                                }}
-                                role="menu"
-                                aria-label={`${item.label} submenu`}
-                              >
-                                {item.children.map((child) => (
-                                  <li key={child.href}>
-                                    <Link
-                                      to={child.href}
-                                      role="menuitem"
-                                      className={`block px-4 py-2 text-sm font-medium transition-colors ${
-                                        isActive(child.href)
-                                          ? "text-white bg-gray-900"
-                                          : "text-white hover:text-[#ff2dd4] hover:bg-gray-800"
-                                      }`}
-                                    >
-                                      {child.label}
-                                    </Link>
-                                  </li>
-                                ))}
-                              </motion.ul>
-                            )}
-                          </AnimatePresence>
                         </>
                       ) : (
                         <Link
@@ -375,6 +347,30 @@ const Header = () => {
           </div>
         </div>
       </header>
+
+      {/* PORTAL DROPDOWNS - RENDERED DIRECTLY TO DOCUMENT.BODY */}
+      <AnimatePresence>
+        {openDropdown !== null && NAV[openDropdown]?.hasCustomDropdown && (
+          <DropdownPortal 
+            isOpen={true} 
+            headerHeight={headerHeight}
+            isScrolled={isScrolled}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.16 }}
+              onMouseEnter={() => setOpenDropdown(openDropdown)}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              {NAV[openDropdown].label === "Company" && <CompanyDropdownCard />}
+              {NAV[openDropdown].label === "Pricing" && <PricingDropdownCard />}
+              {NAV[openDropdown].label === "Resources" && <ResourcesDropdownCard />}
+            </motion.div>
+          </DropdownPortal>
+        )}
+      </AnimatePresence>
 
       <div className="h-14 md:h-16 lg:h-20" />
     </>

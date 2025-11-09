@@ -1,0 +1,13 @@
+<svg width="179" height="33" viewBox="0 0 179 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="179" height="33" rx="10" fill="#0E0E0E"/>
+  <rect x="1" y="1" width="177" height="31" rx="9" stroke="white" stroke-opacity="0.15" stroke-width="2"/>
+  <text
+    x="50%"
+    y="55%"
+    dominant-baseline="middle"
+    text-anchor="middle"
+    fill="#D9D9D9"
+    font-size="14"
+    font-family="Inter, Arial, sans-serif"
+  >Anonymous chat &amp; vidoe</text>
+</svg>

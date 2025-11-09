@@ -67,7 +67,7 @@ const Projects = () => {
                     key={index}
                     src={logo.icon} 
                     alt={logo.name}
-                    className="w-8 h-8 object-contain opacity-60 hover:opacity-100 transition-opacity transform hover:scale-110 transition-transform cursor-pointer"
+                    className="w-5 h-5 object-contain opacity-60 hover:opacity-100 transition-opacity transform hover:scale-110 transition-transform cursor-pointer"
                   />
                 ))}
               </div>
