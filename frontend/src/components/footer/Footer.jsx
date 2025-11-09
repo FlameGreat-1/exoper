@@ -46,30 +46,38 @@ const Footer = () => {
   
   const footerSections = [
     {
-      title: 'Services',
+      title: 'Product',
       links: [
-        { name: 'Web Development', href: '/services' },
-        { name: 'UI/UX Design', href: '/services' },
-        { name: 'Mobile Apps', href: '/services' },
-        { name: 'Consulting', href: '/consult' },
+        { name: 'Features', href: '/features' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'Templates', href: '/templates' },
       ]
     },
     {
       title: 'Resources',
       links: [
-        { name: 'Articles', href: '/resources/articles' },
-        { name: 'Tools', href: '/resources/tools' },
-        { name: 'Freebies', href: '/resources/freebies' },
-        { name: 'Guides', href: '/learn/guides' },
+        { name: 'Customers', href: '/customers' },
+        { name: 'Enterprise', href: '/enterprise' },
+        { name: 'Docs', href: '/docs' },
+        { name: 'Blog', href: '/blog' },
+        { name: 'Partnerships', href: '/partnerships' },
       ]
     },
     {
       title: 'Company',
       links: [
         { name: 'About', href: '/about' },
-        { name: 'Projects', href: '/projects' },
         { name: 'Careers', href: '/careers/all-positions' },
         { name: 'Contact', href: '/careers/contact' },
+      ]
+    },
+    {
+      title: 'Legal',
+      links: [
+        { name: 'Fair Use', href: '/legal/fair-use' },
+        { name: 'Privacy Policy', href: '/legal/privacy' },
+        { name: 'Terms of Service', href: '/legal/terms' },
+        { name: 'Cookie Preferences', href: '/legal/cookies' },
       ]
     },
   ];
@@ -133,7 +141,7 @@ const Footer = () => {
                 </span>
               </Link>
               <p className="mt-4 text-base text-gray-300 max-w-xs leading-relaxed">
-                Creating exceptional digital experiences with modern technologies and creative design solutions.
+                Securing and governing AI for enterprises, governments, and organizations worldwide.
               </p>
             </div>
           </div>
@@ -160,9 +168,9 @@ const Footer = () => {
                 </div>
               ))}
             </div>
-            <div className="md:grid md:grid-cols-1 md:gap-8">
+            <div className="md:grid md:grid-cols-2 md:gap-8">
               {footerSections.slice(2).map((section) => (
-                <div key={section.title}>
+                <div key={section.title} className="mt-12 md:mt-0">
                   <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
                     {section.title}
                   </h3>

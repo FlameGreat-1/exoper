@@ -3,120 +3,116 @@ import { Check } from 'lucide-react';
 
 const PricingDetails = () => {
   const tiers = [
-    { name: 'Free', cta: 'Deploy Now', color: 'bg-gradient-to-r from-purple-600 to-purple-500' },
-    { name: 'Hobby', cta: 'Deploy with Hobby', color: 'bg-gradient-to-r from-blue-600 to-blue-500' },
-    { name: 'Pro', cta: 'Deploy with Pro', color: 'bg-gradient-to-r from-purple-600 to-purple-500' },
-    { name: 'Enterprise', cta: 'Contact Sales', color: 'bg-gradient-to-r from-gray-700 to-gray-600' }
+    { name: 'Starter', cta: 'Start Free Trial', color: 'bg-gradient-to-r from-purple-600 to-purple-500' },
+    { name: 'Professional', cta: 'Deploy with Professional', color: 'bg-gradient-to-r from-blue-600 to-blue-500' },
+    { name: 'Enterprise', cta: 'Deploy with Enterprise', color: 'bg-gradient-to-r from-purple-600 to-purple-500' },
+    { name: 'Custom', cta: 'Contact Sales', color: 'bg-gradient-to-r from-gray-700 to-gray-600' }
   ];
 
   const resources = [
-    { name: 'Projects', values: ['5 during trial, then 1', '50', '100', 'Unlimited'] },
-    { name: 'Services per project', values: ['5 during trial, then 3', '50', '100', 'Unlimited'] },
-    { name: 'CPU per service', values: ['Up to 2 vCPU during trial, then up to 1 vCPU', 'Up to 8 vCPU', 'Up to 32 vCPU', 'Beyond 32 vCPU'] },
-    { name: 'RAM per service', values: ['Up to 1 GB during trial, then up to 0.5 GB', 'Up to 8 GB', 'Up to 32 GB', '64 GB'] },
-    { name: 'Ephemeral disk', values: ['1 GB', '100 GB', '100 GB', '100 GB'] },
-    { name: 'Volume storage', values: ['0.5 GB', '5 GB', '250 GB', '2 TB'] },
-    { name: 'Volumes per project', values: ['3 during trial, then 1', '10', '10, can be increased', 'Unlimited'] },
-    { name: 'Cron jobs per project', values: ['Free Trial only', '50', '100', 'Unlimited'] },
-    { name: 'Build image size', values: ['4 GB', '100 GB', 'Unlimited', 'Unlimited'] }
+    { name: 'AI Requests per month', values: ['10,000', '500,000 included', '5,000,000 included', 'Unlimited'] },
+    { name: 'Model endpoints monitored', values: ['1', 'Up to 5', 'Unlimited', 'Unlimited'] },
+    { name: 'Threat detection scans', values: ['Basic (10K/month)', 'Advanced (500K/month)', 'Full suite (5M/month)', 'Unlimited'] },
+    { name: 'Audit log retention', values: ['7 days', '30 days', '90 days', 'Unlimited'] },
+    { name: 'Request throughput', values: ['100 req/sec', '1,000 req/sec', '10,000 req/sec', 'Custom'] },
+    { name: 'Compliance frameworks', values: ['Basic templates', 'GDPR templates', 'EU AI Act, HIPAA, SOC 2', 'Custom frameworks'] },
+    { name: 'Data residency options', values: ['Single region', 'Multi-region', 'Multi-region + choice', 'On-premises available'] },
+    { name: 'Audit storage (WORM)', values: ['Not included', '10 GB', '100 GB', 'Unlimited'] }
   ];
 
-  const scaling = [
-    { name: 'Vertical autoscaling', values: [true, true, true, true] },
-    { name: 'Horizontal scaling via replicas', values: [true, true, true, true] },
-    { name: 'Replicas per service', values: ['2 during the free trial, then 1', '5', '50', '50+'] }
+  const security = [
+    { name: 'Prompt injection detection', values: [true, true, true, true] },
+    { name: 'PII scanning & redaction', values: [true, true, true, true] },
+    { name: 'ML anomaly detection', values: [false, true, true, true] },
+    { name: 'Adversarial attack testing', values: [false, false, true, true] },
+    { name: 'Red-team sandbox', values: [false, false, true, true] },
+    { name: 'Custom threat rules', values: [false, true, true, true] },
+    { name: 'Real-time threat blocking', values: [true, true, true, true] },
+    { name: 'Output sanitization', values: [true, true, true, true] }
   ];
 
-  const collaboration = [
-    { name: 'Team members', values: ['3 during trial, then 1', '3', 'Unlimited', 'Unlimited'] },
-    { name: 'Team roles', values: ['-', '-', 'Admin, Member, Deployer', 'Admin, Member, Deployer'] },
-    { name: 'Real-time project canvas', values: [true, true, true, true] }
-  ];
-
-  const buildDeploy = [
-    { name: 'Preview environments', values: [true, true, true, true] },
-    { name: 'GitHub repo deployment', values: [true, true, true, true] },
-    { name: 'Docker image deployment', values: [true, true, true, true] },
-    { name: 'Local repo deployment with the Exoper CLI', values: [true, true, true, true] },
-    { name: 'Custom Dockerfile support', values: [true, true, true, true] },
-    { name: 'Concurrent builds', values: ['3 during trial, then 1', '3', '10', '10+'] },
-    { name: 'Config as code (TOML/JSON)', values: [true, true, true, true] },
-    { name: 'Build timeout', values: ['20 mins during trial, then 10 mins', '40 mins', '90 mins', '90+ mins'] },
-    { name: 'Service variables and secrets management', values: [true, true, true, true] },
-    { name: 'One-click rollbacks', values: [true, true, true, true] },
-    { name: 'Redeploy or restart', values: [true, true, true, true] },
-    { name: 'Configurable restart policy', values: [true, true, true, true] },
-    { name: 'Healthcheck endpoints', values: [true, true, true, true] }
-  ];
-
-  const databases = [
-    { name: 'Deploy any open-source database', values: [true, true, true, true] },
-    { name: 'Built-in database and volume backups', values: [false, false, true, true] },
-    { name: 'IOPS', values: ['3,000 read/write operations per second', '3,000 read/write operations per second', '3,000 read/write operations per second', 'custom'] },
-    { name: 'Disk usage metrics', values: [true, true, true, true] }
-  ];
-
-  const networking = [
-    { name: 'Free Exoper domains', values: [true, true, true, true] },
-    { name: 'Custom domains', values: ['1 trial, then 0', '2', '20', 'Unlimited'] },
-    { name: 'Service domains', values: ['2', '4', '20', 'Unlimited'] },
-    { name: 'Global regions', values: ['Trial only, unavailable on the free plan', true, true, true] },
-    { name: 'Concurrent regions', values: [false, false, true, true] },
-    { name: 'Private networking', values: [true, true, true, true] },
-    { name: 'Wildcard domains', values: ['Trial only, unavailable on the free plan', true, true, true] },
-    { name: 'Up to 100 Gbps private transfer', values: [true, true, true, true] },
-    { name: 'Up to 10 Gbps public transfer', values: [true, true, true, true] },
-    { name: 'Multiple IPv6 protocols', values: [true, true, true, true] },
-    { name: 'TCP proxy', values: [true, true, true, true] },
-    { name: 'HTTP proxy', values: [true, true, true, true] },
+  const gateway = [
+    { name: 'Zero-trust API gateway', values: [true, true, true, true] },
+    { name: 'Multi-tenant isolation', values: [false, true, true, true] },
+    { name: 'Rate limiting & quotas', values: [true, true, true, true] },
+    { name: 'Load balancing', values: ['Basic', 'Advanced', 'Advanced', 'Custom'] },
+    { name: 'Request authentication (mTLS, OIDC)', values: [true, true, true, true] },
+    { name: 'Policy engine (OPA)', values: [false, true, true, true] },
+    { name: 'Edge WASM filters', values: [false, false, true, true] },
     { name: 'DDoS protection', values: [true, true, true, true] }
   ];
 
+  const collaboration = [
+    { name: 'Team seats', values: ['1', 'Up to 5', 'Unlimited', 'Unlimited'] },
+    { name: 'Role-based access control', values: [false, true, true, true] },
+    { name: 'Audit trail access', values: ['View only', 'View & export', 'Full access', 'Full access'] },
+    { name: 'Admin control plane', values: [false, true, true, true] }
+  ];
+
+  const deployment = [
+    { name: 'Cloud deployment (managed)', values: [true, true, true, true] },
+    { name: 'Multi-region deployment', values: [false, true, true, true] },
+    { name: 'Concurrent regions', values: [false, false, true, true] },
+    { name: 'On-premises deployment', values: [false, false, false, true] },
+    { name: 'Kubernetes/Helm packaging', values: [false, false, true, true] },
+    { name: 'HSM support', values: [false, false, false, true] },
+    { name: 'Custom infrastructure', values: [false, false, false, true] },
+    { name: 'Air-gapped deployment', values: [false, false, false, true] }
+  ];
+
   const observability = [
-    { name: 'Build/Deploy logs', values: [true, true, true, true] },
-    { name: 'CPU/RAM/Disk/Network metrics', values: [true, true, true, true] },
-    { name: 'Log retention', values: ['7 days during trial, then 3', '7 days', '30 days', '90 days'] },
-    { name: 'Log filtering, querying and structured logging', values: [true, true, true, true] },
-    { name: 'Webhooks', values: [true, true, true, true] },
-    { name: 'Configurable alerts', values: [true, true, true, true] },
-    { name: 'Email alerts', values: [true, true, true, true] }
+    { name: 'Real-time monitoring dashboard', values: [true, true, true, true] },
+    { name: 'Threat detection alerts', values: [true, true, true, true] },
+    { name: 'Request/response logging', values: [true, true, true, true] },
+    { name: 'Metrics & traces (OpenTelemetry)', values: [false, true, true, true] },
+    { name: 'SIEM integration', values: [false, false, true, true] },
+    { name: 'Custom webhooks', values: [false, true, true, true] },
+    { name: 'Anomaly detection reports', values: [false, true, true, true] }
   ];
 
   const compliance = [
-    { name: 'Hard and soft limits', values: [true, true, true, true] },
+    { name: 'Compliance templates', values: ['Basic', 'GDPR', 'EU AI Act, GDPR, HIPAA, SOC 2', 'Custom'] },
+    { name: 'Automated compliance mapping', values: [false, true, true, true] },
+    { name: 'Audit report generation', values: [false, true, true, true] },
+    { name: 'HIPAA BAA', values: [false, false, true, true] },
     { name: 'SOC 2 compliance', values: [false, false, true, true] },
-    { name: 'HIPAA BAA', values: [false, false, false, true] }
+    { name: 'Data sovereignty controls', values: [false, true, true, true] }
   ];
 
   const support = [
     { name: 'Community support', values: [true, true, true, true] },
-    { name: 'Priority support', values: [false, false, true, true] }
+    { name: 'Email support', values: [false, true, true, true] },
+    { name: 'Priority support', values: [false, true, true, true] },
+    { name: 'Support SLOs', values: [false, false, true, true] },
+    { name: 'Dedicated account manager', values: [false, false, false, true] },
+    { name: '24/7 on-call support', values: [false, false, false, true] },
+    { name: 'Slack Connect channel', values: [false, false, false, true] }
   ];
 
   const addons = [
     {
-      icon: '📊',
-      title: '90-Day Log History',
-      description: 'Extended log retention for better historical analysis and auditing.',
-      price: '$200'
+      icon: '🔐',
+      title: 'Extended Audit Retention (1 year)',
+      description: 'Keep immutable audit logs for 365 days with cryptographic verification for regulatory compliance.',
+      price: '$500'
     },
     {
-      icon: '➕',
-      title: 'HIPAA BAAs',
-      description: 'HIPAA Business Associate Agreements for compliant health data handling.',
-      price: '$1,000'
+      icon: '🏥',
+      title: 'HIPAA BAA + Compliance Pack',
+      description: 'HIPAA Business Associate Agreement with automated compliance monitoring and reporting.',
+      price: '$1,500'
     },
     {
-      icon: '💬',
-      title: 'Enterprise Support',
-      description: 'Prioritized support with SLOs, direct access to our on-call team for critical issues, and a dedicated Slack Connect channel.',
-      price: '$2,000'
+      icon: '🛡️',
+      title: 'Advanced Threat Intelligence',
+      description: 'Premium threat feeds, custom ML models, and dedicated red-team testing for your AI systems.',
+      price: '$2,500'
     },
     {
       icon: '🖥️',
-      title: 'Dedicated VMs',
-      description: 'Custom dedicated infrastructure for enhanced performance and control.',
-      price: '$10,000'
+      title: 'Dedicated Infrastructure',
+      description: 'Isolated VMs, HSM integration, and custom deployment architecture for maximum control.',
+      price: '$15,000'
     }
   ];
 
@@ -186,163 +182,21 @@ const PricingDetails = () => {
           </div>
         </div>
 
-        <Section title="Resources & limits" items={resources} />
-        <Section title="Scaling" items={scaling} />
+        <Section title="Resources & Limits" items={resources} />
+        <Section title="Threat Detection & Security" items={security} />
+        <Section title="API Gateway & Access Control" items={gateway} />
         <Section title="Collaboration" items={collaboration} />
-        <Section title="Build & Deploy" items={buildDeploy} />
-        <Section title="Databases & Storage" items={databases} />
-        <Section title="Networking" items={networking} />
-        <Section title="Observability" items={observability} />
-        <Section title="Compliance & Security" items={compliance} />
+        <Section title="Deployment Options" items={deployment} />
+        <Section title="Observability & Monitoring" items={observability} />
+        <Section title="Compliance & Governance" items={compliance} />
         <Section title="Support" items={support} />
 
         <div className="mt-16 md:mt-24 px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-16 md:mb-20">
-            Commonly Asked Questions
-          </h2>
-
-          <div className="max-w-4xl mx-auto mb-24 md:mb-32">
-            <style>{`
-              details summary .icon::before {
-                content: '+';
-              }
-              details[open] summary .icon::before {
-                content: '−';
-              }
-            `}</style>
-            <div className="space-y-0">
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>Which plan is right for me?</span>
-                </summary>
-                <div className="pb-4 ml-8 space-y-3 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <div className="flex gap-3">
-                    <span>•</span>
-                    <p>Hobby is for indie hackers and developers to build and deploy personal projects</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span>•</span>
-                    <p>Pro is for professional developers and their teams shipping to production.</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span>•</span>
-                    <p>Enterprise is for dev teams building and deploying production applications with large instance size, SLA, and/or compliance needs.</p>
-                  </div>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>How do I get started with the free Trial?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>To start your free trial, sign up for a Exoper account and add a payment method. You'll immediately get access to trial resources which include higher limits for projects, services, and compute resources.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>How does the Trial work?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>The Trial gives you $5 of free credit and increased resource limits to test Exoper's full capabilities. After the trial ends or credits are used, you'll need to subscribe to a paid plan to continue using those resources.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>How does the Hobby plan included usage work?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>The Hobby plan includes $5 of usage each month. This covers your compute, memory, and network usage. Any usage beyond the included $5 will be billed at standard rates.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>Does included usage on Hobby accumulate?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>No, the included usage does not roll over. Each month you receive $5 of included usage, and any unused portion expires at the end of the billing period.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>How can I get a receipt?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>When you make a payment, you will receive an email with your invoice and receipt attached. You can also find your billing history in <span className="underline cursor-pointer hover:text-white transition-colors">Account → Billing</span>.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>How to add company details on my invoice?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>You can add your company details by going to Account → Billing → Invoice Settings. Here you can add your company name, address, VAT number, and other relevant billing information that will appear on your invoices.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>What payment methods are accepted?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>Exoper accepts all major credit and debit cards including Visa, Mastercard, and American Express. We process payments securely through Stripe.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>Can I try Exoper without a credit card?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>Yes, you can use Exoper's Free plan without adding a credit card. However, to access trial resources and paid plans, you'll need to add a payment method.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>Can I upgrade or downgrade at any time?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and billing is prorated based on your usage and the time remaining in your billing period.</p>
-                </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex items-start gap-3 cursor-pointer list-none text-white font-medium text-base md:text-lg py-4 border-b border-gray-800">
-                  <span className="icon text-purple-400 mt-1 text-xl"></span>
-                  <span>What happens when I cancel my subscription?</span>
-                </summary>
-                <div className="pb-4 ml-8 text-gray-300 text-sm md:text-base border-b border-gray-800 mt-2">
-                  <p>When you cancel your subscription, you'll retain access to your paid plan features until the end of your current billing period. After that, your account will be downgraded to the Free plan with its associated limits.</p>
-                </div>
-              </details>
-            </div>
-
-            <p className="text-gray-400 text-sm md:text-base mt-8 text-center md:text-left">
-              For more information, <span className="underline cursor-pointer hover:text-white transition-colors">check out the docs</span>.
-            </p>
-          </div>
-
           <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-4">
             Unlock more as you grow
           </h2>
           <p className="text-gray-400 text-center mb-12 text-sm md:text-base">
-            Commit to a minimum monthly spend to unlock all features up to your spend.
+            Add enterprise-grade capabilities with flexible add-ons
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto">
@@ -373,8 +227,8 @@ const PricingDetails = () => {
 
           <div className="text-center mt-16 md:mt-20">
             <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
-              Want it now? Unlock instantly
-              <br className="hidden md:block" /> with a monthly commitment.
+              Need custom solutions?
+              <br className="hidden md:block" /> Contact our team for tailored pricing.
             </h3>
             <button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium px-8 py-3 rounded-lg hover:opacity-90 transition-opacity mt-6">
               Contact Sales

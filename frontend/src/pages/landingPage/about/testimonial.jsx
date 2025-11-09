@@ -14,7 +14,7 @@ const Testimonial = () => {
             Trusted by the best in business
           </h1>
           <p className="text-gray-400 text-base sm:text-lg mb-4 max-w-3xl mx-auto px-4">
-            EXOPER supports great software teams anywhere, they are. Hear from some of the teams, building their products on EXOPER.
+            Exoper — the Cloudflare for AI — lets teams deploy, secure, and scale AI workloads effortlessly, handling orchestration, governance, and real-time threat protection.
           </p>
           <a href="#" className="text-purple-400 hover:text-purple-300 text-sm sm:text-base inline-flex items-center gap-2 transition-colors">
             Read customer stories →
@@ -45,7 +45,7 @@ const Testimonial = () => {
               </div>
               <div className="flex-grow flex flex-col justify-between">
                 <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
-                  "EXOPER is where we host all of our backend services along with our databases. It's been an integral part of our infrastructure since the very beginning."
+                  "Exoper manages our AI pipelines and vector databases reliably. It’s like having a Cloudflare for AI protecting and monitoring every request."
                 </p>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
@@ -78,7 +78,7 @@ const Testimonial = () => {
               </div>
               <div className="flex-grow flex flex-col justify-between">
                 <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
-                  "Even though we already have an internal Kubernetes cluster and infrastructure-at-scale setup, we decided to go with EXOPER so that we weren't spending time writing YAML files when we could be working on the product."
+                  "Even with our own infrastructure, Exoper saved us countless hours on AI deployment and compliance, letting us focus on product innovation."
                 </p>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
@@ -111,7 +111,7 @@ const Testimonial = () => {
               <div className="flex-grow flex flex-col justify-between">
                 <div className="flex-grow">
                   <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-4">
-                    "EXOPER is a game changer for us. We're currently serving more than 80,000 developers with a small team... every minute spent on infrastructure is a minute we're not building the best email product in the world.
+                    "Exoper lets us serve tens of thousands of AI requests daily with minimal overhead. Every security and compliance task is handled automatically."
                   </p>
                   <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
                     If it wasn't for EXOPER, I don't think we would be able to grow as fast as we are today."
@@ -148,7 +148,7 @@ const Testimonial = () => {
               </div>
               <div className="flex-grow flex flex-col justify-between">
                 <p className="text-gray-200 text-base sm:text-lg leading-relaxed mb-6">
-                  "The flexibility and agility for automation with EXOPER helps us move fast and continuously deploy to production with confidence."
+                  "Exoper’s zero-trust gateway and orchestration layer give us the confidence to deploy AI workloads at scale — truly a Cloudflare for AI."
                 </p>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
@@ -188,7 +188,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  Team is an easier option. Deploying literally anything on @EXOPER_app is now possible in minutes instead of days. Obsessed. ⚡
+                  "Deploying AI workloads on Exoper is effortless. Minutes instead of days — it’s like having a Cloudflare for AI protecting everything." ⚡
                 </p>
               </div>
 
@@ -203,7 +203,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  With other apps, infrastructure, and more work to production is @EXOPER_app. Super excited to work with them.
+                  "Exoper handles the infrastructure so we can focus on building AI products. Security, compliance, and scaling are all automatic."
                 </p>
               </div>
 
@@ -218,7 +218,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  @EXOPER_app for prototypes, utilizing the containerized world, infrastructure-as-code, a custom domain local, connect... and that just becomes what you need...
+                  "From prototypes to production, Exoper simplifies AI deployment with zero-trust security, auto-scaling, and seamless orchestration."
                 </p>
               </div>
 
@@ -233,7 +233,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  Assisted in organizing my services to @EXOPER_app.
+                  "Cut our AI deployment time by 70%. Exoper makes everything from orchestration to audit logs painless."
                 </p>
               </div>
 
@@ -248,7 +248,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  This CLI is deploying a small app on @EXOPER_app - has been promising the team for over seven...
+                  "Exoper’s zero-trust gateway and observability tools give us confidence deploying AI at scale."
                 </p>
               </div>
 
@@ -263,7 +263,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  Just migrated our entire backend to @EXOPER_app and it's been the smoothest deployment experience I've ever had. Highly recommend!
+                  "From prototypes to production, Exoper simplifies infrastructure, orchestration, and scaling."
                 </p>
               </div>
             </ThreeDScrollTriggerRow>
@@ -280,7 +280,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  EXOPER is really really great. Bring rules for making frontend super optimized, developing with confidence, improving my code time and well managing the process.
+                  "Exoper makes AI deployment effortless — optimized workflows, fast development, and total confidence in security.
                 </p>
               </div>
 
@@ -295,7 +295,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  Damn, @EXOPER_app. Its the first backend I've ever had to deploy that didn't feel like a hassle.
+                  "The first backend deployment that didn’t feel like a hassle. Exoper just works."
                 </p>
               </div>
 
@@ -310,7 +310,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  @EXOPER_app for prototypes, utilizing the best tools and code, to use my code, with the @EXOPER_app, utilizing.
+                  "Deploying AI services is now automated and reliable. Exoper handles the hard parts, so we can focus on building."
                 </p>
               </div>
               <div className="bg-[#14141f]/80 backdrop-blur-sm rounded-lg p-5 border border-[#1e1e2e] hover:border-[#2e2e3e] transition-all duration-300 w-[280px] sm:w-[300px] mx-2 flex flex-col min-h-[200px] flex-shrink-0 whitespace-normal">
@@ -324,7 +324,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  I have been EXOPER makes it super easy to just drop my and up to Docker for automated over deploying a server.
+                  "Cut our deployment time by 70%. Exoper is the most developer-friendly AI platform we've used."
                 </p>
               </div>
 
@@ -339,7 +339,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  It easy to love to build on @EXOPER_app.
+                  "Exoper simplified our entire infrastructure. Security, scaling, and observability are all built-in."
                 </p>
               </div>
 
@@ -354,7 +354,7 @@ const Testimonial = () => {
                   </div>
                 </div>
                 <p className="text-gray-300 text-sm leading-relaxed flex-grow">
-                  After trying multiple deployment platforms, @EXOPER_app is by far the most developer-friendly. Cut our deployment time by 70% and simplified our workflow.
+                  "Building with Exoper feels seamless — everything just works, end to end."
                 </p>
               </div>
 

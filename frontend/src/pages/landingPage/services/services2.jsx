@@ -33,13 +33,13 @@ const Projects = () => {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
         <section className="relative z-10 mb-16 lg:mb-24 text-center">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-sm text-purple-400 mb-4 tracking-wide font-medium uppercase">Network and Connect</div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight">
-              Interconnect your application seamlessly with highly performant networking
+          <div className="max-w-5xl mx-auto">
+            <div className="text-sm text-purple-400 mb-4 tracking-wide font-medium uppercase">AI Interconnectivity Engine</div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight max-w-6xl mx-auto">
+              Seamlessly link every component of your AI ecosystem — from agents to APIs — through Exoper's autonomous networking layer.
             </h1>
             <p className="text-gray-400 text-base sm:text-lg lg:text-xl mb-8 leading-relaxed">
-              Exoper provides automated service discovery, blazing fast networking, and support for any protocol, all out of the box.
+              Built for intelligent systems that need to communicate, adapt, and scale in real time.
             </p>
             <button className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors font-medium">
               Learn More <ChevronRight className="w-4 h-4" />
@@ -54,16 +54,16 @@ const Projects = () => {
                 <div className="p-2.5 bg-gradient-to-r from-[#8b5cf6]/20 to-[#a855f7]/20 rounded-lg border border-[#8b5cf6]/30">
                   <GitBranch className="w-5 h-5 text-purple-400" />
                 </div>
-                <span className="text-base text-gray-300 font-semibold">Replicas</span>
+                <span className="text-base text-gray-300 font-semibold">Agent Orchestration</span>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-400">Auto-scaling enabled</span>
+                  <span className="text-sm text-gray-400">Auto-scaling AI workloads</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-400">Load balanced</span>
+                  <span className="text-sm text-gray-400">Real-time multi-agent sync</span>
                 </div>
               </div>
             </div>
@@ -73,16 +73,16 @@ const Projects = () => {
                 <div className="p-2.5 bg-gradient-to-r from-[#8b5cf6]/20 to-[#a855f7]/20 rounded-lg border border-[#8b5cf6]/30">
                   <Database className="w-5 h-5 text-purple-400" />
                 </div>
-                <span className="text-base text-gray-300 font-semibold">Database</span>
+                <span className="text-base text-gray-300 font-semibold">Data Intelligence</span>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-400">PostgreSQL 15</span>
+                  <span className="text-sm text-gray-400">Vector memory + PostgreSQL 15</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-400">Auto-backups</span>
+                  <span className="text-sm text-gray-400">Context-aware data routing</span>
                 </div>
               </div>
             </div>
@@ -92,12 +92,12 @@ const Projects = () => {
                 <div className="p-2.5 bg-gradient-to-r from-[#8b5cf6]/20 to-[#a855f7]/20 rounded-lg border border-[#8b5cf6]/30">
                   <Globe className="w-5 h-5 text-purple-400" />
                 </div>
-                <span className="text-base text-gray-300 font-semibold">Network</span>
+                <span className="text-base text-gray-300 font-semibold">AI Networking</span>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-400">Private network</span>
+                  <span className="text-sm text-gray-400">Encrypted low-latency channels</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
@@ -116,32 +116,32 @@ const Projects = () => {
                   <Server className="w-6 h-6 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-white">backend [US-West]</h3>
-                  <p className="text-sm text-gray-400">Just deployed via GitHub</p>
+                  <h3 className="text-xl font-semibold text-white">AI infrastructure panel</h3>
+                  <p className="text-sm text-gray-400">Compute and Networking</p>
                 </div>
               </div>
               
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0b0b10]/60 rounded-xl border border-[#222631] gap-3 sm:gap-0">
-                  <span className="text-sm text-gray-400 font-semibold">CPU</span>
+                  <span className="text-sm text-gray-400 font-semibold">TPU Optimized</span>
                   <div className="flex items-center gap-3">
                     <div className="w-32 sm:w-40 h-2.5 bg-gray-700/50 rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] rounded-full" style={{width: '65%'}}>
                         <div className="h-full bg-white/20 animate-pulse"></div>
                       </div>
                     </div>
-                    <span className="text-sm font-mono text-gray-300 min-w-[3rem]">16x</span>
+                    <span className="text-sm font-mono text-gray-300 min-w-[3rem]">16x cores</span>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0b0b10]/60 rounded-xl border border-[#222631] gap-3 sm:gap-0">
-                  <span className="text-sm text-gray-400 font-semibold">Memory</span>
+                  <span className="text-sm text-gray-400 font-semibold">Memory Auto-Scaled</span>
                   <div className="flex items-center gap-3">
                     <div className="w-32 sm:w-40 h-2.5 bg-gray-700/50 rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] rounded-full" style={{width: '45%'}}>
                         <div className="h-full bg-white/20 animate-pulse"></div>
                       </div>
                     </div>
-                    <span className="text-sm font-mono text-gray-300 min-w-[3rem]">8GB</span>
+                    <span className="text-sm font-mono text-gray-300 min-w-[3rem]">64–256GB+</span>
                   </div>
                 </div>
               </div>
@@ -163,7 +163,7 @@ const Projects = () => {
                 <div className="bg-[#0b0b10]/60 rounded-xl p-4 mb-4 border border-[#222631]">
                   <div className="flex items-center gap-2 mb-2">
                     <Activity className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-gray-400 break-all">frontend-prod.Exoper.app</span>
+                    <span className="text-sm text-gray-400 break-all">frontend-prod.Exoper.ai</span>
                   </div>
                   <button className="text-sm text-purple-400 hover:text-purple-300 transition-colors font-medium">
                     Just deployed
@@ -182,7 +182,7 @@ const Projects = () => {
                 <div className="bg-[#0b0b10]/60 rounded-xl p-4 border border-[#222631]">
                   <div className="flex items-center gap-2 mb-2">
                     <Terminal className="w-4 h-4 text-blue-400" />
-                    <span className="text-sm text-gray-400">Just deployed</span>
+                    <span className="text-sm text-gray-400">AI engine</span>
                   </div>
                   <button className="text-sm text-purple-400 hover:text-purple-300 transition-colors font-medium">
                     Just deployed
@@ -203,7 +203,7 @@ const Projects = () => {
                 <div className="bg-[#0b0b10]/60 rounded-xl p-4 mb-4 border border-[#222631]">
                   <div className="flex items-center gap-2 mb-2">
                     <Lock className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm text-gray-400 break-all">api-prod.Exoper.app</span>
+                    <span className="text-sm text-gray-400 break-all">api-prod.Exoper.ai</span>
                   </div>
                   <button className="text-sm text-purple-400 hover:text-purple-300 transition-colors font-medium">
                     Just deployed
@@ -222,7 +222,7 @@ const Projects = () => {
                 <div className="bg-[#0b0b10]/60 rounded-xl p-4 border border-[#222631]">
                   <div className="flex items-center gap-2 mb-2">
                     <Cpu className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-gray-400">Just deployed</span>
+                    <span className="text-sm text-gray-400">Secure Vector Memory</span>
                   </div>
                   <div className="text-xs text-gray-500 font-mono">
                     pg-data

@@ -33,7 +33,7 @@ const Born = () => {
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 lg:mb-6 tracking-tight leading-tight">
             Redefine the Future
             <br />
-            of Infrastructure
+            of AI Infrastructure
           </h1>
 
           <p className="text-gray-400 text-base sm:text-lg md:text-xl mb-6 lg:mb-10 max-w-2xl mx-auto px-4">
@@ -53,11 +53,8 @@ const Born = () => {
           {/* Text */}
           <div className="w-full lg:max-w-3xl mx-auto text-center lg:mb-16 px-4 order-2 md:order-1">
             <p className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed font-medium">
-              Exoper was born in 2025 to make instantly usable software
-              infrastructure. Crafting software should be frictionless -- existing
-              tools are not. We're expanding our team across the globe, we aim to ship AI
-              solutions that power businesses, enterprises and government, backed by the best people in the
-              industry.
+              EXOPER was founded to provide a real-time, zero-trust AI security and compliance platform. 
+              We empower organizations to adopt AI confidently, with full auditability, threat protection, and regulatory alignment.
             </p>
           </div>
 

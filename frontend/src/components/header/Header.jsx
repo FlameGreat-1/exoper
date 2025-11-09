@@ -41,9 +41,9 @@ const NAV = [
     href: "/resources",
     hasCustomDropdown: true,
     children: [
-      { label: "Freebies", href: "/resources/freebies" },
-      { label: "Articles", href: "/resources/articles" },
-      { label: "Tools", href: "/resources/tools" },
+      { label: "Partnerships", href: "/resources/partnerships" },
+      { label: "Docs", href: "/resources/docs" },
+      { label: "Blog", href: "/resources/blog" },
     ],
   },
 ];
@@ -78,9 +78,9 @@ const MOBILE_NAV_ITEMS = [
     label: "Resources",
     href: "/resources",
     children: [
-      { label: "Freebies", href: "/resources/freebies" },
-      { label: "Articles", href: "/resources/articles" },
-      { label: "Tools", href: "/resources/tools" },
+      { label: "Partnerships", href: "/resources/partnerships" },
+      { label: "Docs", href: "/resources/docs" },
+      { label: "Blog", href: "/resources/blog" },
     ],
   },
   {

@@ -38,8 +38,8 @@ const About = () => {
             <div className="lg:pr-8 order-1 lg:order-1">
               <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">We believe...</h2>
               <p className="text-gray-300 text-base sm:text-lg leading-relaxed">
-                You should simply be able to work on your core product without having to worry about
-                infrastructure and how to deploy it.
+                AI should empower your business—not create new risks. 
+                You should focus on innovation and intelligence while we handle the security, governance, and compliance complexities of AI.
               </p>
             </div>
 
@@ -67,7 +67,7 @@ const About = () => {
             <div className="lg:pr-8 order-1 lg:order-1">
               <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">We want to help...</h2>
               <p className="text-gray-300 text-base sm:text-lg leading-relaxed">
-                More great ideas materialize by reducing developer friction around deployments, clusters, Docker, and many other things that can go wrong.
+                We make AI workloads safe, auditable, and compliant for enterprises, governments, and organizations worldwide. EXOPER serves as the security, trust, and governance layer for every AI interaction—protecting sensitive data, preventing adversarial attacks, detecting bias, and ensuring regulatory compliance.
               </p>
             </div>
 

@@ -25,7 +25,7 @@ export default function App() {
       {!isMobile && (
         <SmoothCursor 
           color="var(--color-primary)"
-          size={25}
+          size={12}
           showTrail={true}
           trailLength={5}
           glowEffect={true}
