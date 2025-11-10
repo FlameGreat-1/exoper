@@ -69,7 +69,7 @@ const CompanyDropdownCard = () => {
               to="/careers/senior-fullstack-engineer" 
               className="block bg-[#0b0b10]/40 hover:bg-[#121421]/60 transition-all duration-200 rounded-lg px-3 py-2 border border-[#222631] hover:border-[#8b5cf6]/30 cursor-pointer group"
             >
-              <p className="text-gray-400 text-xs font-normal group-hover:text-white transition-colors">Senior Full-Stack Engineer, Product</p>
+              <p className="text-gray-400 text-xs font-normal group-hover:text-white transition-colors">Senior Full-Stack Engineer</p>
             </Link>
             
             <Link 
